@@ -7,6 +7,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/laporan/buat', function () {
+    return view('laporan.create');
+})->name('laporan.create');
+
+Route::get('/laporan-baru', function () {
+    return view('laporan.create');
+});
+
+Route::get('/laporan/sukses', function () {
+    return view('laporan.success');
+})->name('laporan.success');
+
+Route::get('/laporan-sukses', function () {
+    return view('laporan.success');
+});
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
