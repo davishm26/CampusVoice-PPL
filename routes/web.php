@@ -30,6 +30,9 @@ Route::get('/profil', function () {
 Route::get('/profile-saya', function () {
     return view('profil');
 });
+Route::get('/laporan/riwayat', function () {
+    return view('laporan.riwayat');
+})->name('laporan.riwayat');  
 
 Route::get('/dashboard', function () {
     return view('dashboard');
