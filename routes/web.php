@@ -23,6 +23,14 @@ Route::get('/laporan-sukses', function () {
     return view('laporan.success');
 });
 
+Route::get('/profil', function () {
+    return view('profil');
+})->name('profil');
+
+Route::get('/profile-saya', function () {
+    return view('profil');
+});
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

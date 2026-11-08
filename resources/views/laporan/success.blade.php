@@ -128,7 +128,7 @@
                         </a>
 
                         <!-- Menu 5: Profil Saya -->
-                        <a href="javascript:void(0)" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
+                        <a href="{{ url('/profil') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                                 <circle cx="12" cy="7" r="4"/>
@@ -207,15 +207,15 @@
                         </span>
                     </button>
 
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0">
+                    <a href="{{ url('/profil') }}" class="flex items-center gap-2.5 group">
+                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 group-hover:ring-2 group-hover:ring-[#B01116]/30 transition">
                             DA
                         </div>
                         <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight">Dimas Arya</p>
+                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">Dimas Arya</p>
                             <p class="text-[11px] text-[#6B7280] leading-tight">Mahasiswa</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </header>
 
