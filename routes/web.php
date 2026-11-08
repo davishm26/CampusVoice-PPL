@@ -23,6 +23,10 @@ Route::get('/laporan-sukses', function () {
     return view('laporan.success');
 });
 
+Route::get('/laporan/riwayat', function () {
+    return view('laporan.riwayat');
+})->name('laporan.riwayat');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
