@@ -23,9 +23,16 @@ Route::get('/laporan-sukses', function () {
     return view('laporan.success');
 });
 
+Route::get('/profil', function () {
+    return view('profil');
+})->name('profil');
+
+Route::get('/profile-saya', function () {
+    return view('profil');
+});
 Route::get('/laporan/riwayat', function () {
     return view('laporan.riwayat');
-})->name('laporan.riwayat');
+})->name('laporan.riwayat');  
 
 Route::get('/dashboard', function () {
     return view('dashboard');
