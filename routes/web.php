@@ -58,7 +58,11 @@ Route::get('/laporan/detail/{tiket?}', function ($tiket = 'CV-2026-00124') {
         return view('laporan.show', compact('tiket'));
     }
     return redirect()->route('laporan.riwayat');
-})->name('laporan.detail');  
+})->name('laporan.detail');
+
+Route::get('/detail-laporan/{tiket?}', function ($tiket = 'CV-2026-00124') {
+    return redirect()->route('laporan.detail', $tiket);
+});  
 
 Route::get('/dashboard', function () {
     return view('dashboard');
