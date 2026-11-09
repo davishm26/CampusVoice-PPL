@@ -32,7 +32,33 @@ Route::get('/profile-saya', function () {
 });
 Route::get('/laporan/riwayat', function () {
     return view('laporan.riwayat');
-})->name('laporan.riwayat');  
+})->name('laporan.riwayat');
+
+Route::get('/riwayat-laporan', function () {
+    return view('laporan.riwayat');
+});
+
+Route::get('/riwayat', function () {
+    return view('laporan.riwayat');
+});
+
+Route::get('/notifikasi', function () {
+    return view('notifikasi');
+})->name('notifikasi');
+
+Route::get('/notif', function () {
+    return view('notifikasi');
+});
+
+Route::get('/laporan/detail/{tiket?}', function ($tiket = 'CV-2026-00124') {
+    if (view()->exists('laporan.detail')) {
+        return view('laporan.detail', compact('tiket'));
+    }
+    if (view()->exists('laporan.show')) {
+        return view('laporan.show', compact('tiket'));
+    }
+    return redirect()->route('laporan.riwayat');
+})->name('laporan.detail');  
 
 Route::get('/dashboard', function () {
     return view('dashboard');
