@@ -62,7 +62,15 @@ Route::get('/laporan/detail/{tiket?}', function ($tiket = 'CV-2026-00124') {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->name('dashboard');
+
+Route::get('/dashboard-mahasiswa', function () {
+    return view('dashboard');
+});
+
+Route::get('/beranda', function () {
+    return view('dashboard');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
