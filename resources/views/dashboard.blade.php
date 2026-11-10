@@ -194,14 +194,9 @@
                 @endauth
 
                 <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
-                    <h4 class="text-sm font-bold tracking-tight">Butuh bantuan?</h4>
-
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan Student Service Center.</p>
-                    <a href="https://wa.me/62811333000" target="_blank" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
-
+                    <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
                     <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
-
+                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
                         Pusat Bantuan
                     </a>
                 </div>

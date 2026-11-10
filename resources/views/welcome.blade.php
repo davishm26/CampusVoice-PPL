@@ -117,7 +117,7 @@
                 </a>
             </nav>
 
-            <!-- Sisi Kanan: Tombol Masuk & Daftar Mahasiswa -->
+            <!-- Sisi Kanan: Tombol Masuk dengan Akun Kampus -->
             <div class="hidden md:flex items-center gap-2.5">
                 @auth
                     <a href="{{ url('/dashboard') }}" 
@@ -125,13 +125,9 @@
                         Buka Dashboard
                     </a>
                 @else
-                    <a href="{{ route('register') }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-[#E5E7EB] text-[#252525] text-sm font-semibold hover:bg-gray-50 transition-all duration-200">
-                        Daftar Mahasiswa
-                    </a>
                     <a href="{{ route('login') }}" 
-                       class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
-                        Masuk Akun
+                       class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
+                        Masuk dengan Akun Kampus
                     </a>
                 @endauth
             </div>
@@ -228,37 +224,23 @@
                     <!-- Tombol Aksi: Merah #B01116 & Putih Border Abu-abu -->
                     <div class="flex flex-wrap items-center gap-4 mb-8 w-full sm:w-auto">
                         <!-- Tombol Merah: Masuk dengan Akun Kampus + Panah Putih -->
-                        @if (Route::has('login'))
-                            @auth
-                                <a href="{{ url('/dashboard') }}"
-                                   class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
-                                    <span>Buka Dashboard</span>
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-                                    </svg>
-                                </a>
-                            @else
-                                <a href="{{ route('register') }}" 
-                                   class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
-                                    <span>Daftar Akun Mahasiswa</span>
-                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
-                                    </svg>
-                                </a>
-                                <a href="{{ route('login') }}" 
-                                   class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-white border border-[#E5E7EB] text-[#252525] text-[15px] font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
-                                    Masuk Akun
-                                </a>
-                            @endauth
+                        @auth
+                            <a href="{{ url('/dashboard') }}"
+                               class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
+                                <span>Buka Dashboard</span>
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+                                </svg>
+                            </a>
                         @else
-                            <a href="{{ url('/login') }}"
+                            <a href="{{ route('login') }}" 
                                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
                                 <span>Masuk dengan Akun Kampus</span>
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
                                 </svg>
                             </a>
-                        @endif
+                        @endauth
 
                         <!-- Tombol Putih: Lihat Statistik Pengaduan -->
                         <a href="#statistik"

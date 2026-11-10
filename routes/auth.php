@@ -12,10 +12,9 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    // Pendaftaran akun publik dinonaktifkan secara total. Akun disediakan oleh kampus (pre-seeded).
+    // Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+    // Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

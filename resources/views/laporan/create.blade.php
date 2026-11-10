@@ -60,7 +60,7 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', Figtree, sans-serif; }
 
-        
+
         /* Linear Gradient Konten Utama: Merah #B01116 ke Abu-abu Gelap #58595B */
 
 
@@ -208,15 +208,9 @@
                 @endauth
 
                 <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
-
-                    <h4 class="text-sm font-bold tracking-tight">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan Student Service Center.</p>
-                    <a href="https://wa.me/62811333000" target="_blank" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
-
                     <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
                     <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
                     <a href="{{ route('pusat.bantuan') }}" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
-
                         Pusat Bantuan
                     </a>
                 </div>
@@ -224,16 +218,7 @@
         </aside>
 
         <!-- Overlay Mobile -->
-
-        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 lg:hidden"></div>
-
-        <div
-            x-show="mobileSidebarOpen"
-            x-cloak
-            @click="mobileSidebarOpen = false"
-            class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
-        ></div>
-
+        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"></div>
 
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
@@ -253,23 +238,19 @@
                         </svg>
                     </button>
 
+                    <!-- Search Bar Tunggal & Rapi -->
                     <div class="relative w-64 sm:w-80 md:w-96">
-
-                        <form @submit.prevent="handleSearch()">
-                            <input 
-                                type="text" 
+                        <form @submit.prevent="handleSearch()" class="relative">
+                            <svg class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input
+                                type="text"
                                 x-model="searchQuery"
-                                placeholder="Cari nomor tiket atau laporan..." 
-                                class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
+                                placeholder="Cari nomor tiket atau laporan..."
+                                class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 pl-10 pr-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
                             />
                         </form>
-
-                        <input
-                            type="text"
-                            placeholder="Cari nomor tiket atau laporan..."
-                            class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                        />
-
                     </div>
                 </div>
 
@@ -338,14 +319,9 @@
                     <!-- Grid Layout: Formulir (Kiri) & Sidebar Info (Kanan) -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-
-                        <!-- FORMULIR UTAMA -->
-                        <div 
-
                         <!-- FORMULIR UTAMA (KARTU PUTIH SOLID #FFFFFF) -->
                         <div
-
-                            class="lg:col-span-8 bg-[#FFFFFF] rounded-2xl p-6 sm:p-8 text-[#252525] shadow-xl border border-[#E5E7EB]"
+                            class="lg:col-span-8 w-full bg-[#FFFFFF] rounded-2xl p-6 sm:p-8 text-[#252525] shadow-xl border border-[#E5E7EB] min-w-0"
                             x-data="{
                                 deskripsi: @js(old('deskripsi', '')),
                                 fileSelected: null,
@@ -400,17 +376,10 @@
                                         <label for="kategori" class="block text-xs font-bold text-[#252525] mb-1.5">
                                             Kategori Laporan <span class="text-[#B01116]">*</span>
                                         </label>
-                                        <div class="relative">
-
-                                            <select 
-                                                id="kategori" 
-                                                name="kategori" 
-
+                                        <div class="relative w-full">
                                             <select
                                                 id="kategori"
                                                 name="kategori"
-                                                x-model="kategori"
-
                                                 required
                                                 class="w-full appearance-none rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] py-2.5 px-3.5 pr-10 text-xs sm:text-sm text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                             >
@@ -435,17 +404,11 @@
                                         <label for="judul" class="block text-xs font-bold text-[#252525] mb-1.5">
                                             Judul Laporan <span class="text-[#B01116]">*</span>
                                         </label>
-
-                                        <input 
-                                            type="text" 
-                                            id="judul" 
-                                            name="judul" 
-                                            value="{{ old('judul') }}"
                                         <input
                                             type="text"
                                             id="judul"
                                             name="judul"
-                                            x-model="judul"
+                                            value="{{ old('judul') }}"
                                             required
                                             placeholder="Contoh: AC Ruang Kelas A-301 Tidak Berfungsi"
                                             class="w-full rounded-lg border border-[#E5E7EB] py-2.5 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
@@ -455,26 +418,26 @@
 
                                     <!-- Field 3: Deskripsi Laporan -->
                                     <div>
-                                        <div class="flex items-center justify-between mb-1.5">
-                                            <label for="deskripsi" class="block text-xs font-bold text-[#252525]">
-                                                Deskripsi Laporan <span class="text-[#B01116]">*</span>
-                                            </label>
-                                            <span
-                                                class="text-[11px] font-medium"
+                                        <label for="deskripsi" class="block text-xs font-bold text-[#252525] mb-1.5">
+                                            Deskripsi Laporan <span class="text-[#B01116]">*</span>
+                                        </label>
+                                        <div class="relative w-full">
+                                            <textarea
+                                                id="deskripsi"
+                                                name="deskripsi"
+                                                rows="5"
+                                                x-model="deskripsi"
+                                                required
+                                                minlength="30"
+                                                placeholder="Jelaskan kronologi, waktu kejadian, dan dampak yang Anda alami..."
+                                                class="w-full rounded-lg border border-[#E5E7EB] p-3.5 pb-8 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition resize-y min-h-[120px]"
+                                            >{{ old('deskripsi') }}</textarea>
+                                            <div
+                                                class="pointer-events-none absolute right-3.5 bottom-2.5 text-[11px] font-medium"
                                                 :class="deskripsi.length < 30 ? 'text-[#6B7280]' : 'text-[#16A34A] font-semibold'"
                                                 x-text="deskripsi.length + ' karakter'"
-                                            ></span>
+                                            ></div>
                                         </div>
-                                        <textarea
-                                            id="deskripsi"
-                                            name="deskripsi"
-                                            rows="5"
-                                            x-model="deskripsi"
-                                            required
-                                            minlength="30"
-                                            placeholder="Jelaskan kronologi, waktu kejadian, dan dampak yang Anda alami..."
-                                            class="w-full rounded-lg border border-[#E5E7EB] p-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition resize-y"
-                                        >{{ old('deskripsi') }}</textarea>
                                         <p class="text-[11px] text-[#6B7280] mt-1">Minimum 30 karakter. Jangan mencantumkan data sensitif.</p>
                                     </div>
 
@@ -483,10 +446,10 @@
                                         <label for="lokasi" class="block text-xs font-bold text-[#252525] mb-1.5">
                                             Lokasi Kejadian <span class="text-[#B01116]">*</span>
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            id="lokasi" 
-                                            name="lokasi" 
+                                        <input
+                                            type="text"
+                                            id="lokasi"
+                                            name="lokasi"
                                             value="{{ old('lokasi') }}"
                                             required
                                             placeholder="Contoh: Gedung A, Ruang A-301"
@@ -515,7 +478,7 @@
                                         @dragover.prevent="isDragging = true"
                                         @dragleave.prevent="isDragging = false"
                                         @drop.prevent="handleFileDrop($event)"
-                                        class="rounded-xl border-2 border-dashed p-6 sm:p-7 text-center transition-all duration-200"
+                                        class="w-full rounded-xl border-2 border-dashed p-6 sm:p-7 text-center transition-all duration-200"
                                         :class="isDragging ? 'border-[#B01116] bg-[#FCE8E8]/40' : 'border-[#E5E7EB] bg-[#FAFAFA] hover:border-gray-300'"
                                     >
                                         <template x-if="!fileSelected">
@@ -583,12 +546,12 @@
                                     </div>
 
                                     <!-- Kotak Checkbox Laporan Anonim -->
-                                    <div class="rounded-xl border border-[#E5E7EB] p-4 bg-[#FFFFFF] hover:border-gray-300 transition">
+                                    <div class="w-full rounded-xl border border-[#E5E7EB] p-4 bg-[#FFFFFF] hover:border-gray-300 transition">
                                         <label for="anonim" class="flex items-start gap-3.5 cursor-pointer">
-                                            <input 
-                                                type="checkbox" 
-                                                id="anonim" 
-                                                name="is_anonim" 
+                                            <input
+                                                type="checkbox"
+                                                id="anonim"
+                                                name="is_anonim"
                                                 value="1"
                                                 {{ old('is_anonim') ? 'checked' : '' }}
                                                 class="w-4 h-4 mt-0.5 rounded border-[#E5E7EB] text-[#B01116] focus:ring-[#B01116] transition cursor-pointer"
@@ -607,14 +570,14 @@
 
                                 <!-- Tombol Aksi di Bawah Form -->
                                 <div class="flex items-center justify-end gap-3 mt-8 pt-2">
-                                    <a 
+                                    <a
                                         href="{{ route('dashboard') }}"
                                         class="px-5 sm:px-6 py-2.5 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] text-xs sm:text-sm font-semibold text-[#252525] hover:bg-gray-50 transition shadow-xs text-center cursor-pointer"
                                     >
-                                        Kembali
+                                        Batal
                                     </a>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         class="flex items-center gap-2 px-5 sm:px-6 py-2.5 rounded-lg bg-[#B01116] hover:bg-[#970e13] text-xs sm:text-sm font-semibold text-[#FFFFFF] shadow-sm transition cursor-pointer"
                                     >
                                         <span class="text-[#FFFFFF]">Kirim Laporan</span>
@@ -628,7 +591,7 @@
                         </div>
 
                         <!-- KOLOM INFORMASI SAMPING KANAN -->
-                        <div class="lg:col-span-4 space-y-4">
+                        <div class="lg:col-span-4 w-full space-y-4 min-w-0">
                             <!-- KARTU 1: Sebelum mengirim -->
                             <div class="bg-[#FFFFFF] rounded-2xl p-5 text-[#252525] shadow-xl border border-[#E5E7EB]">
                                 <h3 class="text-xs sm:text-sm font-bold text-[#252525] mb-3">

@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PusatBantuanController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Depan / Welcome
@@ -44,6 +45,10 @@ Route::get('/notifikasi/baca/{id}', [NotificationController::class, 'markAsRead'
 Route::get('/profil', [ProfileController::class, 'show'])->name('profil');
 Route::get('/profile-saya', [ProfileController::class, 'show']);
 Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name('profil.phone.update');
+
+// Pusat Bantuan
+Route::get('/pusat-bantuan', [PusatBantuanController::class, 'index'])->name('pusat.bantuan');
+Route::get('/bantuan', fn () => redirect()->route('pusat.bantuan'));
 
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {
