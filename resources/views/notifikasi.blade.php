@@ -1,59 +1,31 @@
 @php
-    // Data statis notifikasi
-    $notifications = [
-        [
-            'id' => 1,
-            'icon' => 'progress',
-            'title' => 'Progres laporan diperbarui',
-            'desc' => 'Tim unit telah memperbarui progres CV-2026-00124 menjadi 65%.',
-            'time' => '5 menit lalu',
-            'unread' => true,
-            'tiket' => 'CV-2026-00124',
-        ],
-        [
-            'id' => 2,
-            'icon' => 'forward',
-            'title' => 'Laporan telah diteruskan',
-            'desc' => 'CV-2026-00119 diteruskan ke Direktorat Pusat Teknologi Informasi.',
-            'time' => '2 jam lalu',
-            'unread' => true,
-            'tiket' => 'CV-2026-00119',
-        ],
-        [
-            'id' => 3,
-            'icon' => 'response',
-            'title' => 'Tanggapan baru dari unit',
-            'desc' => 'Budi Santoso memberikan tanggapan pada laporan CV-2026-00124.',
-            'time' => 'Kemarin, 16.20',
-            'unread' => true,
-            'tiket' => 'CV-2026-00124',
-        ],
-        [
-            'id' => 4,
-            'icon' => 'completed',
-            'title' => 'Laporan telah selesai',
-            'desc' => 'CV-2026-00108 telah ditandai selesai. Anda dapat memberikan penilaian.',
-            'time' => '12 Okt 2026',
-            'unread' => false,
-            'tiket' => 'CV-2026-00108',
-        ],
-        [
-            'id' => 5,
-            'icon' => 'submitted',
-            'title' => 'Laporan berhasil dikirim',
-            'desc' => 'Laporan CV-2026-00097 telah diterima dan menunggu verifikasi SSC.',
-            'time' => '8 Okt 2026',
-            'unread' => false,
-            'tiket' => 'CV-2026-00097',
-        ],
-    ];
+    $authUser = $authUser ?? Auth::user() ?? \App\Models\User::first();
+    $authName = $authUser ? $authUser->name : 'Pengguna';
+    $authRole = ($authUser && $authUser->role) ? $authUser->role : 'Mahasiswa';
 
-    // Helper url detail laporan
-    $detailUrl = fn ($tiket) => \Illuminate\Support\Facades\Route::has('laporan.detail')
-        ? route('laporan.detail', $tiket)
-        : (\Illuminate\Support\Facades\Route::has('laporan.show')
-            ? route('laporan.show', $tiket)
-            : url('/laporan/detail/' . $tiket));
+    $authWords = preg_split('/\s+/', trim($authName));
+    $authInitials = '';
+    foreach ($authWords as $w) { $authInitials .= mb_strtoupper(mb_substr($w, 0, 1)); }
+    $authInitials = substr($authInitials, 0, 2) ?: 'CV';
+
+    $authFirstName = $authWords[0] ?? $authName;
+
+    // Ambil data notifikasi dinamis dari database
+    $notifications = $notifications ?? \App\Models\AppNotification::where('user_id', $authUser?->id)->orderBy('created_at', 'desc')->get();
+    $unreadCount = $notifications->where('is_read', false)->count();
+
+    $notifItems = $notifications->map(function ($n) {
+        return [
+            'id' => $n->id,
+            'icon' => $n->icon,
+            'title' => $n->title,
+            'desc' => $n->desc,
+            'time' => $n->formatted_time,
+            'unread' => !$n->is_read,
+            'tiket' => $n->tiket,
+            'url' => route('notifikasi.read', $n->id),
+        ];
+    })->values();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#FFFFFF]">
@@ -90,7 +62,7 @@
         [x-cloak] { display: none !important; }
         body, input, select, button { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* Linear Gradient Konten Utama: Merah #B01116 (kiri bawah) ke Abu-abu Gelap #58595B (kanan atas) */
+        /* Linear Gradient Konten Utama: Merah #B01116 ke Abu-abu Gelap #58595B */
         .content-gradient-bg {
             background: linear-gradient(to top right, #B01116 0%, #58595B 100%);
         }
@@ -101,7 +73,7 @@
     x-data="{
         mobileSidebarOpen: false,
         activeTab: 'all',
-        items: {{ \Illuminate\Support\Js::from($notifications) }},
+        items: @js($notifItems),
         get unreadCount() {
             return this.items.filter(i => i.unread).length;
         },
@@ -115,10 +87,15 @@
             return this.items;
         },
         markAllAsRead() {
-            this.items = this.items.map(i => ({ ...i, unread: false }));
-        },
-        goToDetail(tiket) {
-            window.location.href = '{{ url('/laporan/detail') }}/' + tiket;
+            fetch('{{ route('notifikasi.markAll') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            }).then(() => {
+                this.items = this.items.map(i => ({ ...i, unread: false }));
+            });
         }
     }"
 >
@@ -134,7 +111,7 @@
             <div class="flex flex-col flex-1 overflow-y-auto">
                 <!-- Logo -->
                 <div class="px-6 py-5 flex items-center gap-3">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" />
+                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
                     <div>
                         <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight">CampusVoice</span>
                         <p class="text-[10px] text-[#6B7280] font-medium leading-tight">Telkom University Surabaya</p>
@@ -143,11 +120,11 @@
 
                 <!-- Navigasi Menu -->
                 <div class="px-4 py-3 flex-1">
-                    <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wider mb-2 uppercase">Mahasiswa</p>
+                    <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wider mb-2 uppercase">{{ $authRole }}</p>
 
                     <nav class="space-y-1">
                         <!-- Menu 1: Dashboard -->
-                        <a href="{{ url('/dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:bg-gray-50 transition group">
+                        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:bg-gray-50 transition group">
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <rect width="7" height="7" x="3" y="3" rx="1.5"/>
                                 <rect width="7" height="7" x="14" y="3" rx="1.5"/>
@@ -178,7 +155,7 @@
                             <span>Riwayat Laporan</span>
                         </a>
 
-                        <!-- Menu 4: Notifikasi (AKTIF - Background #FCE8E8 & Teks/Ikon #B01116) -->
+                        <!-- Menu 4: Notifikasi (AKTIF) -->
                         <a href="{{ route('notifikasi') }}" aria-current="page" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -188,11 +165,11 @@
                                 <span>Notifikasi</span>
                             </div>
                             <span 
-                                class="inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full"
+                                class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full"
                                 x-text="unreadCount"
                                 x-show="unreadCount > 0"
                             >
-                                3
+                                {{ $unreadCount }}
                             </span>
                         </a>
 
@@ -208,21 +185,35 @@
                 </div>
             </div>
 
-            <!-- Footer Sidebar: Keluar & Kotak Butuh Bantuan (#B01116) -->
+            <!-- Footer Sidebar -->
             <div class="p-4 border-t border-[#E5E7EB] space-y-3">
-                <button type="button" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
-                    <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    <span>Keluar</span>
-                </button>
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
+                            <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span>Keluar</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
+                        <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        <span>Masuk Akun</span>
+                    </a>
+                @endauth
 
                 <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
                     <h4 class="text-sm font-bold tracking-tight">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
+                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan Student Service Center.</p>
+                    <a href="https://wa.me/62811333000" target="_blank" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
                         Pusat Bantuan
                     </a>
                 </div>
@@ -250,6 +241,7 @@
                         <input
                             type="text"
                             placeholder="Cari nomor tiket atau laporan..."
+                            onkeydown="if(event.key === 'Enter'){ window.location.href='{{ route('laporan.riwayat') }}?q=' + encodeURIComponent(this.value); }"
                             class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
                         />
                     </div>
@@ -262,19 +254,21 @@
                             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
                         </svg>
                         <span 
-                            class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full ring-2 ring-[#FFFFFF]"
+                            class="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full ring-2 ring-[#FFFFFF]"
                             x-text="unreadCount"
                             x-show="unreadCount > 0"
                         >
-                            3
+                            {{ $unreadCount }}
                         </span>
                     </a>
 
                     <a href="{{ route('profil') }}" class="flex items-center gap-2.5 group">
-                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 group-hover:ring-2 group-hover:ring-[#B01116]/30 transition">DA</div>
+                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 group-hover:ring-2 group-hover:ring-[#B01116]/30 transition">
+                            {{ $authInitials }}
+                        </div>
                         <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">Dimas Arya</p>
-                            <p class="text-[11px] text-[#6B7280] leading-tight">Mahasiswa</p>
+                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">{{ $authFirstName }}</p>
+                            <p class="text-[11px] text-[#6B7280] leading-tight">{{ $authRole }}</p>
                         </div>
                     </a>
                 </div>
@@ -286,7 +280,7 @@
             <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-8">
                 <div class="max-w-7xl mx-auto">
 
-                    <!-- Header Notifikasi: Judul & Tombol "Tandai semua telah dibaca" -->
+                    <!-- Header Notifikasi -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
                             <h1 class="text-2xl sm:text-3xl font-bold text-[#FFFFFF] tracking-tight">Notifikasi</h1>
@@ -304,12 +298,10 @@
                         </div>
                     </div>
 
-                    <!-- Layout Grid 2 Kolom: Kolom Kiri Lebar & Kolom Kanan Sempit -->
+                    <!-- Layout Grid 2 Kolom -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                        <!-- ===================================================== -->
-                        <!-- KOLOM KIRI (Kartu Daftar Notifikasi - Background Putih) -->
-                        <!-- ===================================================== -->
+                        <!-- KOLOM KIRI (Daftar Notifikasi) -->
                         <div class="lg:col-span-8 xl:col-span-9 bg-[#FFFFFF] rounded-2xl shadow-xl overflow-hidden">
 
                             <!-- Navigasi Tab -->
@@ -327,7 +319,7 @@
                                         :class="activeTab === 'all' ? 'bg-[#FCE8E8] text-[#B01116]' : 'bg-gray-100 text-[#6B7280]'"
                                         x-text="totalCount"
                                     >
-                                        6
+                                        {{ count($notifItems) }}
                                     </span>
                                 </button>
 
@@ -344,23 +336,22 @@
                                         :class="activeTab === 'unread' ? 'bg-[#FCE8E8] text-[#B01116]' : 'bg-gray-100 text-[#6B7280]'"
                                         x-text="unreadCount"
                                     >
-                                        3
+                                        {{ $unreadCount }}
                                     </span>
                                 </button>
                             </div>
 
-                            <!-- Daftar Item Notifikasi -->
+                            <!-- Daftar Item Notifikasi Dinamis -->
                             <div class="divide-y divide-[#E5E7EB]">
                                 <template x-for="item in filteredItems" :key="item.id">
                                     <a
-                                        :href="'{{ url('/laporan/detail') }}/' + item.tiket"
+                                        :href="item.url"
                                         class="block px-6 py-5 transition cursor-pointer group"
                                         :class="item.unread ? 'bg-[#FEF2F2] hover:bg-[#FEEAEA]' : 'bg-[#FFFFFF] hover:bg-[#F9FAFB]'"
                                     >
                                         <div class="flex items-start gap-4">
-                                            <!-- Ikon Kiri Berlatar Abu Terang -->
+                                            <!-- Ikon Kiri -->
                                             <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 text-[#6B7280] group-hover:scale-105 transition">
-                                                <!-- Ikon 1: Progres (Network/Sliders/Branch) -->
                                                 <template x-if="item.icon === 'progress'">
                                                     <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                                         <circle cx="12" cy="18" r="3"/>
@@ -371,7 +362,6 @@
                                                     </svg>
                                                 </template>
 
-                                                <!-- Ikon 2: Panah Kanan (Diteruskan) -->
                                                 <template x-if="item.icon === 'forward'">
                                                     <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <line x1="5" y1="12" x2="19" y2="12"/>
@@ -379,7 +369,6 @@
                                                     </svg>
                                                 </template>
 
-                                                <!-- Ikon 3: Dokumen (Tanggapan) -->
                                                 <template x-if="item.icon === 'response'">
                                                     <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -389,14 +378,12 @@
                                                     </svg>
                                                 </template>
 
-                                                <!-- Ikon 4: Centang (Selesai) -->
                                                 <template x-if="item.icon === 'completed'">
                                                     <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                                         <polyline points="20 6 9 17 4 12"/>
                                                     </svg>
                                                 </template>
 
-                                                <!-- Ikon 5: Perisai Centang (Terkirim) -->
                                                 <template x-if="item.icon === 'submitted'">
                                                     <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -412,7 +399,7 @@
                                                 <p class="text-[11px] sm:text-xs text-[#6B7280] mt-1.5" x-text="item.time"></p>
                                             </div>
 
-                                            <!-- Titik Merah (#B01116) untuk yang Belum Dibaca -->
+                                            <!-- Titik Merah Belum Dibaca -->
                                             <div class="shrink-0 pt-1.5 pl-2">
                                                 <template x-if="item.unread">
                                                     <span class="block w-2.5 h-2.5 rounded-full bg-[#B01116] shadow-xs"></span>
@@ -422,7 +409,7 @@
                                     </a>
                                 </template>
 
-                                <!-- State Kosong (Jika tidak ada item belum dibaca) -->
+                                <!-- State Kosong -->
                                 <div x-show="filteredItems.length === 0" x-cloak class="py-12 px-6 text-center">
                                     <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-[#6B7280] mb-3">
                                         <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -436,11 +423,8 @@
                             </div>
                         </div>
 
-                        <!-- ===================================================== -->
-                        <!-- KOLOM KANAN (Kartu Info Sidebar - Background Putih) -->
-                        <!-- ===================================================== -->
+                        <!-- KOLOM KANAN -->
                         <div class="lg:col-span-4 xl:col-span-3 bg-[#FFFFFF] rounded-2xl shadow-xl p-6 sm:p-7">
-                            <!-- Ikon Lonceng Warna Merah #B01116 -->
                             <div class="w-6 h-6 text-[#B01116] mb-3">
                                 <svg class="w-6 h-6 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -448,14 +432,12 @@
                                 </svg>
                             </div>
 
-                            <!-- Judul Gelap #252525 -->
                             <h2 class="text-sm sm:text-base font-bold text-[#252525] tracking-tight">
                                 Tetap terinformasi
                             </h2>
 
-                            <!-- Deskripsi Abu-abu #6B7280 -->
                             <p class="text-xs text-[#6B7280] leading-relaxed mt-2">
-                                Notifikasi dikirim untuk perubahan status, tanggapan, penyelesaian, dan pembukaan kembali laporan.
+                                Notifikasi dikirim untuk pembaruan status laporan, respon dari unit penangan, dan verifikasi berkas.
                             </p>
                         </div>
 
@@ -467,4 +449,3 @@
     </div>
 </body>
 </html>
-

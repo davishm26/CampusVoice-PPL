@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('laporan_tanggapans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('laporan_id')->constrained('laporans')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->string('nama_pengirim');
+            $table->string('role_pengirim')->default('Mahasiswa'); // Mahasiswa, Admin SSC, Petugas Unit
+            $table->text('pesan');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('laporan_tanggapans');
+    }
+};
+

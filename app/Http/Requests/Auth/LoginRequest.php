@@ -28,7 +28,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
     }
@@ -42,13 +42,24 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $loginInput = trim($this->input('email'));
+        $password = $this->input('password');
+
+        // Cari user berdasarkan email, NIM, atau username (prefix sebelum @)
+        $user = \App\Models\User::where('email', $loginInput)
+            ->orWhere('nim', $loginInput)
+            ->orWhere('email', 'like', $loginInput . '@%')
+            ->first();
+
+        if (! $user || ! \Illuminate\Support\Facades\Hash::check($password, $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
+
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }

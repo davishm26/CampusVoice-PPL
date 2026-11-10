@@ -1,89 +1,51 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// Halaman Depan / Welcome
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/laporan/buat', function () {
-    return view('laporan.create');
-})->name('laporan.create');
+// Dashboard Mahasiswa (Dinamis dari Database)
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard-mahasiswa', [DashboardController::class, 'index']);
+Route::get('/beranda', [DashboardController::class, 'index']);
 
-Route::get('/laporan-baru', function () {
-    return view('laporan.create');
-});
+// Fitur Laporan (Buat, Simpan, Riwayat, Detail, Tanggapan)
+Route::get('/laporan/buat', [LaporanController::class, 'create'])->name('laporan.create');
+Route::get('/laporan-baru', [LaporanController::class, 'create']);
+Route::post('/laporan', [LaporanController::class, 'store'])->name('laporan.store');
 
-Route::get('/laporan/sukses', function () {
-    return view('laporan.success');
-})->name('laporan.success');
+Route::get('/laporan/sukses/{tiket?}', [LaporanController::class, 'success'])->name('laporan.success');
+Route::get('/laporan-sukses', [LaporanController::class, 'success']);
 
-Route::get('/laporan-sukses', function () {
-    return view('laporan.success');
-});
+Route::get('/laporan/riwayat', [LaporanController::class, 'riwayat'])->name('laporan.riwayat');
+Route::get('/riwayat-laporan', [LaporanController::class, 'riwayat']);
+Route::get('/riwayat', [LaporanController::class, 'riwayat']);
 
-Route::get('/profil', function () {
-    return view('profil');
-})->name('profil');
+Route::get('/laporan/detail/{tiket?}', [LaporanController::class, 'detail'])->name('laporan.detail');
+Route::get('/detail-laporan/{tiket?}', [LaporanController::class, 'detail']);
+Route::post('/laporan/detail/{tiket}/tanggapan', [LaporanController::class, 'storeTanggapan'])->name('laporan.tanggapan');
+Route::post('/laporan/detail/{tiket}/buka-kembali', [LaporanController::class, 'bukaKembali'])->name('laporan.reopen');
+Route::post('/laporan/detail/{tiket}/penilaian', [LaporanController::class, 'simpanPenilaian'])->name('laporan.rating');
 
-Route::get('/profile-saya', function () {
-    return view('profil');
-});
-Route::get('/laporan/riwayat', function () {
-    return view('laporan.riwayat');
-})->name('laporan.riwayat');
+// Notifikasi
+Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi');
+Route::get('/notif', [NotificationController::class, 'index']);
+Route::post('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.markAll');
+Route::get('/notifikasi/baca/{id}', [NotificationController::class, 'markAsRead'])->name('notifikasi.read');
 
-Route::get('/riwayat-laporan', function () {
-    return view('laporan.riwayat');
-});
+// Profil Saya (Kustom Dinamis & Update Kontak)
+Route::get('/profil', [ProfileController::class, 'show'])->name('profil');
+Route::get('/profile-saya', [ProfileController::class, 'show']);
+Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name('profil.phone.update');
 
-Route::get('/riwayat', function () {
-    return view('laporan.riwayat');
-});
-
-Route::get('/notifikasi', function () {
-    return view('notifikasi');
-})->name('notifikasi');
-
-Route::get('/notif', function () {
-    return view('notifikasi');
-});
-
-Route::get('/pusat-bantuan', function () {
-    return view('pusat-bantuan');
-})->name('pusat.bantuan');
-
-Route::get('/bantuan', function () {
-    return view('pusat-bantuan');
-});
-
-Route::get('/laporan/detail/{tiket?}', function ($tiket = 'CV-2026-00124') {
-    if (view()->exists('laporan.detail')) {
-        return view('laporan.detail', compact('tiket'));
-    }
-    if (view()->exists('laporan.show')) {
-        return view('laporan.show', compact('tiket'));
-    }
-    return redirect()->route('laporan.riwayat');
-})->name('laporan.detail');
-
-Route::get('/detail-laporan/{tiket?}', function ($tiket = 'CV-2026-00124') {
-    return redirect()->route('laporan.detail', $tiket);
-});  
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
-
-Route::get('/dashboard-mahasiswa', function () {
-    return view('dashboard');
-});
-
-Route::get('/beranda', function () {
-    return view('dashboard');
-});
-
+// Breeze default profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
