@@ -50,6 +50,14 @@ Route::get('/notif', function () {
     return view('notifikasi');
 });
 
+Route::get('/pusat-bantuan', function () {
+    return view('pusat-bantuan');
+})->name('pusat.bantuan');
+
+Route::get('/bantuan', function () {
+    return view('pusat-bantuan');
+});
+
 Route::get('/laporan/detail/{tiket?}', function ($tiket = 'CV-2026-00124') {
     if (view()->exists('laporan.detail')) {
         return view('laporan.detail', compact('tiket'));
