@@ -67,48 +67,45 @@
             background-color: #FFFFFF;
         }
 
-        /* Diagonal Hero Slice 1v1 Style (#58595B & #B01116) */
+        /* Diagonal Hero Slice Style (#B01116 ke #58595B) */
         .hero-diagonal-slice {
             clip-path: polygon(18% 0%, 100% 0%, 100% 100%, 0% 100%);
-            background: linear-gradient(135deg, rgba(88, 89, 91, 0.05) 0%, rgba(176, 17, 22, 0.10) 100%);
+            background: linear-gradient(135deg, #B01116 0%, #7d161a 50%, #58595B 100%);
         }
 
         @media (min-width: 1024px) {
             .hero-diagonal-slice {
-                clip-path: polygon(22% 0%, 100% 0%, 100% 100%, 5% 100%);
+                clip-path: polygon(24% 0%, 100% 0%, 100% 100%, 0% 100%);
             }
         }
 
-        /* Footer Background Matching Design #360608 */
+        /* Footer Gradient Background (#B01116 ke #58595B) */
         .footer-exact-bg {
-            background-color: #360608;
+            background: linear-gradient(135deg, #4A4B4E 0%, #6E1B1E 45%, #B01116 100%);
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-[#B01116] selection:text-white" x-data="{ mobileMenuOpen: false }">
 
     <!-- ========================================================= -->
-    <!-- 1. NAVBAR (Background #FFFFFF)                             -->
+    <!-- 1. NAVBAR (Background #FFFFFF Full-Width)                  -->
     <!-- ========================================================= -->
-    <header class="w-full bg-[#FFFFFF] border-b border-[#E5E7EB]/60 sticky top-0 z-50">
+    <header class="w-full bg-[#FFFFFF] border-b border-[#E5E7EB] sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <!-- Sisi Kiri: Logo CampusVoice Telkom University Surabaya -->
+            <!-- Sisi Kiri: Logo merah-putih CampusVoice + Telkom University Surabaya -->
             <a href="{{ url('/') }}" class="flex items-center gap-3 group">
-                <!-- Red Voice Bubble Icon -->
-                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" 
-                         alt="Logo CampusVoice" 
-                         class="w-10 h-10 object-contain"
-                         onerror="this.onerror=null; this.parentElement.innerHTML='<svg class=\'w-9 h-9 text-[#B01116]\' viewBox=\'0 0 40 40\' fill=\'currentColor\'><path d=\'M6 18c0-6.627 5.373-12 12-12h4c6.627 0 12 5.373 12 12 0 6.627-5.373 12-12 12h-2.5l-6.5 4.5v-4.5H18C11.373 30 6 24.627 6 18z\' fill=\'#B01116\'/><path d=\'M15 15a3 3 0 0 1 0 6M19 12a6 6 0 0 1 0 12M23 9a9 9 0 0 1 0 18\' stroke=\'white\' stroke-width=\'2.2\' stroke-linecap=\'round\' fill=\'none\'/></svg>';">
-                </div>
+                <img src="{{ asset('images/logo-campusvoice.png') }}"
+                     alt="CampusVoice Logo"
+                     class="w-9 h-9 object-contain shrink-0"
+                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-9 h-9 rounded-full bg-[#B01116] flex items-center justify-center shrink-0\'><svg class=\'w-5 h-5 text-white\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\' fill=\'#B01116\'/><path d=\'M8 9h.01M12 9h.01M16 9h.01\' stroke=\'#FFFFFF\' stroke-width=\'2.5\'/></svg></div>';">
                 <div>
-                    <span class="text-xl font-extrabold text-[#252525] tracking-tight block leading-tight">CampusVoice</span>
+                    <span class="text-lg sm:text-xl font-extrabold text-[#252525] tracking-tight block leading-tight">CampusVoice</span>
                     <span class="text-xs font-medium text-[#6B7280] block leading-tight">Telkom University Surabaya</span>
                 </div>
             </a>
 
-            <!-- Sisi Tengah: Teks Navigasi (#252525) -->
-            <nav class="hidden md:flex items-center gap-8 lg:gap-10">
+            <!-- Sisi Tengah: Menu Navigasi Rapi & Berjarak Longgar (#252525) -->
+            <nav class="hidden md:flex items-center gap-10 lg:gap-14">
                 <a href="{{ url('/') }}" class="text-[15px] font-semibold text-[#252525] hover:text-[#B01116] transition-colors">
                     Beranda
                 </a>
@@ -141,9 +138,9 @@
 
             <!-- Hamburger Button for Mobile -->
             <div class="md:hidden flex items-center">
-                <button @click="mobileMenuOpen = !mobileMenuOpen" 
-                        type="button" 
-                        class="p-2 rounded-lg text-[#252525] hover:bg-gray-100 focus:outline-none" 
+                <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        type="button"
+                        class="p-2 rounded-lg text-[#252525] hover:bg-gray-100 focus:outline-none"
                         aria-label="Buka menu navigasi">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -154,8 +151,8 @@
         </div>
 
         <!-- Mobile Drawer Menu -->
-        <div x-show="mobileMenuOpen" 
-             x-cloak 
+        <div x-show="mobileMenuOpen"
+             x-cloak
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 -translate-y-2"
              x-transition:enter-end="opacity-100 translate-y-0"
@@ -202,10 +199,10 @@
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                
+
                 <!-- SISI KIRI: Headline, Deskripsi, CTA, Checklist -->
                 <div class="lg:col-span-7 flex flex-col items-start z-10">
-                    
+
                     <!-- Label kecil di atas: "Kanal resmi aspirasi mahasiswa" -->
                     <div class="inline-flex items-center gap-2 mb-5">
                         <!-- Shield Check Icon Merah #B01116 -->
@@ -233,7 +230,7 @@
                         <!-- Tombol Merah: Masuk dengan Akun Kampus + Panah Putih -->
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ url('/dashboard') }}" 
+                                <a href="{{ url('/dashboard') }}"
                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
                                     <span>Buka Dashboard</span>
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -254,7 +251,7 @@
                                 </a>
                             @endauth
                         @else
-                            <a href="{{ url('/login') }}" 
+                            <a href="{{ url('/login') }}"
                                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
                                 <span>Masuk dengan Akun Kampus</span>
                                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -264,7 +261,7 @@
                         @endif
 
                         <!-- Tombol Putih: Lihat Statistik Pengaduan -->
-                        <a href="#statistik" 
+                        <a href="#statistik"
                            class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-white border border-[#E5E7EB] text-[#252525] text-[15px] font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
                             Lihat Statistik Pengaduan
                         </a>
@@ -291,14 +288,17 @@
 
                 </div>
 
-                <!-- SISI KANAN: Mockup Antarmuka (UI) Melayang & Floating Badges -->
-                <div class="lg:col-span-5 relative mt-6 lg:mt-0 flex justify-center">
-                    
-                    <!-- WRAPPER KARTU MOCKUP -->
-                    <div class="relative w-full max-w-[460px]">
-                        
-                        <!-- Floating Badge Atas Kanan: "Teruskan ke Unit" -->
-                        <div class="absolute -top-6 -right-2 sm:-right-6 z-20 bg-white rounded-2xl p-3 sm:p-3.5 shadow-xl border border-gray-100/80 flex items-center gap-3">
+                <!-- SISI KANAN: Visual Abstrak Glassmorphism (Layered Floating Cards) -->
+                <div class="lg:col-span-5 relative mt-10 lg:mt-0 flex justify-center items-center py-6 lg:py-0">
+
+                    <!-- WRAPPER KARTU MELAYANG -->
+                    <div class="relative w-full max-w-[440px]">
+
+                        <!-- Layer Belakang: Glassmorphism Frosted Plate -->
+                        <div class="absolute -top-6 -left-6 sm:-left-10 w-72 h-44 bg-white/20 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl -rotate-6 pointer-events-none"></div>
+
+                        <!-- Floating Badge 1 (Atas Kanan): "Teruskan ke Unit" -->
+                        <div class="absolute -top-6 -right-2 sm:-right-6 z-20 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-[0_15px_35px_-5px_rgba(0,0,0,0.25)] border border-white/80 flex items-center gap-3">
                             <div class="w-9 h-9 rounded-full bg-[#DCFCE7] flex items-center justify-center shrink-0">
                                 <svg class="w-5 h-5 text-[#16A34A]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
@@ -310,29 +310,41 @@
                             </div>
                         </div>
 
-                        <!-- KARTU UTAMA MOCKUP LAPORAN -->
-                        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex min-h-[300px]">
-                            
-                            <!-- Sidebar Mini Kiri Mockup (Maroon / Dark Red Bar) -->
-                            <div class="w-16 sm:w-20 bg-[#421013] py-5 px-3 sm:px-4 flex flex-col items-center gap-3 shrink-0">
-                                <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center mb-2">
-                                    <div class="w-3.5 h-3.5 rounded-full bg-white/70"></div>
+                        <!-- KARTU TERATAS (PALING DEPAN): Kartu Tiket Aktif "Permohonan Perbaikan AC" -->
+                        <div class="relative z-10 bg-white/95 backdrop-blur-md rounded-3xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] border border-white/80 p-6 sm:p-7 space-y-4">
+
+                            <!-- Header Kartu: Mini Logo & Status Verifikasi -->
+                            <div class="flex items-center justify-between pb-3 border-b border-[#E5E7EB]/70">
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ asset('images/logo-campusvoice.png') }}"
+                                         alt=""
+                                         class="w-6 h-6 object-contain"
+                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-6 h-6 rounded-full bg-[#B01116] flex items-center justify-center\'><svg class=\'w-3.5 h-3.5 text-white\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\'><path d=\'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\' fill=\'#B01116\'/></svg></div>';">
+                                    <div>
+                                        <span class="text-xs font-bold text-[#B01116] block leading-tight">CampusVoice</span>
+                                        <span class="text-[9px] text-[#6B7280] block leading-tight">Telkom University Surabaya</span>
+                                    </div>
                                 </div>
-                                <div class="w-full h-2 rounded-full bg-white/40"></div>
-                                <div class="w-full h-2 rounded-full bg-white/20"></div>
-                                <div class="w-3/4 h-2 rounded-full bg-white/20 self-start"></div>
+                                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-0.5 rounded-full">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM13.707 8.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Terverifikasi</span>
+                                </div>
                             </div>
 
-                            <!-- Area Konten Mockup -->
-                            <div class="flex-1 p-5 sm:p-6 lg:p-7 flex flex-col justify-between">
-                                
-                                <!-- Top Browser Dots -->
-                                <div>
-                                    <div class="flex items-center gap-1.5 mb-5">
-                                        <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                                        <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                            <!-- Baris Nomor Tiket & Badge Status Diproses -->
+                            <div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <div>
+                                        <p class="text-[10px] font-extrabold text-[#6B7280] tracking-wider uppercase">LAPORAN AKTIF</p>
+                                        <p class="text-xs font-bold text-[#252525]">CV-2026-00124</p>
                                     </div>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-[#7C3AED] bg-[#F5F3FF]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#7C3AED]"></span>
+                                        Diproses
+                                    </span>
+                                </div>
 
                                     <!-- Tag Laporan Aktif -->
                                     <p class="text-[10px] font-bold text-[#6B7280] tracking-wider uppercase mb-1.5">
@@ -360,7 +372,6 @@
                                     <div class="w-full bg-[#E5E7EB] rounded-full h-2.5 mt-5 overflow-hidden">
                                         <div class="bg-[#B01116] h-2.5 rounded-full transition-all duration-500" style="width: {{ $progressVal }}%;"></div>
                                     </div>
-                                </div>
 
                                 <!-- Progress Stepper Timeline Bawah (4 Steps) -->
                                 <div class="pt-6">
@@ -400,7 +411,20 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
+                        </div>
+
+                        <!-- Floating Badge 2 (Bawah Kiri): Notifikasi "Progres diperbarui Hari ini, 09.24" -->
+                        <div class="absolute -bottom-6 -left-3 sm:-left-8 z-20 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-[0_15px_35px_-5px_rgba(0,0,0,0.25)] border border-white/80 flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#FCE8E8] text-[#B01116] flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-[#B01116]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-[#252525] leading-tight">Progres diperbarui</h4>
+                                <p class="text-[11px] text-[#6B7280] leading-tight mt-0.5">Hari ini, 09.24</p>
                             </div>
                         </div>
 
@@ -431,7 +455,7 @@
     <!-- ========================================================= -->
     <section id="alur-penanganan" class="bg-[#FFFFFF] py-20 lg:py-24 border-t border-[#E5E7EB]/40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
+
             <!-- Header Section (Center Aligned) -->
             <div class="text-center max-w-3xl mx-auto mb-14 lg:mb-16">
                 <!-- Label Atas: Merah #B01116, Tebal -->
@@ -450,7 +474,7 @@
 
             <!-- Grid 4 Kartu Langkah (Border #E5E7EB, Icon Pink #FCE8E8) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                
+
                 <!-- KARTU 01: Kirim Laporan -->
                 <div class="bg-white border border-[#E5E7EB] rounded-2xl p-6 lg:p-7 relative flex flex-col justify-between hover:shadow-lg hover:border-gray-300 transition-all duration-200">
                     <!-- Angka Besar Abu-abu Terang di Pojok Kanan Atas -->
@@ -574,7 +598,7 @@
     <section id="statistik" class="bg-[#F7F7F8] py-20 lg:py-24 border-t border-[#E5E7EB]/60">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-                
+
                 <!-- Sisi Kiri: Label Merah, Judul Besar, Deskripsi -->
                 <div class="lg:col-span-5">
                     <p class="text-xs sm:text-sm font-bold text-[#B01116] tracking-wider uppercase mb-3">
@@ -591,7 +615,7 @@
                 <!-- Sisi Kanan: Grid 4 Kotak Putih Statistik -->
                 <div class="lg:col-span-7">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
-                        
+
                         <!-- Kotak 1: Total Laporan -->
                         <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-xs border border-[#E5E7EB]/60 hover:shadow-md transition-shadow">
                             <span class="text-4xl lg:text-[42px] font-extrabold text-[#252525] tracking-tight block mb-2 leading-none">
@@ -641,50 +665,55 @@
 
 
     <!-- ========================================================= -->
-    <!-- 5. FOOTER (Background #360608 Sesuai Desain Acuan)         -->
+    <!-- 5. FOOTER (Gradient Merah-Gelap Diagonal #B01116 ke #58595B)-->
     <!-- ========================================================= -->
-    <footer class="footer-exact-bg text-white pt-14 pb-8">
+    <footer class="w-full text-white pt-14 pb-8 sm:pt-16 sm:pb-10" style="background: linear-gradient(135deg, #58595B 0%, #7d171c 45%, #B01116 100%);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <!-- Baris Atas: Logo CampusVoice (Merah) + Tagline -->
-            <div class="flex flex-col md:flex-row items-center justify-center gap-5 md:gap-8 mb-7 text-center md:text-left">
-                <!-- Logo CampusVoice -->
-                <div class="flex items-center gap-3 shrink-0">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" 
-                         alt="Logo CampusVoice" 
-                         class="w-10 h-10 object-contain shrink-0"
-                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-10 h-10 rounded-full bg-[#B01116] flex items-center justify-center shrink-0\'><svg class=\'w-6 h-6 text-white\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\' fill=\'#B01116\'/><path d=\'M8 9h.01M12 9h.01M16 9h.01\' stroke=\'#FFFFFF\' stroke-width=\'2.5\'/></svg></div>';">
-                    <div class="text-left">
-                        <span class="text-xl font-extrabold text-white tracking-tight block leading-tight">CampusVoice</span>
-                        <span class="text-xs font-normal text-white/90 block leading-tight">Telkom University Surabaya</span>
+
+            <!-- Konten Utama: 2 Kolom Seimbang -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-start">
+
+                <!-- Sisi Kiri: Logo Putih CampusVoice & Deskripsi Singkat -->
+                <div class="md:col-span-7 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <img src="{{ asset('images/logo-campusvoice.png') }}"
+                             alt="Logo CampusVoice"
+                             class="w-9 h-9 object-contain shrink-0"
+                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0\'><svg class=\'w-5 h-5 text-white\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\' fill=\'#FFFFFF\'/><path d=\'M8 9h.01M12 9h.01M16 9h.01\' stroke=\'#B01116\' stroke-width=\'2.5\'/></svg></div>';">
+                        <div>
+                            <span class="text-xl sm:text-2xl font-extrabold text-white tracking-tight block leading-tight">CampusVoice</span>
+                            <span class="text-xs font-medium text-white/80 block leading-tight">Telkom University Surabaya</span>
+                        </div>
+                    </div>
+
+                    <p class="text-sm font-normal text-white/85 leading-relaxed max-w-md pt-1">
+                        Kanal resmi pengaduan dan aspirasi mahasiswa Telkom University Surabaya.
+                    </p>
+                </div>
+
+                <!-- Sisi Kanan: Judul NAVIGASI & Menu Tautan Sejajar Horizontal -->
+                <div class="md:col-span-5 md:flex md:flex-col md:items-end space-y-2.5">
+                    <p class="text-xs font-bold tracking-widest text-white/60 uppercase">
+                        NAVIGASI
+                    </p>
+                    <div class="flex items-center gap-6 sm:gap-8 flex-wrap">
+                        <a href="{{ url('/') }}" class="text-sm font-medium text-white/85 hover:text-white transition-colors">
+                            Beranda
+                        </a>
+                        <a href="#alur-penanganan" class="text-sm font-medium text-white/85 hover:text-white transition-colors">
+                            Tentang
+                        </a>
+                        <a href="mailto:ssc@telkomuniversity.ac.id" class="text-sm font-medium text-white/85 hover:text-white transition-colors">
+                            Pusat Bantuan
+                        </a>
                     </div>
                 </div>
 
-                <!-- Tagline Resmi -->
-                <p class="text-sm font-normal text-white/95 leading-normal">
-                    Kanal resmi pengaduan dan aspirasi mahasiswa Telkom University Surabaya.
-                </p>
             </div>
 
-            <!-- Baris Tengah: Tautan Menu (Beranda, Tentang, ssc@telkomuniversity.ac.id) -->
-            <div class="flex flex-wrap items-center justify-center gap-8 sm:gap-10 mb-9">
-                <a href="{{ url('/') }}" class="text-[15px] font-medium text-white hover:text-white/80 transition-colors">
-                    Beranda
-                </a>
-                <a href="#alur-penanganan" class="text-[15px] font-medium text-white hover:text-white/80 transition-colors">
-                    Tentang
-                </a>
-                <a href="mailto:ssc@telkomuniversity.ac.id" class="text-[15px] font-medium text-white hover:text-white/80 transition-colors">
-                    ssc@telkomuniversity.ac.id
-                </a>
-            </div>
-
-            <!-- Garis Pembatas Tipis (#57292B) -->
-            <div class="w-full border-t border-[#57292B] mb-6"></div>
-
-            <!-- Baris Bawah: Hak Cipta -->
-            <div>
-                <p class="text-xs text-[#B39294]">
+            <!-- Garis Pembatas Horizontal Tipis (border-t warna putih transparan) -->
+            <div class="w-full border-t border-white/15 mt-10 sm:mt-12 pt-6">
+                <p class="text-xs text-white/50">
                     © 2026 CampusVoice. Hak cipta dilindungi.
                 </p>
             </div>

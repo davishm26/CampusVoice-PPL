@@ -98,9 +98,16 @@
 
                     <nav class="space-y-1">
                         <!-- Menu 1: Dashboard (AKTIF) -->
+
                         <a 
                             href="{{ route('dashboard') }}" 
                             aria-current="page" 
+
+                        <a
+                            href="{{ url('/dashboard') }}"
+                            @click="backToDashboard()"
+                            aria-current="page"
+
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition"
                         >
                             <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -188,8 +195,13 @@
 
                 <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
                     <h4 class="text-sm font-bold tracking-tight">Butuh bantuan?</h4>
+
                     <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan Student Service Center.</p>
                     <a href="https://wa.me/62811333000" target="_blank" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
+
+                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
+                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 inline-block py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center transition">
+
                         Pusat Bantuan
                     </a>
                 </div>
