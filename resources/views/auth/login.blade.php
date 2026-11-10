@@ -70,7 +70,16 @@
         }
     </style>
 </head>
-<body class="h-full bg-white antialiased" x-data="{ showPassword: false, isLoading: false }">
+<body class="h-full bg-white antialiased" x-data="{ 
+    showPassword: false, 
+    isLoading: false, 
+    showDemoAccounts: false,
+    selectAccount(email) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = 'password';
+        this.showDemoAccounts = false;
+    }
+}">
 
     <div class="min-h-screen flex flex-col lg:flex-row">
 
@@ -128,8 +137,8 @@
         <!-- ============================================================= -->
         <div class="bg-white lg:w-1/2 flex flex-col min-h-screen">
 
-            <!-- Navigasi Atas: Kembali ke beranda -->
-            <div class="px-8 sm:px-12 lg:px-16 pt-8 pb-4">
+            <!-- Navigasi Atas: Kembali ke beranda & Link Register -->
+            <div class="px-8 sm:px-12 lg:px-16 pt-8 pb-4 flex items-center justify-between">
                 <a
                     href="{{ url('/') }}"
                     class="inline-flex items-center gap-1.5 text-sm font-bold text-[#B01116] hover:text-[#8e0d12] transition-colors group"
@@ -144,6 +153,11 @@
                     </svg>
                     Kembali ke beranda
                 </a>
+
+                <span class="text-xs text-[#6B7280]">
+                    Belum punya akun?
+                    <a href="{{ route('register') }}" class="font-bold text-[#B01116] hover:underline ml-1">Daftar</a>
+                </span>
             </div>
 
             <!-- Area Form — Terpusat Vertikal -->
@@ -184,10 +198,10 @@
                     >
                         @csrf
 
-                        <!-- Input Username (Email) -->
+                        <!-- Input Username (Email / NIM / Username) -->
                         <div>
                             <label for="email" class="block text-sm font-bold text-[#252525] mb-1.5">
-                                Username<span class="text-[#B01116] ml-0.5">*</span>
+                                Username / NIM / Email SSO<span class="text-[#B01116] ml-0.5">*</span>
                             </label>
                             <input
                                 id="email"
@@ -195,7 +209,7 @@
                                 type="text"
                                 autocomplete="username"
                                 value="{{ old('email') }}"
-                                placeholder="username sso"
+                                placeholder="Email, NIM, atau username SSO"
                                 required
                                 autofocus
                                 class="block w-full rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#252525] placeholder-[#6B7280] transition-all duration-150 hover:border-gray-300 @error('email') border-red-400 @enderror"
@@ -259,7 +273,7 @@
                         <button
                             type="submit"
                             :disabled="isLoading"
-                            class="w-full flex items-center justify-center gap-2 rounded-xl bg-[#B01116] hover:bg-[#8e0d12] active:bg-[#780b0f] text-white font-bold text-sm py-3.5 transition-colors duration-150 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                            class="w-full flex items-center justify-center gap-2 rounded-xl bg-[#B01116] hover:bg-[#8e0d12] active:bg-[#780b0f] text-white font-bold text-sm py-3.5 transition-colors duration-150 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                         >
                             <svg x-show="isLoading" x-cloak class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -267,6 +281,13 @@
                             </svg>
                             <span x-text="isLoading ? 'Memproses...' : 'Masuk'">Masuk</span>
                         </button>
+
+                        <div class="pt-2 text-center">
+                            <span class="text-xs text-[#6B7280]">Belum punya akun?</span>
+                            <a href="{{ route('register') }}" class="text-xs font-bold text-[#B01116] hover:underline ml-1">
+                                Daftar sebagai Mahasiswa
+                            </a>
+                        </div>
                     </form>
 
                     <!-- Kotak Info Keamanan -->
@@ -278,8 +299,45 @@
                             </svg>
                         </div>
                         <p class="text-xs text-[#6B7280] leading-relaxed">
-                            Akses dilindungi dan dikelola menggunakan akun resmi kampus. Tidak ada pendaftaran akun publik.
+                            Akses dilindungi SSO kampus. Masuk dengan <strong>Email</strong>, <strong>NIM</strong>, atau <strong>Username</strong> (Password: <code class="text-[#B01116] bg-red-50 px-1 py-0.5 rounded font-mono">password</code>).
                         </p>
+                    </div>
+
+                    <!-- Kotak Pilihan Akun Mahasiswa Demo -->
+                    <div class="mt-4 rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-xs">
+                        <button
+                            type="button"
+                            @click="showDemoAccounts = !showDemoAccounts"
+                            class="w-full px-4 py-3 bg-gray-50/70 hover:bg-gray-100/70 text-left flex items-center justify-between text-xs font-bold text-[#252525] transition"
+                        >
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#B01116]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Pilih Cepat Akun Demo (10 Mahasiswa)
+                            </span>
+                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" :class="showDemoAccounts ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        <div x-show="showDemoAccounts" x-cloak class="p-3 max-h-56 overflow-y-auto divide-y divide-gray-100 text-xs">
+                            @foreach (\App\Models\User::all() as $demoUser)
+                                <div class="py-2 flex items-center justify-between gap-2 hover:bg-red-50/50 px-2 rounded-lg transition">
+                                    <div class="truncate">
+                                        <p class="font-bold text-[#252525] truncate">{{ $demoUser->name }}</p>
+                                        <p class="text-[11px] text-[#6B7280] truncate">{{ $demoUser->nim }} • {{ $demoUser->prodi }}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        @click="selectAccount('{{ $demoUser->email }}')"
+                                        class="shrink-0 px-2.5 py-1 rounded bg-[#FCE8E8] hover:bg-[#B01116] text-[#B01116] hover:text-white font-bold text-[11px] transition"
+                                    >
+                                        Pilih
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
                 </div>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\AppNotification;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +13,67 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    protected function getActiveUser(): User
+    {
+        if (Auth::check()) {
+            return Auth::user();
+        }
+
+        if (request()->filled('user_id')) {
+            $u = User::find(request('user_id'));
+            if ($u) return $u;
+        }
+
+        if (request()->filled('nim')) {
+            $u = User::where('nim', request('nim'))->first();
+            if ($u) return $u;
+        }
+
+        return User::first() ?? new User();
+    }
+
+    /**
+     * Display the campus voice custom profile page.
+     */
+    public function show(Request $request): View
+    {
+        $authUser = $this->getActiveUser();
+
+        $unreadCount = AppNotification::where('user_id', $authUser->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('profil', compact('authUser', 'unreadCount'));
+    }
+
+    /**
+     * Update the user's phone number.
+     */
+    public function updatePhone(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|max:25',
+        ], [
+            'phone.required' => 'Nomor telepon wajib diisi.',
+        ]);
+
+        $user = $this->getActiveUser();
+        if ($user) {
+            $user->phone = $request->phone;
+            $user->save();
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nomor telepon berhasil diperbarui.',
+                'phone' => $user->phone,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Nomor telepon berhasil diperbarui.');
+    }
+
     /**
      * Display the user's profile form.
      */

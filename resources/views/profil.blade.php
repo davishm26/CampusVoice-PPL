@@ -1,3 +1,23 @@
+@php
+    $authUser = $authUser ?? Auth::user() ?? \App\Models\User::first();
+    $name = $authUser ? $authUser->name : '-';
+    $email = $authUser ? $authUser->email : '-';
+    $nim = ($authUser && $authUser->nim) ? $authUser->nim : '-';
+    $prodi = ($authUser && $authUser->prodi) ? $authUser->prodi : '-';
+    $fakultas = ($authUser && $authUser->fakultas) ? $authUser->fakultas : '-';
+    $phone = ($authUser && $authUser->phone) ? $authUser->phone : '-';
+    $role = ($authUser && $authUser->role) ? $authUser->role : 'Mahasiswa';
+
+    $words = preg_split('/\s+/', trim($name));
+    $initials = '';
+    foreach ($words as $w) {
+        $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+    }
+    $initials = substr($initials, 0, 2) ?: 'CV';
+
+    $firstName = $words[0] ?? $name;
+    $unreadCount = $unreadCount ?? \App\Models\AppNotification::where('user_id', $authUser?->id)->where('is_read', false)->count();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#FFFFFF]">
 <head>
@@ -47,7 +67,7 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* Linear Gradient Konten Utama: Merah #B01116 (0%) ke Abu-abu Gelap #58595B (100%) */
+        /* Linear Gradient Konten Utama: Merah #B01116 ke Abu-abu Gelap #58595B */
         .content-gradient-bg {
             background: linear-gradient(to top right, #B01116 0%, #58595B 100%);
         }
@@ -58,8 +78,10 @@
     x-data="{
         mobileSidebarOpen: false,
         isEditing: false,
-        nomorTelepon: '0812 3456 7890',
-        tempNomorTelepon: '0812 3456 7890',
+        saving: false,
+        saveSuccessMsg: '',
+        nomorTelepon: @js($phone),
+        tempNomorTelepon: @js($phone),
         startEdit() {
             this.tempNomorTelepon = this.nomorTelepon;
             this.isEditing = true;
@@ -69,24 +91,44 @@
             this.isEditing = false;
         },
         saveEdit() {
-            this.nomorTelepon = this.tempNomorTelepon;
-            this.isEditing = false;
+            this.saving = true;
+            fetch('{{ route('profil.phone.update') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ phone: this.tempNomorTelepon })
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.nomorTelepon = this.tempNomorTelepon;
+                this.isEditing = false;
+                this.saving = false;
+                this.saveSuccessMsg = 'Nomor telepon berhasil diperbarui!';
+                setTimeout(() => this.saveSuccessMsg = '', 3000);
+            })
+            .catch(err => {
+                this.saving = false;
+                alert('Gagal memperbarui nomor telepon.');
+            });
         }
     }"
 >
     <div class="min-h-screen flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
-        <!-- SIDEBAR KIRI (Lebar Tetap - Fill Solid White #FFFFFF) -->
+        <!-- SIDEBAR KIRI -->
         <!-- ========================================================= -->
         <aside
             class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shadow-xs"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
-                <!-- Logo CampusVoice Telkom University Surabaya -->
+                <!-- Logo -->
                 <div class="px-6 py-5 flex items-center gap-3 border-b border-transparent">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" />
+                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
                     <div>
                         <div class="flex items-center gap-1">
                             <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight">CampusVoice</span>
@@ -98,12 +140,12 @@
                 <!-- Navigasi Menu -->
                 <div class="px-4 py-3 flex-1">
                     <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wider mb-2 uppercase">
-                        Mahasiswa
+                        {{ $role }}
                     </p>
 
                     <nav class="space-y-1">
-                        <!-- Menu 1: Dashboard (Netral) -->
-                        <a href="{{ url('/dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
+                        <!-- Menu 1: Dashboard -->
+                        <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <rect width="7" height="7" x="3" y="3" rx="1.5"/>
                                 <rect width="7" height="7" x="14" y="3" rx="1.5"/>
@@ -113,16 +155,16 @@
                             <span>Dashboard</span>
                         </a>
 
-                        <!-- Menu 2: Buat Laporan (Netral) -->
-                        <a href="{{ url('/laporan-baru') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Menu 2: Buat Laporan -->
+                        <a href="{{ route('laporan.create') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
                                 <line x1="5" y1="12" x2="19" y2="12"/>
                             </svg>
                             <span>Buat Laporan</span>
                         </a>
 
-                        <!-- Menu 3: Riwayat Laporan (Netral) -->
+                        <!-- Menu 3: Riwayat Laporan -->
                         <a href="{{ route('laporan.riwayat') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -134,7 +176,7 @@
                             <span>Riwayat Laporan</span>
                         </a>
 
-                        <!-- Menu 4: Notifikasi (Netral dengan Badge '3') -->
+                        <!-- Menu 4: Notifikasi -->
                         <a href="{{ route('notifikasi') }}" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#252525] hover:text-[#000000] hover:bg-gray-50 transition group">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -143,14 +185,16 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="inline-flex items-center justify-center w-5 h-5 text-[11px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full">
-                                3
-                            </span>
+                            @if ($unreadCount > 0)
+                                <span class="inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full">
+                                    {{ $unreadCount }}
+                                </span>
+                            @endif
                         </a>
 
-                        <!-- Menu 5: Profil Saya (AKTIF - Background #FCE8E8 & Teks #B01116) -->
-                        <a href="{{ url('/profil') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition">
-                            <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Menu 5: Profil Saya (AKTIF) -->
+                        <a href="{{ route('profil') }}" aria-current="page" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition">
+                            <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
                                 <circle cx="12" cy="7" r="4"/>
                             </svg>
@@ -160,42 +204,42 @@
                 </div>
             </div>
 
-            <!-- Footer Sidebar: Keluar & Kotak Butuh Bantuan (#B01116) -->
+            <!-- Footer Sidebar -->
             <div class="p-4 border-t border-[#E5E7EB] space-y-3">
-                <button type="button" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
-                    <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                    <span>Keluar</span>
-                </button>
-
-                <!-- Kotak Butuh Bantuan Merah (#B01116) -->
-                <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
-                    <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a href="javascript:void(0)" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
-                        Pusat Bantuan
+                @auth
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
+                            <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span>Keluar</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#B01116] hover:bg-[#FCE8E8] rounded-xl transition">
+                        <svg class="w-5 h-5 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        <span>Masuk Akun</span>
                     </a>
-                </div>
+                @endauth
             </div>
         </aside>
 
         <!-- Overlay Mobile -->
-        <div
-            x-show="mobileSidebarOpen"
-            x-cloak
-            @click="mobileSidebarOpen = false"
-            class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
-        ></div>
+        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 lg:hidden"></div>
 
         <!-- ========================================================= -->
-        <!-- AREA UTAMA (Header + Konten Utama) -->
+        <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
         <div class="flex-1 flex flex-col min-w-0">
 
-            <!-- HEADER ATAS (Search Bar & Profil - Background Solid White #FFFFFF) -->
+            <!-- HEADER ATAS -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] h-16 flex items-center justify-between px-4 sm:px-8 shrink-0">
                 <div class="flex items-center gap-3">
                     <button
@@ -212,6 +256,7 @@
                         <input
                             type="text"
                             placeholder="Cari nomor tiket atau laporan..."
+                            onkeydown="if(event.key === 'Enter'){ window.location.href='{{ route('laporan.riwayat') }}?q=' + encodeURIComponent(this.value); }"
                             class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
                         />
                     </div>
@@ -223,18 +268,20 @@
                             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
                             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
                         </svg>
-                        <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full ring-2 ring-[#FFFFFF]">
-                            3
-                        </span>
+                        @if ($unreadCount > 0)
+                            <span class="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-[#FFFFFF] bg-[#B01116] rounded-full ring-2 ring-[#FFFFFF]">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
                     </a>
 
-                    <a href="{{ url('/profil') }}" class="flex items-center gap-2.5 group">
+                    <a href="{{ route('profil') }}" class="flex items-center gap-2.5 group">
                         <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 group-hover:ring-2 group-hover:ring-[#B01116]/30 transition">
-                            DA
+                            {{ $initials }}
                         </div>
                         <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">Dimas Arya</p>
-                            <p class="text-[11px] text-[#6B7280] leading-tight">Mahasiswa</p>
+                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">{{ $name }}</p>
+                            <p class="text-[11px] text-[#6B7280] leading-tight">{{ $role }}</p>
                         </div>
                     </a>
                 </div>
@@ -246,6 +293,14 @@
             <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto">
 
+                    <!-- Alert Notifikasi Update Kontak -->
+                    <div x-show="saveSuccessMsg" x-cloak class="mb-4 p-4 rounded-xl bg-emerald-500/90 text-white font-semibold text-sm flex items-center gap-2 shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span x-text="saveSuccessMsg"></span>
+                    </div>
+
                     <!-- Header Halaman -->
                     <div class="mb-6">
                         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
@@ -256,27 +311,23 @@
                         </p>
                     </div>
 
-                    <!-- ===================================================== -->
-                    <!-- KARTU PROFIL UTAMA (Background Solid White #FFFFFF) -->
-                    <!-- ===================================================== -->
+                    <!-- KARTU PROFIL UTAMA -->
                     <div class="bg-[#FFFFFF] rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 text-[#252525] shadow-xl border border-[#E5E7EB]">
 
                         <!-- BAGIAN ATAS: Info Pengguna & Tombol Edit -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
                             <!-- Kiri: Avatar & Identitas -->
                             <div class="flex items-center gap-4 sm:gap-5">
-                                <!-- Kotak Avatar Besar Bersudut Melengkung -->
                                 <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#FCE8E8] text-[#B01116] font-bold text-xl sm:text-2xl flex items-center justify-center shrink-0 shadow-xs">
-                                    DA
+                                    {{ $initials }}
                                 </div>
                                 <div>
                                     <h2 class="text-lg sm:text-xl font-bold text-[#252525] leading-tight">
-                                        Dimas Arya Irwansyah
+                                        {{ $name }}
                                     </h2>
                                     <p class="text-xs sm:text-sm text-[#6B7280] mt-1 font-normal">
-                                        Mahasiswa • S1 Sistem Informasi
+                                        {{ $role }} • {{ $prodi }}
                                     </p>
-                                    <!-- Badge Status: Akun Aktif -->
                                     <div class="mt-2">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ECFDF5] text-[#16A34A] text-xs font-semibold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-[#16A34A]"></span>
@@ -286,7 +337,7 @@
                                 </div>
                             </div>
 
-                            <!-- Kanan: Tombol Edit Profil (HILANG saat mode edit aktif) -->
+                            <!-- Kanan: Tombol Edit Profil -->
                             <div x-show="!isEditing" x-transition>
                                 <button
                                     type="button"
@@ -311,14 +362,14 @@
                                 </svg>
                             </div>
                             <p class="text-xs text-[#6B7280] leading-relaxed">
-                                Identitas utama disinkronkan dari akun kampus dan tidak dapat diubah melalui CampusVoice.
+                                Identitas utama disinkronkan dari akun kampus Telkom University dan tidak dapat diubah melalui CampusVoice.
                             </p>
                         </div>
 
-                        <!-- GRID FORMULIR DATA DIRI (2 Kolom) -->
+                        <!-- GRID FORMULIR DATA DIRI -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
 
-                            <!-- Baris 1: Nama Lengkap & NIM (Read-only) -->
+                            <!-- Baris 1: Nama Lengkap & NIM -->
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
                                     Nama Lengkap
@@ -326,7 +377,7 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="Dimas Arya Irwansyah"
+                                    value="{{ $name }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
@@ -338,20 +389,20 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="102062400113"
+                                    value="{{ $nim }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
 
-                            <!-- Baris 2: Email Institusi & Peran Akun (Read-only) -->
+                            <!-- Baris 2: Email & Peran Akun -->
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
-                                    Email Institusi
+                                    Email
                                 </label>
                                 <input
                                     type="text"
                                     readonly
-                                    value="dimasai@student.telkomuniversity.ac.id"
+                                    value="{{ $email }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
@@ -363,12 +414,12 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="Mahasiswa"
+                                    value="{{ $role }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
 
-                            <!-- Baris 3: Program Studi & Institusi (Read-only) -->
+                            <!-- Baris 3: Program Studi & Fakultas -->
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
                                     Program Studi
@@ -376,24 +427,24 @@
                                 <input
                                     type="text"
                                     readonly
-                                    value="S1 Sistem Informasi"
+                                    value="{{ $prodi }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
-                                    Institusi
+                                    Fakultas
                                 </label>
                                 <input
                                     type="text"
                                     readonly
-                                    value="Fakultas Rekayasa Industri"
+                                    value="{{ $fakultas }}"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
 
-                            <!-- Baris 4: Nomor Telepon (Editable saat isEditing = true) -->
+                            <!-- Baris 4: Nomor Telepon (Editable) -->
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
                                     Nomor Telepon
@@ -412,43 +463,44 @@
                                     x-cloak
                                     class="text-[11px] sm:text-xs text-[#6B7280] mt-1.5"
                                 >
-                                    Gunakan nomor yang aktif untuk kebutuhan koordinasi.
+                                    Gunakan nomor yang aktif untuk kebutuhan koordinasi penanganan laporan.
                                 </p>
                             </div>
 
-                            <!-- Baris 4: Terakhir Masuk (Read-only) -->
+                            <!-- Baris 4: Terakhir Masuk -->
                             <div>
                                 <label class="block text-xs font-bold text-[#252525] mb-1.5">
-                                    Terakhir Masuk
+                                    Status Sinkronisasi
                                 </label>
                                 <input
                                     type="text"
                                     readonly
-                                    value="19 Oktober 2026, 08.12 WIB"
+                                    value="Tersinkronisasi SSO Telkom University"
                                     class="w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] py-2.5 sm:py-3 px-4 text-xs sm:text-sm text-[#6B7280] cursor-not-allowed select-none focus:outline-none"
                                 />
                             </div>
 
                         </div>
 
-                        <!-- FOOTER FORMULIR (Tombol Batal & Simpan Perubahan saat Mode Edit) -->
+                        <!-- FOOTER FORMULIR (Saat Mode Edit) -->
                         <div x-show="isEditing" x-cloak x-transition class="border-t border-[#E5E7EB] mt-8 pt-5">
                             <div class="flex items-center justify-end gap-3">
-                                <!-- Tombol Batal -->
                                 <button
                                     type="button"
                                     @click="cancelEdit()"
+                                    :disabled="saving"
                                     class="px-5 sm:px-6 py-2.5 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] text-xs sm:text-sm font-bold text-[#252525] hover:bg-gray-50 transition shadow-xs cursor-pointer"
                                 >
                                     Batal
                                 </button>
-                                <!-- Tombol Simpan Perubahan -->
                                 <button
                                     type="button"
                                     @click="saveEdit()"
-                                    class="px-5 sm:px-6 py-2.5 rounded-xl bg-[#B01116] hover:bg-[#970e13] text-xs sm:text-sm font-bold text-[#FFFFFF] shadow-sm transition cursor-pointer"
+                                    :disabled="saving"
+                                    class="px-5 sm:px-6 py-2.5 rounded-xl bg-[#B01116] hover:bg-[#970e13] text-xs sm:text-sm font-bold text-[#FFFFFF] shadow-sm transition cursor-pointer flex items-center gap-2"
                                 >
-                                    Simpan Perubahan
+                                    <span x-show="!saving">Simpan Perubahan</span>
+                                    <span x-show="saving" x-cloak>Menyimpan...</span>
                                 </button>
                             </div>
                         </div>

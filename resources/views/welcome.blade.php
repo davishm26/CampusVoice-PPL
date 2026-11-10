@@ -1,3 +1,17 @@
+@php
+    $dbTotal = \App\Models\Laporan::count();
+    $dbSelesai = \App\Models\Laporan::where('status', 'Selesai')->count();
+    $dbProses = \App\Models\Laporan::whereIn('status', ['Diproses', 'Diteruskan'])->count();
+    $dbMenunggu = \App\Models\Laporan::where('status', 'Menunggu Verifikasi')->count();
+
+    $statTotal = $dbTotal;
+    $statSelesai = $dbSelesai;
+    $statProses = $dbProses;
+    $statMenunggu = $dbMenunggu;
+
+    $sampleReport = \App\Models\Laporan::whereIn('status', ['Diproses', 'Diteruskan'])->latest()->first() 
+        ?? \App\Models\Laporan::latest()->first();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full scroll-smooth">
 <head>
@@ -106,26 +120,23 @@
                 </a>
             </nav>
 
-            <!-- Sisi Kanan: Tombol Masuk dengan Akun Kampus (#B01116) -->
-            <div class="hidden md:flex items-center">
-                @if (Route::has('login'))
-                    @auth
-                        <a href="{{ url('/dashboard') }}" 
-                           class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
-                            Buka Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" 
-                           class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
-                            Masuk dengan Akun Kampus
-                        </a>
-                    @endauth
-                @else
-                    <a href="{{ url('/login') }}" 
+            <!-- Sisi Kanan: Tombol Masuk & Daftar Mahasiswa -->
+            <div class="hidden md:flex items-center gap-2.5">
+                @auth
+                    <a href="{{ url('/dashboard') }}" 
                        class="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
-                        Masuk dengan Akun Kampus
+                        Buka Dashboard
                     </a>
-                @endif
+                @else
+                    <a href="{{ route('register') }}" 
+                       class="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-[#E5E7EB] text-[#252525] text-sm font-semibold hover:bg-gray-50 transition-all duration-200">
+                        Daftar Mahasiswa
+                    </a>
+                    <a href="{{ route('login') }}" 
+                       class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#B01116] text-white text-sm font-semibold hover:bg-[#950e12] shadow-sm hover:shadow transition-all duration-200">
+                        Masuk Akun
+                    </a>
+                @endauth
             </div>
 
             <!-- Hamburger Button for Mobile -->
@@ -230,12 +241,16 @@
                                     </svg>
                                 </a>
                             @else
-                                <a href="{{ route('login') }}" 
+                                <a href="{{ route('register') }}" 
                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-[#B01116] text-white text-[15px] font-semibold hover:bg-[#950e12] shadow-sm hover:shadow-md transition-all duration-200">
-                                    <span>Masuk dengan Akun Kampus</span>
+                                    <span>Daftar Akun Mahasiswa</span>
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
                                     </svg>
+                                </a>
+                                <a href="{{ route('login') }}" 
+                                   class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-white border border-[#E5E7EB] text-[#252525] text-[15px] font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+                                    Masuk Akun
                                 </a>
                             @endauth
                         @else
@@ -321,23 +336,29 @@
 
                                     <!-- Tag Laporan Aktif -->
                                     <p class="text-[10px] font-bold text-[#6B7280] tracking-wider uppercase mb-1.5">
-                                        LAPORAN AKTIF
+                                        LAPORAN AKTIF {{ $sampleReport ? '• ' . $sampleReport->nomor_tiket : '' }}
                                     </p>
 
                                     <!-- Judul Laporan -->
                                     <h3 class="text-base sm:text-lg font-bold text-[#252525] leading-snug mb-3">
-                                        Permohonan Perbaikan AC
+                                        {{ $sampleReport ? $sampleReport->judul : 'Permohonan Perbaikan AC' }}
                                     </h3>
 
-                                    <!-- Status Badge: Diproses -->
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F5F3FF] text-[#7C3AED] text-xs font-semibold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-[#7C3AED]"></span>
-                                        <span>Diproses</span>
+                                    @php
+                                        $badgeStyle = $sampleReport ? $sampleReport->status_badge : ['text' => '#7C3AED', 'bg' => '#F5F3FF', 'dot' => '#7C3AED'];
+                                        $progressVal = $sampleReport ? $sampleReport->progres : 65;
+                                        $statusText = $sampleReport ? $sampleReport->status : 'Diproses';
+                                    @endphp
+
+                                    <!-- Status Badge -->
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style="color: {{ $badgeStyle['text'] }}; background-color: {{ $badgeStyle['bg'] }};">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background-color: {{ $badgeStyle['dot'] }};"></span>
+                                        <span>{{ $statusText }}</span>
                                     </div>
 
-                                    <!-- Progress Bar Merah #B01116 (65%) -->
+                                    <!-- Progress Bar Merah #B01116 -->
                                     <div class="w-full bg-[#E5E7EB] rounded-full h-2.5 mt-5 overflow-hidden">
-                                        <div class="bg-[#B01116] h-2.5 rounded-full w-[65%]"></div>
+                                        <div class="bg-[#B01116] h-2.5 rounded-full transition-all duration-500" style="width: {{ $progressVal }}%;"></div>
                                     </div>
                                 </div>
 
@@ -347,36 +368,50 @@
                                         <!-- Garis Penghubung Stepper -->
                                         <div class="absolute left-2.5 right-2.5 top-1/2 -translate-y-1/2 h-0.5 bg-[#E5E7EB] z-0">
                                             <!-- Bagian aktif (hijau ke merah) -->
-                                            <div class="h-0.5 bg-[#16A34A] w-[66%]"></div>
+                                            <div class="h-0.5 bg-[#16A34A] transition-all duration-500" style="width: {{ $progressVal }}%;"></div>
                                         </div>
 
-                                        <!-- Node 1: Selesai (Hijau #16A34A) -->
+                                        <!-- Node 1: Selesai / Terkirim -->
                                         <div class="relative z-10 w-5 h-5 rounded-full bg-[#16A34A] border-2 border-white shadow-xs flex items-center justify-center">
                                             <div class="w-2 h-2 rounded-full bg-white"></div>
                                         </div>
 
-                                        <!-- Node 2: Selesai (Hijau #16A34A) -->
-                                        <div class="relative z-10 w-5 h-5 rounded-full bg-[#16A34A] border-2 border-white shadow-xs flex items-center justify-center">
-                                            <div class="w-2 h-2 rounded-full bg-white"></div>
+                                        <!-- Node 2: Terverifikasi -->
+                                        <div class="relative z-10 w-5 h-5 rounded-full {{ $progressVal >= 35 ? 'bg-[#16A34A]' : 'bg-white border-2 border-gray-300' }} border-2 border-white shadow-xs flex items-center justify-center">
+                                            @if ($progressVal >= 35)
+                                                <div class="w-2 h-2 rounded-full bg-white"></div>
+                                            @endif
                                         </div>
 
-                                        <!-- Node 3: Sedang Diproses (Merah #B01116 Ring) -->
-                                        <div class="relative z-10 w-5 h-5 rounded-full bg-white border-2 border-[#B01116] shadow-xs flex items-center justify-center">
-                                            <div class="w-2 h-2 rounded-full bg-[#B01116]"></div>
+                                        <!-- Node 3: Sedang Diproses -->
+                                        <div class="relative z-10 w-5 h-5 rounded-full {{ $progressVal >= 65 ? 'bg-[#16A34A]' : ($progressVal >= 40 ? 'bg-white border-2 border-[#B01116]' : 'bg-white border-2 border-gray-300') }} shadow-xs flex items-center justify-center">
+                                            @if ($progressVal >= 65)
+                                                <div class="w-2 h-2 rounded-full bg-white"></div>
+                                            @elseif ($progressVal >= 40)
+                                                <div class="w-2 h-2 rounded-full bg-[#B01116]"></div>
+                                            @endif
                                         </div>
 
-                                        <!-- Node 4: Menunggu (Abu-abu #D1D5DB) -->
-                                        <div class="relative z-10 w-5 h-5 rounded-full bg-white border-2 border-gray-300 shadow-xs"></div>
+                                        <!-- Node 4: Selesai -->
+                                        <div class="relative z-10 w-5 h-5 rounded-full {{ $progressVal >= 100 ? 'bg-[#16A34A]' : 'bg-white border-2 border-gray-300' }} shadow-xs flex items-center justify-center">
+                                            @if ($progressVal >= 100)
+                                                <div class="w-2 h-2 rounded-full bg-white"></div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
 
                             </div>
                         </div>
 
-                        <!-- Floating Badge Bawah Kiri: "Progres diperbarui 65%" -->
+                        <!-- Floating Badge Bawah Kiri: "Progres diperbarui" -->
                         <div class="absolute -bottom-5 -left-2 sm:-left-6 z-20 bg-white rounded-xl px-4 py-2.5 shadow-xl border border-gray-100/80 flex items-center gap-2.5">
                             <!-- Bell Icon Biru #2563EB -->
                             <svg class="w-5 h-5 text-[#2563EB] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                            </svg>
+                            <span class="text-xs sm:text-sm font-semibold text-[#252525]">Progres diperbarui {{ $progressVal }}%</span>
+                        </div>
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
                             </svg>
                             <span class="text-xs sm:text-sm font-semibold text-[#252525]">Progres diperbarui 65%</span>
@@ -543,7 +578,7 @@
                 <!-- Sisi Kiri: Label Merah, Judul Besar, Deskripsi -->
                 <div class="lg:col-span-5">
                     <p class="text-xs sm:text-sm font-bold text-[#B01116] tracking-wider uppercase mb-3">
-                        DATA DEMONSTRASI • OKTOBER 2026
+                        DATA STATISTIK KAMPUS • {{ strtoupper(now()->locale('id')->isoFormat('MMMM Y')) }}
                     </p>
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#252525] tracking-tight mb-4">
                         Transparansi dalam angka
@@ -560,7 +595,7 @@
                         <!-- Kotak 1: Total Laporan -->
                         <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-xs border border-[#E5E7EB]/60 hover:shadow-md transition-shadow">
                             <span class="text-4xl lg:text-[42px] font-extrabold text-[#252525] tracking-tight block mb-2 leading-none">
-                                1.248
+                                {{ number_format($statTotal, 0, ',', '.') }}
                             </span>
                             <span class="text-sm font-medium text-[#6B7280]">
                                 Total Laporan
@@ -570,7 +605,7 @@
                         <!-- Kotak 2: Laporan Selesai -->
                         <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-xs border border-[#E5E7EB]/60 hover:shadow-md transition-shadow">
                             <span class="text-4xl lg:text-[42px] font-extrabold text-[#252525] tracking-tight block mb-2 leading-none">
-                                892
+                                {{ number_format($statSelesai, 0, ',', '.') }}
                             </span>
                             <span class="text-sm font-medium text-[#6B7280]">
                                 Laporan Selesai
@@ -580,7 +615,7 @@
                         <!-- Kotak 3: Dalam Proses -->
                         <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-xs border border-[#E5E7EB]/60 hover:shadow-md transition-shadow">
                             <span class="text-4xl lg:text-[42px] font-extrabold text-[#252525] tracking-tight block mb-2 leading-none">
-                                267
+                                {{ number_format($statProses, 0, ',', '.') }}
                             </span>
                             <span class="text-sm font-medium text-[#6B7280]">
                                 Dalam Proses
@@ -590,7 +625,7 @@
                         <!-- Kotak 4: Menunggu Verifikasi -->
                         <div class="bg-white rounded-2xl p-6 lg:p-7 shadow-xs border border-[#E5E7EB]/60 hover:shadow-md transition-shadow">
                             <span class="text-4xl lg:text-[42px] font-extrabold text-[#252525] tracking-tight block mb-2 leading-none">
-                                89
+                                {{ number_format($statMenunggu, 0, ',', '.') }}
                             </span>
                             <span class="text-sm font-medium text-[#6B7280]">
                                 Menunggu Verifikasi
