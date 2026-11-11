@@ -38,6 +38,7 @@ Route::post('/laporan/detail/{tiket}/penilaian', [LaporanController::class, 'sim
 // Notifikasi
 Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi');
 Route::get('/notif', [NotificationController::class, 'index']);
+Route::get('/admin/notifikasi', [NotificationController::class, 'index'])->name('admin.notifikasi');
 Route::post('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.markAll');
 Route::get('/notifikasi/baca/{id}', [NotificationController::class, 'markAsRead'])->name('notifikasi.read');
 
