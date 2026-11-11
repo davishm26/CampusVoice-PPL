@@ -67,6 +67,18 @@ Route::get('/admin/monitoring-laporan', function () {
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
+// Petugas Unit: Notifikasi Unit
+Route::get('/unit/notifikasi', function () {
+    return view('unit.notifikasi');
+})->name('unit.notifikasi');
+Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
+
+// Super Admin: Log Aktivitas
+Route::get('/super-admin/log-aktivitas', function () {
+    return view('superadmin.log-aktivitas');
+})->name('superadmin.log');
+Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
+
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
