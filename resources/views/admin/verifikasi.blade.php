@@ -102,7 +102,7 @@
 
                         <!-- Menu 3: Monitoring Laporan -->
                         <a
-                            href="#"
+                            href="{{ route('admin.monitoring') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -115,7 +115,7 @@
 
                         <!-- Menu 4: Rekapitulasi -->
                         <a
-                            href="#"
+                            href="{{ route('admin.rekapitulasi') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -128,7 +128,7 @@
 
                         <!-- Menu 5: Notifikasi (Badge 3) -->
                         <a
-                            href="#"
+                            href="{{ route('admin.notifikasi') }}"
                             class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <div class="flex items-center gap-3">
@@ -148,7 +148,7 @@
                 <!-- Bagian Bawah: Profil & Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
                     <a
-                        href="#"
+                        href="{{ route('admin.profil') }}"
                         class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                     >
                         <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -224,8 +224,8 @@
                 <!-- Bagian Kanan: Lonceng Notifikasi & Profil Admin SSC -->
                 <div class="flex items-center gap-3 sm:gap-4">
                     <!-- Tombol Lonceng Notifikasi -->
-                    <button
-                        type="button"
+                    <a
+                        href="{{ route('admin.notifikasi') }}"
                         class="relative p-2 rounded-lg text-[#6B7280] hover:text-[#B01116] hover:bg-gray-100 transition cursor-pointer"
                         title="Notifikasi"
                     >
@@ -235,21 +235,21 @@
                         <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
                             3
                         </span>
-                    </button>
+                    </a>
 
                     <!-- Pemisah Vertikal -->
                     <div class="h-6 w-px bg-[#E5E7EB]"></div>
 
                     <!-- Profil Admin SSC: Siti Rahmawati -->
-                    <div class="flex items-center gap-2.5">
+                    <a href="{{ route('admin.profil') }}" class="flex items-center gap-2.5 group">
                         <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 ring-1 ring-[#B01116]/20">
                             SR
                         </div>
                         <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight">Siti Rahmawati</p>
+                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">Siti Rahmawati</p>
                             <p class="text-[11px] text-[#6B7280] leading-tight">Admin SSC</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </header>
 

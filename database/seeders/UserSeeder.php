@@ -93,9 +93,9 @@ class UserSeeder extends Seeder
             User::create($data);
         }
 
-        // 3. Tambahan Akun Staf (Admin SSC & Petugas Unit) untuk operasional pengaduan
+        // 3. Tambahan Akun Staf (Admin SSC, Petugas Unit, dan Super Admin) untuk operasional pengaduan
         User::create([
-            'name'              => 'Admin SSC',
+            'name'              => 'Siti Rahmawati',
             'email'             => 'admin.ssc@telkomuniversity.ac.id',
             'nim'               => '991001',
             'prodi'             => 'Layanan Mahasiswa',
@@ -109,7 +109,7 @@ class UserSeeder extends Seeder
 
         User::create([
             'name'              => 'Budi Santoso',
-            'email'             => 'budi.santoso@telkomuniversity.ac.id',
+            'email'             => 'unit@telkomuniversity.ac.id',
             'nim'               => '992002',
             'prodi'             => 'Logistik & Sarana',
             'fakultas'          => 'Direktorat Logistik dan Aset',
@@ -120,7 +120,20 @@ class UserSeeder extends Seeder
             'email_verified_at' => $now,
         ]);
 
-        $this->command->info('✅ Berhasil membersihkan user lama dan men-seed 5 akun mahasiswa (password: 12345678).');
+        User::create([
+            'name'              => 'Rizky Pratama',
+            'email'             => 'superadmin@telkomuniversity.ac.id',
+            'nim'               => '993003',
+            'prodi'             => 'Pusat Teknologi Informasi',
+            'fakultas'          => 'Direktorat Pusat Teknologi Informasi',
+            'phone'             => '081122334477',
+            'role'              => 'Super Admin',
+            'status_akun'       => 'Aktif',
+            'password'          => $defaultPassword,
+            'email_verified_at' => $now,
+        ]);
+
+        $this->command->info('✅ Berhasil membersihkan user lama dan men-seed 5 akun mahasiswa + 3 akun staf (Admin SSC, Petugas Unit, Super Admin) dengan password: 12345678.');
     }
 }
 

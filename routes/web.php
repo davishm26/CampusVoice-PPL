@@ -51,6 +51,11 @@ Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name(
 Route::get('/pusat-bantuan', [PusatBantuanController::class, 'index'])->name('pusat.bantuan');
 Route::get('/bantuan', fn () => redirect()->route('pusat.bantuan'));
 
+// Admin SSC: Dashboard
+Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+Route::get('/admin', fn () => redirect()->route('admin.dashboard'));
+Route::get('/dashboard-admin', fn () => redirect()->route('admin.dashboard'));
+
 // Admin SSC: Verifikasi Laporan & Detail Verifikasi
 Route::get('/admin/verifikasi-laporan', function () {
     return view('admin.verifikasi');
@@ -68,11 +73,23 @@ Route::get('/admin/monitoring-laporan', function () {
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
-// Petugas Unit: Notifikasi Unit
+// Admin SSC: Rekapitulasi
+Route::get('/admin/rekapitulasi', function () {
+    return view('admin.rekapitulasi');
+})->name('admin.rekapitulasi');
+Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
+
+// Admin SSC: Profil Saya
+Route::get('/admin/profil', [ProfileController::class, 'show'])->name('admin.profil');
+
+// Petugas Unit: Notifikasi Unit & Profil Unit
 Route::get('/unit/notifikasi', function () {
     return view('unit.notifikasi');
 })->name('unit.notifikasi');
 Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
+
+Route::get('/unit/profil', [ProfileController::class, 'show'])->name('unit.profil');
+Route::get('/profil-unit', fn () => redirect()->route('unit.profil'));
 
 // Super Admin: Dashboard & Log Aktivitas
 Route::get('/super-admin/dashboard', function () {
@@ -84,6 +101,11 @@ Route::get('/super-admin/log-aktivitas', function () {
     return view('superadmin.log-aktivitas');
 })->name('superadmin.log');
 Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
+
+Route::get('/super-admin/unit-penangan', function () {
+    return view('superadmin.unit-penangan');
+})->name('superadmin.unit-penangan');
+Route::get('/unit-penangan', fn () => redirect()->route('superadmin.unit-penangan'));
 
 // Petugas Unit: Riwayat Penanganan
 Route::get('/petugas/riwayat-penanganan', function () {

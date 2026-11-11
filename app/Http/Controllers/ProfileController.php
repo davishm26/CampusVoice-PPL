@@ -39,6 +39,30 @@ class ProfileController extends Controller
     {
         $authUser = $this->getActiveUser();
 
+        if ($request->routeIs('admin.profil') || $request->is('admin/*') || $authUser->role === 'Admin SSC') {
+            if ($authUser->role !== 'Admin SSC') {
+                $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser;
+            }
+
+            $unreadCount = AppNotification::where('user_id', $authUser->id)
+                ->where('is_read', false)
+                ->count();
+
+            return view('admin.profil', compact('authUser', 'unreadCount'));
+        }
+
+        if ($request->routeIs('unit.profil') || $request->is('unit/*') || $authUser->role === 'Petugas Unit') {
+            if ($authUser->role !== 'Petugas Unit') {
+                $authUser = User::where('role', 'Petugas Unit')->first() ?? $authUser;
+            }
+
+            $unreadCount = AppNotification::where('user_id', $authUser->id)
+                ->where('is_read', false)
+                ->count();
+
+            return view('unit.profil', compact('authUser', 'unreadCount'));
+        }
+
         $unreadCount = AppNotification::where('user_id', $authUser->id)
             ->where('is_read', false)
             ->count();
