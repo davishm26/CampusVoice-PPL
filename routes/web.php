@@ -50,6 +50,13 @@ Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name(
 Route::get('/pusat-bantuan', [PusatBantuanController::class, 'index'])->name('pusat.bantuan');
 Route::get('/bantuan', fn () => redirect()->route('pusat.bantuan'));
 
+// Admin SSC: Verifikasi Laporan
+Route::get('/admin/verifikasi-laporan', function () {
+    return view('admin.verifikasi');
+})->name('admin.verifikasi');
+Route::get('/admin/verifikasi', fn () => redirect()->route('admin.verifikasi'));
+Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi'));
+
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
