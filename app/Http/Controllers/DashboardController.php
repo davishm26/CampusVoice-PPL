@@ -38,6 +38,16 @@ class DashboardController extends Controller
             return $this->adminDashboard($request);
         }
 
+        // Jika user memiliki role Super Admin, arahkan ke dashboard Super Admin
+        if ($authUser && $authUser->role === 'Super Admin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        // Jika user memiliki role Petugas Unit, arahkan ke halaman Petugas Unit
+        if ($authUser && $authUser->role === 'Petugas Unit') {
+            return redirect()->route('petugas.riwayat');
+        }
+
         $userId = $authUser->id;
 
         $totalLaporan = Laporan::where('user_id', $userId)->count();

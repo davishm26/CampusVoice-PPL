@@ -101,7 +101,7 @@
 
                         <!-- Menu 3: Unit Penangan -->
                         <a
-                            href="#"
+                            href="{{ route('superadmin.unit-penangan') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <svg class="w-5 h-5 text-[#252525] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -401,7 +401,7 @@
 
                         <!-- Shortcut 2: Unit Penangan -->
                         <a
-                            href="#"
+                            href="{{ route('superadmin.unit-penangan') }}"
                             class="group bg-[#FFFFFF] rounded-2xl border border-[#E5E7EB] p-5 shadow-sm hover:border-[#B01116]/40 hover:shadow-md transition flex items-center justify-between gap-3"
                         >
                             <div class="flex items-start gap-3.5 min-w-0">
