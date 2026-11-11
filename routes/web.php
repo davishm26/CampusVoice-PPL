@@ -74,7 +74,12 @@ Route::get('/unit/notifikasi', function () {
 })->name('unit.notifikasi');
 Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
 
-// Super Admin: Log Aktivitas
+// Super Admin: Dashboard & Log Aktivitas
+Route::get('/super-admin/dashboard', function () {
+    return view('superadmin.dashboard');
+})->name('superadmin.dashboard');
+Route::get('/dashboard-super-admin', fn () => redirect()->route('superadmin.dashboard'));
+
 Route::get('/super-admin/log-aktivitas', function () {
     return view('superadmin.log-aktivitas');
 })->name('superadmin.log');
