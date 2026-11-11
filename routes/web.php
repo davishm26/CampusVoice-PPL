@@ -69,6 +69,12 @@ Route::get('/admin/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi
 Route::get('/rekapitulasi-pengaduan', fn () => redirect()->route('admin.rekapitulasi'));
 Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
 
+// Petugas Unit: Riwayat Penanganan
+Route::get('/petugas/riwayat-penanganan', function () {
+    return view('petugas.riwayat-penanganan');
+})->name('petugas.riwayat');
+Route::get('/riwayat-penanganan', fn () => redirect()->route('petugas.riwayat'));
+
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
