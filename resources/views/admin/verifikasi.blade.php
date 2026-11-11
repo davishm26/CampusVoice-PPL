@@ -90,7 +90,7 @@
 
                         <!-- Menu 2: Verifikasi Laporan (AKTIF) -->
                         <a
-                            href="#"
+                            href="{{ route('admin.verifikasi') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition shadow-xs"
                         >
                             <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -393,7 +393,7 @@
                                             Hari ini, 09.42
                                         </td>
                                         <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="#" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
+                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00132') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
                                                 Verifikasi &rarr;
                                             </a>
                                         </td>
@@ -419,7 +419,7 @@
                                             Hari ini, 08.15
                                         </td>
                                         <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="#" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
+                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00131') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
                                                 Verifikasi &rarr;
                                             </a>
                                         </td>
@@ -444,7 +444,7 @@
                                             Kemarin, 16.30
                                         </td>
                                         <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="#" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
+                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00130') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
                                                 Verifikasi &rarr;
                                             </a>
                                         </td>
