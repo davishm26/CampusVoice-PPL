@@ -68,7 +68,13 @@ Route::get('/admin/monitoring-laporan', function () {
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
-// Petugas Unit: Notifikasi Unit
+// Petugas Unit: Dashboard & Notifikasi Unit
+Route::get('/unit/dashboard', function () {
+    return view('unit.dashboard');
+})->name('unit.dashboard');
+Route::get('/dashboard-unit', fn () => redirect()->route('unit.dashboard'));
+Route::get('/unit', fn () => redirect()->route('unit.dashboard'));
+
 Route::get('/unit/notifikasi', function () {
     return view('unit.notifikasi');
 })->name('unit.notifikasi');
