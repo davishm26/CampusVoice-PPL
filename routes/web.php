@@ -38,6 +38,7 @@ Route::post('/laporan/detail/{tiket}/penilaian', [LaporanController::class, 'sim
 // Notifikasi
 Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifikasi');
 Route::get('/notif', [NotificationController::class, 'index']);
+Route::get('/admin/notifikasi', [NotificationController::class, 'index'])->name('admin.notifikasi');
 Route::post('/notifikasi/baca-semua', [NotificationController::class, 'markAllAsRead'])->name('notifikasi.markAll');
 Route::get('/notifikasi/baca/{id}', [NotificationController::class, 'markAsRead'])->name('notifikasi.read');
 
@@ -50,24 +51,34 @@ Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name(
 Route::get('/pusat-bantuan', [PusatBantuanController::class, 'index'])->name('pusat.bantuan');
 Route::get('/bantuan', fn () => redirect()->route('pusat.bantuan'));
 
-// Admin SSC: Dashboard & Verifikasi Laporan
-Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
-Route::get('/admin', fn () => redirect()->route('admin.dashboard'));
-Route::get('/dashboard-admin', fn () => redirect()->route('admin.dashboard'));
-
+// Admin SSC: Verifikasi Laporan & Detail Verifikasi
 Route::get('/admin/verifikasi-laporan', function () {
     return view('admin.verifikasi');
 })->name('admin.verifikasi');
+Route::get('/admin/verifikasi-laporan/{tiket}', function ($tiket) {
+    return view('admin.verifikasi-detail', compact('tiket'));
+})->name('admin.verifikasi.detail');
 Route::get('/admin/verifikasi', fn () => redirect()->route('admin.verifikasi'));
 Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi'));
 
-// Admin SSC: Rekapitulasi Pengaduan
-Route::get('/admin/rekapitulasi-pengaduan', function () {
-    return view('admin.rekapitulasi');
-})->name('admin.rekapitulasi');
-Route::get('/admin/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
-Route::get('/rekapitulasi-pengaduan', fn () => redirect()->route('admin.rekapitulasi'));
-Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
+// Admin SSC: Monitoring Laporan
+Route::get('/admin/monitoring-laporan', function () {
+    return view('admin.monitoring');
+})->name('admin.monitoring');
+Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
+Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
+
+// Petugas Unit: Notifikasi Unit
+Route::get('/unit/notifikasi', function () {
+    return view('unit.notifikasi');
+})->name('unit.notifikasi');
+Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
+
+// Super Admin: Log Aktivitas
+Route::get('/super-admin/log-aktivitas', function () {
+    return view('superadmin.log-aktivitas');
+})->name('superadmin.log');
+Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
 
 // Petugas Unit: Riwayat Penanganan
 Route::get('/petugas/riwayat-penanganan', function () {
