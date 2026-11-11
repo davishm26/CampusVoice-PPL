@@ -50,14 +50,13 @@ Route::post('/profil/telepon', [ProfileController::class, 'updatePhone'])->name(
 Route::get('/pusat-bantuan', [PusatBantuanController::class, 'index'])->name('pusat.bantuan');
 Route::get('/bantuan', fn () => redirect()->route('pusat.bantuan'));
 
-// Admin SSC: Dashboard & Verifikasi Laporan
-Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
-Route::get('/admin', fn () => redirect()->route('admin.dashboard'));
-Route::get('/dashboard-admin', fn () => redirect()->route('admin.dashboard'));
-
+// Admin SSC: Verifikasi Laporan & Detail Verifikasi
 Route::get('/admin/verifikasi-laporan', function () {
     return view('admin.verifikasi');
 })->name('admin.verifikasi');
+Route::get('/admin/verifikasi-laporan/{tiket}', function ($tiket) {
+    return view('admin.verifikasi-detail', compact('tiket'));
+})->name('admin.verifikasi.detail');
 Route::get('/admin/verifikasi', fn () => redirect()->route('admin.verifikasi'));
 Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi'));
 
