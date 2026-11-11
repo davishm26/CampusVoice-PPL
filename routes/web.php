@@ -60,13 +60,12 @@ Route::get('/admin/verifikasi-laporan/{tiket}', function ($tiket) {
 Route::get('/admin/verifikasi', fn () => redirect()->route('admin.verifikasi'));
 Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi'));
 
-// Admin SSC: Rekapitulasi Pengaduan
-Route::get('/admin/rekapitulasi-pengaduan', function () {
-    return view('admin.rekapitulasi');
-})->name('admin.rekapitulasi');
-Route::get('/admin/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
-Route::get('/rekapitulasi-pengaduan', fn () => redirect()->route('admin.rekapitulasi'));
-Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
+// Admin SSC: Monitoring Laporan
+Route::get('/admin/monitoring-laporan', function () {
+    return view('admin.monitoring');
+})->name('admin.monitoring');
+Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
+Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {
