@@ -5,6 +5,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PusatBantuanController;
+use App\Http\Controllers\SuperAdminAkunController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Depan / Welcome
@@ -113,6 +114,13 @@ Route::get('/super-admin/unit-penangan', function () {
     return view('superadmin.unit-penangan');
 })->name('superadmin.unit-penangan');
 Route::get('/unit-penangan', fn () => redirect()->route('superadmin.unit-penangan'));
+
+// Super Admin: Manajemen Akun
+Route::get('/super-admin/manajemen-akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun');
+Route::get('/manajemen-akun', fn () => redirect()->route('superadmin.akun'));
+Route::post('/super-admin/manajemen-akun', [SuperAdminAkunController::class, 'store'])->name('superadmin.akun.store');
+Route::put('/super-admin/manajemen-akun/{user}', [SuperAdminAkunController::class, 'update'])->name('superadmin.akun.update');
+Route::delete('/super-admin/manajemen-akun/{user}', [SuperAdminAkunController::class, 'destroy'])->name('superadmin.akun.destroy');
 
 // Petugas Unit: Riwayat Penanganan
 Route::get('/petugas/riwayat-penanganan', function () {
