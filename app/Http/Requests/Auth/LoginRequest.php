@@ -59,6 +59,12 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (strcasecmp($user->status_akun ?? 'Aktif', 'Aktif') !== 0) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda berstatus Nonaktif dan tidak dapat digunakan. Silakan hubungi pusat layanan kampus.',
+            ]);
+        }
+
         Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
