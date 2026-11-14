@@ -351,7 +351,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($rows as $row)
-                                        @php 
+                                        @php
                                             [$fg, $bg] = $statusStyles[$row['status']] ?? ['#D97706', '#FFF7ED'];
                                         @endphp
                                         <tr
@@ -410,8 +410,8 @@
                             </div>
                             <h4 class="text-sm font-bold text-[#252525]">Tidak ada laporan yang cocok</h4>
                             <p class="text-xs text-[#6B7280] mt-1">Coba gunakan kata kunci lain atau ubah filter status & kategori.</p>
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 @click="search = ''; status = ''; kategori = ''"
                                 class="mt-4 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold text-[#252525] transition"
                             >
