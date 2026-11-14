@@ -85,11 +85,30 @@ Route::get('/unit/notifikasi', function () {
 })->name('unit.notifikasi');
 Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
 
-// Super Admin: Log Aktivitas
+Route::get('/unit/profil', [ProfileController::class, 'show'])->name('unit.profil');
+Route::get('/profil-unit', fn () => redirect()->route('unit.profil'));
+
+// Super Admin: Dashboard & Log Aktivitas
+Route::get('/super-admin/dashboard', function () {
+    return view('superadmin.dashboard');
+})->name('superadmin.dashboard');
+Route::get('/dashboard-super-admin', fn () => redirect()->route('superadmin.dashboard'));
+
 Route::get('/super-admin/log-aktivitas', function () {
     return view('superadmin.log-aktivitas');
 })->name('superadmin.log');
 Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
+
+Route::get('/super-admin/unit-penangan', function () {
+    return view('superadmin.unit-penangan');
+})->name('superadmin.unit-penangan');
+Route::get('/unit-penangan', fn () => redirect()->route('superadmin.unit-penangan'));
+
+// Petugas Unit: Riwayat Penanganan
+Route::get('/petugas/riwayat-penanganan', function () {
+    return view('petugas.riwayat-penanganan');
+})->name('petugas.riwayat');
+Route::get('/riwayat-penanganan', fn () => redirect()->route('petugas.riwayat'));
 
 // Breeze default profile routes
 Route::middleware('auth')->group(function () {

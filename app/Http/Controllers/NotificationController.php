@@ -28,7 +28,7 @@ class NotificationController extends Controller
         return User::first() ?? new User();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $authUser = $this->getActiveUser();
         $notifications = AppNotification::where('user_id', $authUser->id)
@@ -36,6 +36,14 @@ class NotificationController extends Controller
             ->get();
 
         $unreadCount = $notifications->where('is_read', false)->count();
+
+        if ($request->routeIs('admin.notifikasi') || $request->is('admin/*') || $authUser->role === 'Admin SSC') {
+            return view('admin.notifikasi', compact('notifications', 'authUser', 'unreadCount'));
+        }
+
+        if ($request->routeIs('unit.notifikasi') || $request->is('unit/*') || $authUser->role === 'Petugas Unit') {
+            return view('unit.notifikasi', compact('notifications', 'authUser', 'unreadCount'));
+        }
 
         return view('notifikasi', compact('notifications', 'authUser', 'unreadCount'));
     }
