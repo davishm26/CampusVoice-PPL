@@ -73,11 +73,12 @@ Route::get('/admin/monitoring-laporan', function () {
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
-// Admin SSC: Rekapitulasi
-Route::get('/admin/rekapitulasi', function () {
-    return view('admin.rekapitulasi');
-})->name('admin.rekapitulasi');
-Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
+// Petugas Unit: Dashboard & Notifikasi Unit
+Route::get('/unit/dashboard', function () {
+    return view('unit.dashboard');
+})->name('unit.dashboard');
+Route::get('/dashboard-unit', fn () => redirect()->route('unit.dashboard'));
+Route::get('/unit', fn () => redirect()->route('unit.dashboard'));
 
 // Admin SSC: Profil Saya
 Route::get('/admin/profil', [ProfileController::class, 'show'])->name('admin.profil');
