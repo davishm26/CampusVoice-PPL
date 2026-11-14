@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
                 'email_verified_at' => $now,
             ],
             [
-                'name'          => 'Davis Tahana May Giantama',
+                'name'          => 'Davista Hana Maygiantama',
                 'email'         => 'davistahanamaygiantama@student.telkomuniversity.ac.id',
                 'nim'           => '102062400214',
                 'prodi'         => 'S1 Sistem Informasi',
@@ -52,7 +52,7 @@ class UserSeeder extends Seeder
                 'email_verified_at' => $now,
             ],
             [
-                'name'          => 'Revan Permanah Akim Saputra',
+                'name'          => 'Revan Permana Hakim Saputra',
                 'email'         => 'revanpermanahakimsaputra@student.telkomuniversity.ac.id',
                 'nim'           => '102062400315',
                 'prodi'         => 'S1 Sistem Informasi',
@@ -136,4 +136,3 @@ class UserSeeder extends Seeder
         $this->command->info('✅ Berhasil membersihkan user lama dan men-seed 5 akun mahasiswa + 3 akun staf (Admin SSC, Petugas Unit, Super Admin) dengan password: 12345678.');
     }
 }
-

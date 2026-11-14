@@ -80,6 +80,16 @@ Route::get('/unit/dashboard', function () {
 Route::get('/dashboard-unit', fn () => redirect()->route('unit.dashboard'));
 Route::get('/unit', fn () => redirect()->route('unit.dashboard'));
 
+// Admin SSC: Profil Saya
+Route::get('/admin/profil', [ProfileController::class, 'show'])->name('admin.profil');
+
+// Petugas Unit: Laporan Ditugaskan, Notifikasi Unit & Profil Unit
+Route::get('/unit/laporan-ditugaskan', [LaporanController::class, 'laporanDitugaskan'])->name('unit.laporan-ditugaskan');
+Route::get('/unit/laporan-ditugaskan/{tiket}', [LaporanController::class, 'tanganiLaporan'])->name('unit.laporan-ditugaskan.detail');
+Route::post('/unit/laporan-ditugaskan/{tiket}/update', [LaporanController::class, 'updatePenangananUnit'])->name('unit.laporan-ditugaskan.update');
+Route::get('/laporan-ditugaskan', fn () => redirect()->route('unit.laporan-ditugaskan'));
+Route::get('/petugas/laporan-ditugaskan', fn () => redirect()->route('unit.laporan-ditugaskan'));
+
 Route::get('/unit/notifikasi', function () {
     return view('unit.notifikasi');
 })->name('unit.notifikasi');
