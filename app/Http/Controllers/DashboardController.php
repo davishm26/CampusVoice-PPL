@@ -38,14 +38,9 @@ class DashboardController extends Controller
             return $this->adminDashboard($request);
         }
 
-        // Jika user memiliki role Super Admin, arahkan ke dashboard Super Admin
-        if ($authUser && $authUser->role === 'Super Admin') {
-            return redirect()->route('superadmin.dashboard');
-        }
-
-        // Jika user memiliki role Petugas Unit, arahkan ke halaman Petugas Unit
+        // Jika user memiliki role Petugas Unit, arahkan langsung ke dashboard Petugas Unit
         if ($authUser && $authUser->role === 'Petugas Unit') {
-            return redirect()->route('petugas.riwayat');
+            return redirect()->route('unit.dashboard');
         }
 
         $userId = $authUser->id;

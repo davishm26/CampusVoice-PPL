@@ -134,7 +134,7 @@
                     <nav class="space-y-1">
                         <!-- Menu 1: Dashboard Unit -->
                         <a
-                            href="#"
+                            href="{{ route('unit.dashboard') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
