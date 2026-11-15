@@ -43,7 +43,7 @@
     class="h-full antialiased text-[#252525] bg-[#B01116]"
     x-data="riwayatPenangananApp()"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (PETUGAS UNIT) -->
@@ -204,7 +204,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
@@ -267,7 +267,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-8 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-8 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Header Halaman (Atas) -->
@@ -544,38 +544,7 @@
                 dateRange: '19 Sep — 19 Okt 2026',
                 selectedRow: null,
 
-                rows: [
-                    {
-                        tiket: 'CV-2026-00124',
-                        judul: 'Permohonan Perbaikan AC Ruang Kelas',
-                        diterima: '18 Okt 2026',
-                        selesai: '—',
-                        status: 'Diproses',
-                        durasi: '1 hari berjalan',
-                        kategori: 'Sarana & Prasarana',
-                        prioritas: 'Tinggi'
-                    },
-                    {
-                        tiket: 'CV-2026-00119',
-                        judul: 'Kendala Akses Portal Akademik',
-                        diterima: '16 Okt 2026',
-                        selesai: '18 Okt 2026',
-                        status: 'Selesai',
-                        durasi: '3 hari',
-                        kategori: 'Layanan IT',
-                        prioritas: 'Sedang'
-                    },
-                    {
-                        tiket: 'CV-2026-00108',
-                        judul: 'Permasalahan Transkrip Nilai',
-                        diterima: '12 Okt 2026',
-                        selesai: '18 Okt 2026',
-                        status: 'Selesai',
-                        durasi: '4 hari',
-                        kategori: 'Akademik',
-                        prioritas: 'Rendah'
-                    }
-                ],
+                rows: @js($rows ?? []),
 
                 get filteredRows() {
                     const q = this.search.trim().toLowerCase();

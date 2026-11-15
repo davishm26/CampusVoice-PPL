@@ -2,113 +2,25 @@
     $authUser = $authUser ?? Auth::user();
     if (!$authUser || $authUser->role !== 'Petugas Unit') {
         $authUser = \App\Models\User::where('role', 'Petugas Unit')->first() ?? $authUser ?? new \App\Models\User([
-            'name' => 'Budi Santoso',
+            'name' => 'Petugas Unit',
             'role' => 'Petugas Unit',
             'email' => 'petugas.unit@telkomuniversity.ac.id',
         ]);
     }
-    $authName = $authUser ? $authUser->name : 'Budi Santoso';
+    $authName = $authUser ? $authUser->name : 'Petugas Unit';
     $authRole = ($authUser && $authUser->role) ? $authUser->role : 'Petugas Unit';
 
     $authWords = preg_split('/\s+/', trim($authName));
     $authInitials = '';
     foreach ($authWords as $w) { $authInitials .= mb_strtoupper(mb_substr($w, 0, 1)); }
-    $authInitials = substr($authInitials, 0, 2) ?: 'BS';
+    $authInitials = substr($authInitials, 0, 2) ?: 'PU';
 
-    // Statistik laporan
-    $totalMasuk = \App\Models\Laporan::count();
-    if ($totalMasuk === 0) {
-        $totalMasuk = 18;
-        $belumDitangani = 6;
-        $sedangDiproses = 14;
-        $selesai = 8;
-    } else {
-        $belumDitangani = \App\Models\Laporan::where('status', 'Menunggu Verifikasi')->count() ?: 6;
-        $sedangDiproses = \App\Models\Laporan::whereIn('status', ['Diproses', 'Diteruskan'])->count() ?: 14;
-        $selesai = \App\Models\Laporan::where('status', 'Selesai')->count() ?: 8;
-    }
-
-    // Data Laporan Terbaru
-    $dbLaporans = \App\Models\Laporan::orderBy('created_at', 'desc')->take(5)->get();
-    if ($dbLaporans->isEmpty()) {
-        $laporansList = [
-            [
-                'tiket' => 'CV-2026-00124',
-                'tanggal' => '18 Okt 2026',
-                'judul' => 'Permohonan Perbaikan AC Ruang Kelas',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Tinggi',
-                'prioritasClass' => 'bg-red-50 text-red-600',
-                'status' => 'Diproses',
-                'statusDot' => 'bg-purple-600',
-                'statusClass' => 'text-purple-600',
-                'progres' => 65,
-                'url' => route('laporan.detail', 'CV-2026-00124')
-            ],
-            [
-                'tiket' => 'CV-2026-00119',
-                'tanggal' => '16 Okt 2026',
-                'judul' => 'Kendala Akses Portal Akademik',
-                'kategori' => 'SSC',
-                'prioritas' => 'Sedang',
-                'prioritasClass' => 'bg-amber-50 text-amber-600',
-                'status' => 'Diteruskan',
-                'statusDot' => 'bg-blue-600',
-                'statusClass' => 'text-blue-600',
-                'progres' => 20,
-                'url' => route('laporan.detail', 'CV-2026-00119')
-            ],
-            [
-                'tiket' => 'CV-2026-00108',
-                'tanggal' => '12 Okt 2026',
-                'judul' => 'Permasalahan Transkrip Nilai',
-                'kategori' => 'SSC',
-                'prioritas' => 'Tinggi',
-                'prioritasClass' => 'bg-red-50 text-red-600',
-                'status' => 'Selesai',
-                'statusDot' => 'bg-emerald-600',
-                'statusClass' => 'text-emerald-600',
-                'progres' => 100,
-                'url' => route('laporan.detail', 'CV-2026-00108')
-            ]
-        ];
-    } else {
-        $laporansList = $dbLaporans->map(function ($lap) {
-            $prioritasClass = match ($lap->prioritas) {
-                'Tinggi' => 'bg-red-50 text-red-600',
-                'Sedang' => 'bg-amber-50 text-amber-600',
-                default => 'bg-gray-100 text-gray-700',
-            };
-
-            $statusClass = match ($lap->status) {
-                'Diproses' => 'text-purple-600',
-                'Diteruskan' => 'text-blue-600',
-                'Selesai' => 'text-emerald-600',
-                default => 'text-amber-600',
-            };
-
-            $statusDot = match ($lap->status) {
-                'Diproses' => 'bg-purple-600',
-                'Diteruskan' => 'bg-blue-600',
-                'Selesai' => 'bg-emerald-600',
-                default => 'bg-amber-600',
-            };
-
-            return [
-                'tiket' => $lap->nomor_tiket,
-                'tanggal' => $lap->created_at ? $lap->created_at->format('d M Y') : '18 Okt 2026',
-                'judul' => $lap->judul,
-                'kategori' => $lap->kategori_label ?? $lap->kategori ?? 'Umum',
-                'prioritas' => $lap->prioritas ?? 'Sedang',
-                'prioritasClass' => $prioritasClass,
-                'status' => $lap->status,
-                'statusDot' => $statusDot,
-                'statusClass' => $statusClass,
-                'progres' => $lap->progres ?? 50,
-                'url' => route('laporan.detail', $lap->nomor_tiket)
-            ];
-        })->toArray();
-    }
+    $totalMasuk = $totalMasuk ?? 0;
+    $belumDitangani = $belumDitangani ?? 0;
+    $sedangDiproses = $sedangDiproses ?? 0;
+    $selesai = $selesai ?? 0;
+    $laporansList = $laporansList ?? [];
+    $unreadCount = $unreadCount ?? 0;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-white">
@@ -179,7 +91,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- 2. SIDEBAR KIRI (LATAR PUTIH) -->
@@ -328,7 +240,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Top Navbar & Area Konten Maroon) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- 1. TOP NAVBAR (LATAR PUTIH) -->
             <header class="bg-white border-b border-[#E5E7EB] h-[72px] flex items-center justify-between px-6 sm:px-8 shrink-0 sticky top-0 z-30">
@@ -384,7 +296,7 @@
             <!-- ========================================================= -->
             <!-- 3. AREA KONTEN UTAMA (HEADER MAROON & LATAR ABU-ABU) -->
             <!-- ========================================================= -->
-            <main class="flex-1 bg-[#851518] px-6 sm:px-8 lg:px-10 py-8">
+            <main class="flex-1 min-h-0 overflow-y-auto bg-[#851518] px-6 sm:px-8 lg:px-10 py-8">
                 <div class="max-w-[1360px] mx-auto space-y-6">
 
                     <!-- Header Atas (Maroon): Label, Judul Besar, Sub-judul, Tombol Aksi Kanan -->
@@ -590,38 +502,19 @@
 
                             <!-- Timeline List -->
                             <div class="space-y-5">
-                                <!-- Aktivitas 1 -->
-                                <div class="flex items-start gap-3">
-                                    <span class="w-2 h-2 rounded-full bg-[#B01116] shrink-0 mt-1.5"></span>
-                                    <div>
-                                        <p class="text-xs font-bold text-[#1F2937] leading-snug">
-                                            Progres CV-2026-00124 diperbarui menjadi 65%
-                                        </p>
-                                        <p class="text-[11px] text-[#6B7280] mt-0.5">12 menit lalu</p>
+                                @forelse ($aktivitasUnit ?? [] as $akt)
+                                    <div class="flex items-start gap-3">
+                                        <span class="w-2 h-2 rounded-full bg-[#B01116] shrink-0 mt-1.5"></span>
+                                        <div>
+                                            <p class="text-xs font-bold text-[#1F2937] leading-snug">
+                                                {{ $akt->laporan?->nomor_tiket ? $akt->laporan->nomor_tiket . ' — ' : '' }}{{ $akt->status }}
+                                            </p>
+                                            <p class="text-[11px] text-[#6B7280] mt-0.5">{{ $akt->formatted_waktu }}</p>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <!-- Aktivitas 2 -->
-                                <div class="flex items-start gap-3">
-                                    <span class="w-2 h-2 rounded-full bg-[#B01116] shrink-0 mt-1.5"></span>
-                                    <div>
-                                        <p class="text-xs font-bold text-[#1F2937] leading-snug">
-                                            Bukti penyelesaian CV-2026-00088 diunggah
-                                        </p>
-                                        <p class="text-[11px] text-[#6B7280] mt-0.5">Kemarin, 14.22</p>
-                                    </div>
-                                </div>
-
-                                <!-- Aktivitas 3 -->
-                                <div class="flex items-start gap-3">
-                                    <span class="w-2 h-2 rounded-full bg-[#B01116] shrink-0 mt-1.5"></span>
-                                    <div>
-                                        <p class="text-xs font-bold text-[#1F2937] leading-snug">
-                                            CV-2026-00103 mulai ditangani
-                                        </p>
-                                        <p class="text-[11px] text-[#6B7280] mt-0.5">16 Okt 2026</p>
-                                    </div>
-                                </div>
+                                @empty
+                                    <p class="text-xs text-[#6B7280]">Belum ada aktivitas unit.</p>
+                                @endforelse
                             </div>
                         </div>
 

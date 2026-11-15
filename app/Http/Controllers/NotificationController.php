@@ -64,6 +64,12 @@ class NotificationController extends Controller
         if ($notif) {
             $notif->update(['is_read' => true]);
             if ($notif->tiket) {
+                if ($authUser->role === 'Admin SSC') {
+                    return redirect()->route('admin.verifikasi.detail', $notif->tiket);
+                }
+                if ($authUser->role === 'Petugas Unit') {
+                    return redirect()->route('unit.laporan-ditugaskan.detail', $notif->tiket);
+                }
                 return redirect()->route('laporan.detail', $notif->tiket);
             }
         }

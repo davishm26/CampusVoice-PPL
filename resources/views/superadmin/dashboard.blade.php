@@ -43,7 +43,7 @@
     class="h-full antialiased text-[#252525] bg-[#B01116]"
     x-data="superAdminDashboardApp()"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (SUPER ADMIN) -->
@@ -212,7 +212,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
@@ -275,7 +275,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #58595B ke #B01116 -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-8 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-8 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Header Halaman (Atas) -->
@@ -303,7 +303,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280] truncate">Total Pengguna</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">5.842</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">{{ number_format($totalPengguna ?? 0, 0, ',', '.') }}</p>
                             </div>
                         </div>
 
@@ -317,7 +317,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280] truncate">Admin SSC Aktif</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">8</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">{{ $totalAdminSsc ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -334,7 +334,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280] truncate">Petugas Unit Aktif</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">67</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">{{ $totalPetugasUnit ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -350,7 +350,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280] truncate">Unit Penangan</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">24</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">{{ $totalUnitPenangan ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -366,7 +366,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280] truncate">Kategori Aktif</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">10</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5">{{ $totalKategori ?? 0 }}</p>
                             </div>
                         </div>
                     </section>
@@ -587,32 +587,7 @@
                 mobileSidebarOpen: false,
                 searchQuery: '',
 
-                activities: [
-                    {
-                        id: 1,
-                        timestamp: '19 Okt 2026, 10.42',
-                        pengguna: 'Siti Rahmawati',
-                        peran: 'Admin SSC',
-                        aktivitas: 'Penyaluran laporan',
-                        record: 'CV-2026-00132'
-                    },
-                    {
-                        id: 2,
-                        timestamp: '19 Okt 2026, 10.31',
-                        pengguna: 'Budi Santoso',
-                        peran: 'Petugas Unit',
-                        aktivitas: 'Pembaruan progres',
-                        record: 'CV-2026-00124'
-                    },
-                    {
-                        id: 3,
-                        timestamp: '19 Okt 2026, 09.18',
-                        pengguna: 'Rizky Pratama',
-                        peran: 'Super Admin',
-                        aktivitas: 'Perubahan kategori',
-                        record: 'Fasilitas dan Sarana'
-                    }
-                ],
+                activities: @js($activities ?? []),
 
                 get filteredActivities() {
                     const q = this.searchQuery.trim().toLowerCase();

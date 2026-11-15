@@ -128,7 +128,7 @@ class LaporanController extends Controller
             'waktu' => now(),
         ]);
 
-        // Buat notifikasi
+        // Buat notifikasi untuk mahasiswa pelapor
         AppNotification::create([
             'user_id' => $user->id,
             'laporan_id' => $laporan->id,
@@ -137,6 +137,15 @@ class LaporanController extends Controller
             'title' => 'Laporan berhasil dikirim',
             'desc' => "Laporan {$laporan->nomor_tiket} telah diterima dan menunggu verifikasi SSC.",
             'is_read' => false,
+        ]);
+
+        // Buat notifikasi untuk Admin SSC
+        $this->notifyRole('Admin SSC', [
+            'laporan_id' => $laporan->id,
+            'tiket' => $laporan->nomor_tiket,
+            'icon' => 'submitted',
+            'title' => 'Laporan baru masuk',
+            'desc' => "Laporan {$laporan->nomor_tiket} ({$laporan->judul}) menunggu verifikasi SSC.",
         ]);
 
         return redirect()->route('laporan.success', ['tiket' => $laporan->nomor_tiket])
@@ -300,6 +309,15 @@ class LaporanController extends Controller
             'is_read' => true,
         ]);
 
+        // Notifikasi untuk Admin SSC
+        $this->notifyRole('Admin SSC', [
+            'laporan_id' => $laporan->id,
+            'tiket' => $laporan->nomor_tiket,
+            'icon' => 'submitted',
+            'title' => 'Pengajuan buka kembali laporan',
+            'desc' => "Pelapor mengajukan buka kembali untuk tiket {$laporan->nomor_tiket}.",
+        ]);
+
         return redirect()->route('laporan.detail', $tiket)
             ->with('success', 'Pengajuan pembukaan kembali laporan berhasil diajukan ke Admin SSC.');
     }
@@ -385,103 +403,9 @@ class LaporanController extends Controller
             ];
         }
 
-        // Data sampel sesuai desain UI (jika data DB masih kurang dari 8 agar pagination 1-6 dari 8 berfungsi)
-        $sampleItems = [
-            [
-                'tiket' => 'CV-2026-00124',
-                'tanggal' => '18 Okt 2026',
-                'judul' => 'Permohonan Perbaikan AC Ruang Kelas',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Tinggi',
-                'status' => 'Diproses',
-                'progres' => 65,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00124'),
-            ],
-            [
-                'tiket' => 'CV-2026-00119',
-                'tanggal' => '16 Okt 2026',
-                'judul' => 'Kendala Akses Portal Akademik',
-                'kategori' => 'SSC',
-                'prioritas' => 'Sedang',
-                'status' => 'Diteruskan',
-                'progres' => 20,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00119'),
-            ],
-            [
-                'tiket' => 'CV-2026-00108',
-                'tanggal' => '12 Okt 2026',
-                'judul' => 'Permasalahan Transkrip Nilai',
-                'kategori' => 'SSC',
-                'prioritas' => 'Tinggi',
-                'status' => 'Selesai',
-                'progres' => 100,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00108'),
-            ],
-            [
-                'tiket' => 'CV-2026-00105',
-                'tanggal' => '10 Okt 2026',
-                'judul' => 'Proyektor Ruang 3.04 Tidak Menampilkan Gambar',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Tinggi',
-                'status' => 'Diproses',
-                'progres' => 50,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00105'),
-            ],
-            [
-                'tiket' => 'CV-2026-00102',
-                'tanggal' => '08 Okt 2026',
-                'judul' => 'Kebocoran Plafon Koridor Lantai 2 Gedung A',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Sedang',
-                'status' => 'Diteruskan',
-                'progres' => 25,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00102'),
-            ],
-            [
-                'tiket' => 'CV-2026-00099',
-                'tanggal' => '05 Okt 2026',
-                'judul' => 'Lampu Taman Area Parkir Belakang Mati',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Rendah',
-                'status' => 'Selesai',
-                'progres' => 100,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00099'),
-            ],
-            [
-                'tiket' => 'CV-2026-00095',
-                'tanggal' => '02 Okt 2026',
-                'judul' => 'Koneksi Wi-Fi Lab Komputer 2 Lambat',
-                'kategori' => 'SSC',
-                'prioritas' => 'Sedang',
-                'status' => 'Diproses',
-                'progres' => 75,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00095'),
-            ],
-            [
-                'tiket' => 'CV-2026-00091',
-                'tanggal' => '28 Sep 2026',
-                'judul' => 'Penggantian Kursi Kuliah Rusak di Ruang 1.02',
-                'kategori' => 'Satpras',
-                'prioritas' => 'Rendah',
-                'status' => 'Selesai',
-                'progres' => 100,
-                'url' => route('unit.laporan-ditugaskan.detail', 'CV-2026-00091'),
-            ],
-        ];
-
-        $existingTickets = collect($items)->pluck('tiket')->all();
-        foreach ($sampleItems as $s) {
-            if (!in_array($s['tiket'], $existingTickets)) {
-                $items[] = $s;
-            }
-        }
-
         $unreadCount = AppNotification::where('user_id', $authUser?->id)
             ->where('is_read', false)
             ->count();
-        if ($unreadCount === 0) {
-            $unreadCount = 3;
-        }
 
         return view('unit.laporan-ditugaskan', [
             'authUser' => $authUser,
@@ -562,86 +486,13 @@ class LaporanController extends Controller
                 ];
             }
         } else {
-            // Data detail sampel sesuai desain UI (default CV-2026-00124)
-            $samples = [
-                'CV-2026-00124' => [
-                    'judul' => 'Permohonan Perbaikan AC Ruang Kelas',
-                    'status' => 'Diproses',
-                    'prioritas' => 'Prioritas Tinggi',
-                    'is_anonim' => true,
-                    'kategori' => 'Satpras',
-                    'lokasi' => 'Gedung A, Ruang A-301',
-                    'pelapor' => 'Identitas disembunyikan',
-                    'deskripsi' => 'AC di ruang kelas A-301 tidak berfungsi sejak dua hari terakhir. Kondisi ruangan menjadi panas dan mengganggu proses perkuliahan.',
-                    'berkas_nama' => 'foto_ac_ruang_a301.jpg',
-                    'berkas_meta' => '1,8 MB • JPG',
-                    'progres' => 65,
-                ],
-                'CV-2026-00119' => [
-                    'judul' => 'Kendala Akses Portal Akademik',
-                    'status' => 'Diteruskan',
-                    'prioritas' => 'Prioritas Sedang',
-                    'is_anonim' => false,
-                    'kategori' => 'SSC',
-                    'lokasi' => 'Sistem Informasi Akademik (iGracias)',
-                    'pelapor' => 'Raka Aditya',
-                    'deskripsi' => 'Mahasiswa tidak dapat mengakses halaman pengisian KRS sejak pagi hari dan muncul pesan error 504 gateway timeout.',
-                    'berkas_nama' => 'screenshot_portal_error.png',
-                    'berkas_meta' => '940 KB • PNG',
-                    'progres' => 20,
-                ],
-                'CV-2026-00108' => [
-                    'judul' => 'Permasalahan Transkrip Nilai',
-                    'status' => 'Selesai',
-                    'prioritas' => 'Prioritas Tinggi',
-                    'is_anonim' => false,
-                    'kategori' => 'SSC',
-                    'lokasi' => 'Layanan Akademik / SSC',
-                    'pelapor' => 'Nadia Putri',
-                    'deskripsi' => 'Nilai mata kuliah Pemrograman Web belum muncul di transkrip sementara meskipun sudah diinput dosen pengampu.',
-                    'berkas_nama' => 'bukti_nilai_igracias.pdf',
-                    'berkas_meta' => '620 KB • PDF',
-                    'progres' => 100,
-                ],
-            ];
-
-            $chosen = $samples[$tiket] ?? [
-                'judul' => 'Laporan Penanganan Unit (' . $tiket . ')',
-                'status' => 'Diproses',
-                'prioritas' => 'Prioritas Tinggi',
-                'is_anonim' => true,
-                'kategori' => 'Satpras',
-                'lokasi' => 'Gedung A, Ruang A-301',
-                'pelapor' => 'Identitas disembunyikan',
-                'deskripsi' => 'AC di ruang kelas A-301 tidak berfungsi sejak dua hari terakhir. Kondisi ruangan menjadi panas dan mengganggu proses perkuliahan.',
-                'berkas_nama' => 'foto_ac_ruang_a301.jpg',
-                'berkas_meta' => '1,8 MB • JPG',
-                'progres' => 65,
-            ];
-
-            $laporan = array_merge($chosen, [
-                'is_db' => false,
-                'tiket' => $tiket,
-                'berkas_url' => null,
-            ]);
-
-            $riwayats = [
-                [
-                    'inisial' => 'SS',
-                    'nama' => 'Admin SSC',
-                    'role' => 'Admin SSC',
-                    'pesan' => 'Laporan telah diverifikasi dan diteruskan ke unit Anda.',
-                    'waktu' => 'Hari ini, 09.15',
-                ],
-            ];
+            return redirect()->route('unit.laporan-ditugaskan')
+                ->with('error', 'Laporan dengan tiket ' . $tiket . ' tidak ditemukan di database.');
         }
 
         $unreadCount = AppNotification::where('user_id', $authUser?->id)
             ->where('is_read', false)
             ->count();
-        if ($unreadCount === 0) {
-            $unreadCount = 3;
-        }
 
         return view('unit.tangani-laporan', compact('authUser', 'laporan', 'riwayats', 'unreadCount'));
     }
@@ -692,17 +543,43 @@ class LaporanController extends Controller
 
             LaporanTanggapan::create([
                 'laporan_id' => $dbLaporan->id,
-                'pengirim_nama' => $authUser->name ?? 'Budi Santoso',
+                'pengirim_nama' => $authUser->name ?? 'Petugas Unit',
                 'pengirim_role' => 'Petugas Unit',
                 'pesan' => $catatan,
             ]);
 
             LaporanTracking::create([
                 'laporan_id' => $dbLaporan->id,
-                'judul' => $actionType === 'kembalikan' ? 'Dikembalikan ke Admin SSC' : "Penanganan Unit: {$statusBaru}",
-                'deskripsi' => $catatan,
-                'status_step' => $statusBaru,
+                'status' => $actionType === 'kembalikan' ? 'Dikembalikan ke Admin SSC' : $statusBaru,
+                'keterangan' => $catatan,
+                'waktu' => now(),
             ]);
+
+            // Notifikasi untuk Admin SSC
+            $this->notifyRole('Admin SSC', [
+                'laporan_id' => $dbLaporan->id,
+                'tiket' => $dbLaporan->nomor_tiket,
+                'icon' => $actionType === 'kembalikan' ? 'forward' : ($statusBaru === 'Selesai' ? 'completed' : 'progress'),
+                'title' => $actionType === 'kembalikan'
+                    ? 'Laporan dikembalikan ke SSC'
+                    : ($statusBaru === 'Selesai' ? 'Laporan selesai ditangani unit' : 'Progres laporan diperbarui'),
+                'desc' => $actionType === 'kembalikan'
+                    ? "{$dbLaporan->nomor_tiket} dikembalikan oleh unit ke Admin SSC."
+                    : "Unit memperbarui {$dbLaporan->nomor_tiket} menjadi {$statusBaru} ({$progresBaru}%).",
+            ]);
+
+            // Notifikasi untuk mahasiswa pelapor
+            if ($dbLaporan->user_id) {
+                AppNotification::create([
+                    'user_id' => $dbLaporan->user_id,
+                    'laporan_id' => $dbLaporan->id,
+                    'tiket' => $dbLaporan->nomor_tiket,
+                    'icon' => $statusBaru === 'Selesai' ? 'completed' : 'progress',
+                    'title' => $statusBaru === 'Selesai' ? 'Laporan telah selesai' : 'Progres laporan diperbarui',
+                    'desc' => "Laporan {$dbLaporan->nomor_tiket} kini berstatus {$statusBaru} ({$progresBaru}%).",
+                    'is_read' => false,
+                ]);
+            }
         }
 
         $msg = match ($actionType) {
@@ -712,5 +589,347 @@ class LaporanController extends Controller
         };
 
         return redirect()->route('unit.laporan-ditugaskan.detail', $tiket)->with('success', $msg);
+    }
+
+    /**
+     * Admin SSC: Daftar Verifikasi Laporan.
+     */
+    public function adminVerifikasi()
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Admin SSC') {
+            $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser ?? new User([
+                'name' => 'Admin SSC',
+                'role' => 'Admin SSC',
+                'email' => 'admin.ssc@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $laporans = Laporan::with('user')
+            ->where('status', 'Menunggu Verifikasi')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.verifikasi', compact('authUser', 'laporans', 'unreadCount'));
+    }
+
+    /**
+     * Admin SSC: Detail Verifikasi Laporan.
+     */
+    public function adminVerifikasiDetail($tiket)
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Admin SSC') {
+            $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser ?? new User([
+                'name' => 'Admin SSC',
+                'role' => 'Admin SSC',
+                'email' => 'admin.ssc@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $dbLaporan = Laporan::with('user')->where('nomor_tiket', $tiket)->first();
+        if (!$dbLaporan) {
+            return redirect()->route('admin.verifikasi')
+                ->with('error', 'Laporan dengan tiket ' . $tiket . ' tidak ditemukan.');
+        }
+
+        $laporan = [
+            'tiket' => $dbLaporan->nomor_tiket,
+            'judul' => $dbLaporan->judul,
+            'waktu' => $dbLaporan->created_at ? 'Diterima ' . $dbLaporan->created_at->locale('id')->translatedFormat('d M Y, H.i') . ' WIB' : '-',
+            'anonim' => (bool) $dbLaporan->is_anonim,
+            'kategori' => $dbLaporan->short_kategori ?? $dbLaporan->kategori_label ?? $dbLaporan->kategori,
+            'lokasi' => $dbLaporan->lokasi ?? '-',
+            'pelapor' => trim(($dbLaporan->user->name ?? 'Mahasiswa') . ($dbLaporan->user?->nim ? ' • ' . $dbLaporan->user->nim : '')),
+            'prodi' => $dbLaporan->user->prodi ?? '-',
+            'deskripsi' => $dbLaporan->deskripsi,
+            'lampiran_nama' => $dbLaporan->berkas_nama ?? '',
+            'lampiran_meta' => $dbLaporan->berkas_ukuran ?? '',
+            'lampiran_url' => $dbLaporan->berkas_bukti ? asset('storage/' . $dbLaporan->berkas_bukti) : null,
+            'rekomendasi_unit' => $dbLaporan->unit_penangan ?? 'Belum ditentukan',
+            'rekomendasi_alasan' => 'Berdasarkan kategori laporan dan program studi pelapor.',
+            'dasar_penyaluran' => 'Penyaluran disesuaikan dengan kategori laporan.',
+            'status' => $dbLaporan->status,
+        ];
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.verifikasi-detail', compact('authUser', 'laporan', 'tiket', 'unreadCount'));
+    }
+
+    /**
+     * Admin SSC: Proses Verifikasi & Penyaluran / Penolakan Laporan.
+     */
+    public function adminVerifikasiSubmit(Request $request, $tiket)
+    {
+        $request->validate([
+            'action' => 'required|in:teruskan,tolak',
+            'prioritas' => 'nullable|string|max:50',
+            'unit_penangan' => 'nullable|string|max:255',
+            'catatan' => 'nullable|string|max:2000',
+        ]);
+
+        $dbLaporan = Laporan::where('nomor_tiket', $tiket)->firstOrFail();
+        $action = $request->input('action');
+
+        if ($action === 'teruskan') {
+            $unitPenangan = $request->input('unit_penangan') ?: ($dbLaporan->unit_penangan ?: 'Unit Penangan Terkait');
+            $prioritas = $request->input('prioritas') ?: 'Sedang';
+            $catatan = $request->input('catatan');
+
+            $dbLaporan->update([
+                'status' => 'Diteruskan',
+                'prioritas' => $prioritas,
+                'unit_penangan' => $unitPenangan,
+                'progres' => max(20, (int) ($dbLaporan->progres ?? 0)),
+            ]);
+
+            LaporanTracking::create([
+                'laporan_id' => $dbLaporan->id,
+                'status' => 'Diteruskan ke Unit',
+                'keterangan' => "Laporan diverifikasi oleh Admin SSC dan diteruskan ke {$unitPenangan}." . ($catatan ? " Catatan: {$catatan}" : ''),
+                'waktu' => now(),
+            ]);
+
+            if ($dbLaporan->user_id) {
+                AppNotification::create([
+                    'user_id' => $dbLaporan->user_id,
+                    'laporan_id' => $dbLaporan->id,
+                    'icon' => 'forward',
+                    'title' => 'Laporan telah diteruskan',
+                    'desc' => "{$tiket} telah diverifikasi dan diteruskan ke {$unitPenangan}.",
+                    'tiket' => $tiket,
+                    'is_read' => false,
+                ]);
+            }
+
+            // Notifikasi untuk Petugas Unit terkait
+            $this->notifyRole('Petugas Unit', [
+                'laporan_id' => $dbLaporan->id,
+                'tiket' => $tiket,
+                'icon' => 'forward',
+                'title' => 'Laporan baru ditugaskan',
+                'desc' => "{$tiket} ({$dbLaporan->judul}) telah diteruskan ke {$unitPenangan}.",
+            ], $unitPenangan);
+
+            $message = "Laporan {$tiket} berhasil diverifikasi dan diteruskan ke {$unitPenangan}.";
+        } else {
+            $alasan = $request->input('catatan') ?: 'Laporan ditolak oleh Admin SSC.';
+
+            $dbLaporan->update([
+                'status' => 'Ditolak',
+            ]);
+
+            LaporanTracking::create([
+                'laporan_id' => $dbLaporan->id,
+                'status' => 'Ditolak',
+                'keterangan' => $alasan,
+                'waktu' => now(),
+            ]);
+
+            if ($dbLaporan->user_id) {
+                AppNotification::create([
+                    'user_id' => $dbLaporan->user_id,
+                    'icon' => 'rejected',
+                    'title' => 'Laporan ditolak',
+                    'desc' => "{$tiket} ditolak oleh Admin SSC: {$alasan}",
+                    'tiket' => $tiket,
+                    'is_read' => false,
+                ]);
+            }
+
+            $message = "Laporan {$tiket} telah ditolak.";
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'redirect' => route('admin.verifikasi'),
+            ]);
+        }
+
+        return redirect()->route('admin.verifikasi')->with('success', $message);
+    }
+
+    /**
+     * Admin SSC: Monitoring Laporan.
+     */
+    public function adminMonitoring()
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Admin SSC') {
+            $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser ?? new User([
+                'name' => 'Admin SSC',
+                'role' => 'Admin SSC',
+                'email' => 'admin.ssc@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $allLaporans = Laporan::orderBy('created_at', 'desc')->get();
+
+        $rows = $allLaporans->map(function ($l) {
+            $prioritasShort = match ($l->prioritas) {
+                'Prioritas Tinggi', 'Tinggi' => 'Tinggi',
+                'Prioritas Sedang', 'Sedang' => 'Sedang',
+                'Prioritas Rendah', 'Rendah' => 'Rendah',
+                default => '',
+            };
+
+            $days = $l->created_at ? (int) $l->created_at->diffInDays(now()) : 0;
+            $overdue = $days >= 7 && !in_array($l->status, ['Selesai', 'Ditolak']);
+
+            return [
+                'tiket' => $l->nomor_tiket,
+                'judul' => $l->judul,
+                'kategori' => $l->short_kategori ?? $l->kategori_label ?? $l->kategori ?? 'Umum',
+                'prioritas' => $prioritasShort,
+                'unit' => $l->unit_penangan ?? 'Belum Ditentukan',
+                'dikirim' => $l->created_at ? $l->created_at->locale('id')->translatedFormat('d M Y') : '-',
+                'tanggal_ymd' => $l->created_at ? $l->created_at->format('Y-m-d') : '',
+                'diperbarui' => $l->updated_at ? 'Update: ' . $l->updated_at->locale('id')->translatedFormat('d M Y, H.i') : '-',
+                'durasi' => $days . ' hari',
+                'overdue' => $overdue,
+                'status' => $l->status,
+            ];
+        })->values()->all();
+
+        $stats = [
+            'total' => $allLaporans->count(),
+            'menunggu' => $allLaporans->where('status', 'Menunggu Verifikasi')->count(),
+            'diteruskan' => $allLaporans->where('status', 'Diteruskan')->count(),
+            'diproses' => $allLaporans->where('status', 'Diproses')->count(),
+            'selesai' => $allLaporans->where('status', 'Selesai')->count(),
+            'ditolak' => $allLaporans->where('status', 'Ditolak')->count(),
+            'overdueCount' => collect($rows)->where('overdue', true)->count(),
+        ];
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.monitoring', compact('authUser', 'rows', 'stats', 'unreadCount'));
+    }
+
+    /**
+     * Admin SSC: Rekapitulasi Pengaduan.
+     */
+    public function adminRekapitulasi()
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Admin SSC') {
+            $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser ?? new User([
+                'name' => 'Admin SSC',
+                'role' => 'Admin SSC',
+                'email' => 'admin.ssc@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $laporans = Laporan::all();
+        $rows = $laporans->groupBy(fn ($l) => $l->unit_penangan ?: 'Belum Ditentukan')
+            ->map(function ($group, $unit) {
+                $total = $group->count();
+                $selesai = $group->where('status', 'Selesai')->count();
+                $diproses = $group->whereIn('status', ['Diproses', 'Diteruskan', 'Menunggu Verifikasi'])->count();
+                $avgDays = $group->avg(fn ($l) => $l->created_at ? max(1, $l->created_at->diffInDays($l->updated_at ?? now())) : 1) ?? 0;
+                $avgDaysRounded = round($avgDays, 1);
+                $rate = $total > 0 ? round(($selesai / $total) * 100, 1) : 0;
+                $firstKategori = $group->first()?->kategori_label ?? $group->first()?->kategori ?? 'Umum';
+
+                return [
+                    'unit' => $unit,
+                    'shortUnit' => strlen($unit) > 22 ? substr($unit, 0, 20) . '…' : $unit,
+                    'kategori' => $firstKategori,
+                    'total' => $total,
+                    'diproses' => $diproses,
+                    'selesai' => $selesai,
+                    'durasi' => number_format($avgDaysRounded, 1, ',', '.') . ' hari',
+                    'durasiNum' => $avgDaysRounded,
+                    'tingkat' => number_format($rate, 1, ',', '.') . '%',
+                ];
+            })->values()->all();
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.rekapitulasi', compact('authUser', 'rows', 'unreadCount'));
+    }
+
+    /**
+     * Petugas Unit: Riwayat Penanganan.
+     */
+    public function petugasRiwayat()
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Petugas Unit') {
+            $authUser = User::where('role', 'Petugas Unit')->first() ?? $authUser ?? new User([
+                'name' => 'Petugas Unit',
+                'role' => 'Petugas Unit',
+                'email' => 'petugas.unit@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $query = Laporan::whereIn('status', ['Diteruskan', 'Diproses', 'Selesai']);
+        if (!empty($authUser->unit)) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('unit_penangan', $authUser->unit)
+                  ->orWhereNull('unit_penangan');
+            });
+        }
+
+        $rows = $query->orderBy('updated_at', 'desc')->get()->map(function ($l) {
+            $prioritasShort = match ($l->prioritas) {
+                'Prioritas Tinggi', 'Tinggi' => 'Tinggi',
+                'Prioritas Sedang', 'Sedang' => 'Sedang',
+                'Prioritas Rendah', 'Rendah' => 'Rendah',
+                default => 'Sedang',
+            };
+
+            $days = $l->created_at ? max(1, (int) $l->created_at->diffInDays($l->status === 'Selesai' ? ($l->updated_at ?? now()) : now())) : 1;
+
+            return [
+                'tiket' => $l->nomor_tiket,
+                'judul' => $l->judul,
+                'diterima' => $l->created_at ? $l->created_at->locale('id')->translatedFormat('d M Y') : '-',
+                'selesai' => $l->status === 'Selesai' && $l->updated_at ? $l->updated_at->locale('id')->translatedFormat('d M Y') : '—',
+                'status' => $l->status,
+                'durasi' => $l->status === 'Selesai' ? "{$days} hari" : "{$days} hari berjalan",
+                'kategori' => $l->kategori_label ?? $l->kategori ?? 'Umum',
+                'prioritas' => $prioritasShort,
+            ];
+        })->values()->all();
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('petugas.riwayat-penanganan', compact('authUser', 'rows', 'unreadCount'));
+    }
+
+    /**
+     * Kirim notifikasi ke seluruh user dengan role tertentu (opsional filter unit).
+     */
+    private function notifyRole(string $role, array $payload, ?string $unit = null): void
+    {
+        $query = User::where('role', $role);
+        if ($unit) {
+            $query->where(function ($q) use ($unit) {
+                $q->where('unit', $unit)->orWhereNull('unit');
+            });
+        }
+
+        foreach ($query->get() as $recipient) {
+            AppNotification::create(array_merge($payload, [
+                'user_id' => $recipient->id,
+                'is_read' => false,
+            ]));
+        }
     }
 }

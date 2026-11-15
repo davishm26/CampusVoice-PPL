@@ -47,52 +47,7 @@
         searchLog: '',
         filterStatus: '',
         filterKategori: '',
-        logs: [
-            {
-                id: 1,
-                timestamp: '19 Okt 2026, 10.42',
-                pengguna: 'Siti Rahmawati',
-                peran: 'Admin SSC',
-                aktivitas: 'Penyaluran laporan',
-                kategori: 'Penyaluran',
-                status: 'Berhasil',
-                record: 'CV-2026-00132',
-                ip: '10.20.14.8'
-            },
-            {
-                id: 2,
-                timestamp: '19 Okt 2026, 10.31',
-                pengguna: 'Budi Santoso',
-                peran: 'Petugas Unit',
-                aktivitas: 'Pembaruan progres',
-                kategori: 'Progres',
-                status: 'Berhasil',
-                record: 'CV-2026-00124',
-                ip: '10.20.8.21'
-            },
-            {
-                id: 3,
-                timestamp: '19 Okt 2026, 09.18',
-                pengguna: 'Rizky Pratama',
-                peran: 'Super Admin',
-                aktivitas: 'Perubahan kategori',
-                kategori: 'Sistem',
-                status: 'Berhasil',
-                record: 'Fasilitas dan Sarana',
-                ip: '10.20.2.4'
-            },
-            {
-                id: 4,
-                timestamp: '19 Okt 2026, 08.57',
-                pengguna: 'Maya Prameswari',
-                peran: 'Petugas Unit',
-                aktivitas: 'User login',
-                kategori: 'Autentikasi',
-                status: 'Berhasil',
-                record: '—',
-                ip: '10.20.9.7'
-            }
-        ],
+        logs: @js($logs ?? []),
         get filteredLogs() {
             const q = (this.searchLog || this.searchHeader).trim().toLowerCase();
             return this.logs.filter(item => {
@@ -109,7 +64,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (SUPER ADMIN) -->
@@ -250,7 +205,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -310,7 +265,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7">
                 <div class="max-w-7xl mx-auto space-y-6">
 
                     <!-- Header Halaman -->
@@ -463,7 +418,7 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan 1-6 dari 8 laporan
+                                Menampilkan <span x-text="filteredLogs.length"></span> dari <span x-text="logs.length"></span> log aktivitas
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <button
