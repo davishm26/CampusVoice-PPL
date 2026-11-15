@@ -64,13 +64,13 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (ADMIN SSC) -->
         <!-- ========================================================= -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
@@ -152,26 +152,29 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                {{ $unreadCount }}
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount }}
+                                </span>
+                            @endif
+                        </a>
+
+                        <!-- Menu 6: Profil Saya -->
+                        <a
+                            href="{{ route('admin.profil') }}"
+                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
+                        >
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Profil & Keluar -->
+                <!-- Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
-                    <a
-                        href="{{ route('admin.profil') }}"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                    >
-                        <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span>Profil Saya</span>
-                    </a>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
@@ -207,7 +210,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten Dashboard) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -246,9 +249,11 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
-                            {{ $unreadCount }}
-                        </span>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Pemisah Vertikal -->
@@ -270,7 +275,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA DASHBOARD ADMIN SSC -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 space-y-6">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 space-y-6">
 
                 <!-- Header Action: Judul Halaman & Tombol Buka Antrian Verifikasi -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -313,7 +318,6 @@
                             <p class="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight leading-tight">
                                 {{ number_format($totalLaporan, 0, ',', '.') }}
                             </p>
-                            <p class="text-[11px] font-semibold text-emerald-600 leading-tight">+12% bulan ini</p>
                         </div>
                     </div>
 
@@ -566,14 +570,14 @@
                                             @endif
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $item->user->prodi ?? 'S1 Sistem Informasi' }}
+                                            {{ $item->user->prodi ?? '-' }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $item->created_at ? $item->created_at->diffForHumans() : 'Hari ini' }}
+                                            {{ $item->created_at ? $item->created_at->diffForHumans() : '-' }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-right">
                                             <a
-                                                href="{{ route('admin.verifikasi') }}?tiket={{ $item->nomor_tiket }}"
+                                                href="{{ route('admin.verifikasi.detail', $item->nomor_tiket) }}"
                                                 class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline transition"
                                             >
                                                 Verifikasi &rarr;
@@ -582,49 +586,13 @@
                                     </tr>
                                 @endforeach
 
-                                <!-- Baris Data Mockup Persis Gambar Desain -->
-                                @foreach ($mockLaporans as $mock)
-                                    <tr
-                                        class="hover:bg-gray-50/80 transition"
-                                        x-show="matchesQuery({
-                                            tiket: '{{ $mock['nomor_tiket'] }}',
-                                            judul: '{{ addslashes($mock['judul']) }}',
-                                            pelapor: '{{ addslashes($mock['pelapor']) }}',
-                                            prodi: '{{ addslashes($mock['prodi']) }}',
-                                            kategori: '{{ addslashes($mock['kategori']) }}'
-                                        })"
-                                    >
-                                        <td class="py-4 px-6 whitespace-nowrap font-bold text-gray-900">
-                                            {{ $mock['nomor_tiket'] }}
-                                        </td>
-                                        <td class="py-4 px-6">
-                                            <div class="font-bold text-gray-900 leading-snug">{{ $mock['judul'] }}</div>
-                                            <div class="text-xs text-gray-500 mt-0.5">{{ $mock['kategori'] }}</div>
-                                        </td>
-                                        <td class="py-4 px-6 whitespace-nowrap">
-                                            @if ($mock['is_anonim'])
-                                                <div class="text-gray-900 leading-snug">Pelapor anonim</div>
-                                                <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
-                                            @else
-                                                <div class="text-gray-900">{{ $mock['pelapor'] }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $mock['prodi'] }}
-                                        </td>
-                                        <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $mock['waktu'] }}
-                                        </td>
-                                        <td class="py-4 px-6 whitespace-nowrap text-right">
-                                            <a
-                                                href="{{ route('admin.verifikasi') }}?tiket={{ $mock['nomor_tiket'] }}"
-                                                class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline transition"
-                                            >
-                                                Verifikasi &rarr;
-                                            </a>
+                                @if ($dbLaporans->isEmpty())
+                                    <tr>
+                                        <td colspan="6" class="py-10 px-6 text-center text-sm text-gray-500">
+                                            Belum ada laporan masuk di database.
                                         </td>
                                     </tr>
-                                @endforeach
+                                @endif
 
                             </tbody>
                         </table>

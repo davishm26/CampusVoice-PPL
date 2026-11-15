@@ -35,7 +35,7 @@
 
         /* Linear Gradient Konten Utama: Merah #B01116 ke Abu-abu Gelap #58595B */
         .content-gradient-bg {
-            background: linear-gradient(to left, #B01116 0%, #58595B 100%);
+            background: linear-gradient(to top right, #B01116 0%, #58595B 100%);
         }
     </style>
 </head>
@@ -43,13 +43,13 @@
     class="h-full antialiased text-[#252525] bg-[#B01116]"
     x-data="rekapitulasiApp()"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (ADMIN SSC) -->
         <!-- ========================================================= -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
@@ -137,26 +137,29 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                3
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount ?? 0 }}
+                                </span>
+                            @endif
+                        </a>
+
+                        <!-- Menu 6: Profil Saya -->
+                        <a
+                            href="{{ route('admin.profil') }}"
+                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
+                        >
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Bagian Bawah: Profil Saya & Keluar -->
+                <!-- Bagian Bawah: Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
-                    <a
-                        href="{{ route('admin.profil') }}"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                    >
-                        <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span>Profil Saya</span>
-                    </a>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
@@ -197,7 +200,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -236,9 +239,11 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
-                            3
-                        </span>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
+                                {{ $unreadCount ?? 0 }}
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Pemisah Vertikal -->
@@ -260,7 +265,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Header Halaman (Atas) -->
@@ -386,7 +391,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280]">Total Laporan</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.total">324</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.total">0</p>
                             </div>
                         </div>
 
@@ -400,7 +405,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280]">Tingkat Penyelesaian</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.completionRate">71,6%</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.completionRate">0,0%</p>
                             </div>
                         </div>
 
@@ -416,7 +421,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280]">Rata-rata Penanganan</p>
-                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.avgDuration">4,2 hari</p>
+                                <p class="text-2xl font-extrabold text-[#252525] tracking-tight mt-0.5" x-text="metrics.avgDuration">0,0 hari</p>
                             </div>
                         </div>
 
@@ -435,7 +440,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-[#6B7280]">Unit Teraktif</p>
-                                <p class="text-lg sm:text-xl font-extrabold text-[#252525] tracking-tight mt-0.5 truncate" x-text="metrics.topUnit">Logistik &amp; Aset</p>
+                                <p class="text-lg sm:text-xl font-extrabold text-[#252525] tracking-tight mt-0.5 truncate" x-text="metrics.topUnit">-</p>
                             </div>
                         </div>
                     </div>
@@ -449,7 +454,7 @@
                                     Rincian per Unit
                                 </h2>
                                 <p class="text-xs text-[#6B7280] mt-0.5">
-                                    Data demonstrasi &bull; Oktober 2026
+                                    Ringkasan data pengaduan dari database
                                 </p>
                             </div>
 
@@ -522,61 +527,16 @@
 
     <script>
         function rekapitulasiApp() {
-            const initialRows = [
-                {
-                    unit: 'Direktorat Logistik dan Aset',
-                    shortUnit: 'Logistik & Aset',
-                    kategori: 'Sarana & Prasarana',
-                    total: 74,
-                    diproses: 18,
-                    selesai: 56,
-                    durasi: '3,8 hari',
-                    durasiNum: 3.8,
-                    tingkat: '75,7%'
-                },
-                {
-                    unit: 'Direktorat Pusat Teknologi Informasi',
-                    shortUnit: 'Pusat TI',
-                    kategori: 'Layanan IT',
-                    total: 62,
-                    diproses: 20,
-                    selesai: 42,
-                    durasi: '4,1 hari',
-                    durasiNum: 4.1,
-                    tingkat: '67,7%'
-                },
-                {
-                    unit: 'Program Studi S1 Sistem Informasi',
-                    shortUnit: 'S1 Sistem Informasi',
-                    kategori: 'Akademik',
-                    total: 38,
-                    diproses: 9,
-                    selesai: 29,
-                    durasi: '2,9 hari',
-                    durasiNum: 2.9,
-                    tingkat: '76,3%'
-                },
-                {
-                    unit: 'Direktorat Akademik',
-                    shortUnit: 'Direktorat Akademik',
-                    kategori: 'Administrasi',
-                    total: 34,
-                    diproses: 12,
-                    selesai: 22,
-                    durasi: '5,2 hari',
-                    durasiNum: 5.2,
-                    tingkat: '64,7%'
-                }
-            ];
+            const initialRows = @js($rows ?? []);
 
             return {
                 mobileSidebarOpen: false,
                 searchHeader: '',
-                draftPeriod: '1 Oktober — 31 Oktober 2026',
+                draftPeriod: 'Semua Periode',
                 draftKategori: '',
                 draftUnit: '',
                 draftStatus: '',
-                activePeriod: '1 Oktober — 31 Oktober 2026',
+                activePeriod: 'Semua Periode',
                 activeKategori: '',
                 activeUnit: '',
                 activeStatus: '',
@@ -606,15 +566,6 @@
                 },
 
                 get metrics() {
-                    if (this.isDefaultState) {
-                        return {
-                            total: '324',
-                            completionRate: '71,6%',
-                            avgDuration: '4,2 hari',
-                            topUnit: 'Logistik & Aset'
-                        };
-                    }
-
                     const rows = this.filteredRows;
                     if (rows.length === 0) {
                         return {

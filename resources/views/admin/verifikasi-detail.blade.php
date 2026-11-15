@@ -1,58 +1,21 @@
 @php
-    $tiketId = $tiket ?? request()->route('tiket') ?? 'CV-2026-00132';
-
-    $daftarLaporan = [
-        'CV-2026-00132' => [
-            'tiket' => 'CV-2026-00132',
-            'judul' => 'Jadwal kuliah belum sinkron',
-            'waktu' => 'Diterima hari ini, 09.42 WIB',
-            'anonim' => true,
-            'kategori' => 'SSC',
-            'lokasi' => 'Portal Akademik',
-            'pelapor' => 'Nadia Putri • 102062400089',
-            'prodi' => 'S1 Sistem Informasi',
-            'deskripsi' => 'Jadwal mata kuliah Analisis Proses Bisnis pada portal belum sesuai dengan pengumuman program studi. Mohon dibantu verifikasi agar tidak terjadi kekeliruan ruang dan waktu.',
-            'lampiran_nama' => 'tangkapan_layar_jadwal.pdf',
-            'lampiran_meta' => '820 KB • PDF',
-            'rekomendasi_unit' => 'Program Studi S1 Sistem Informasi',
-            'rekomendasi_alasan' => 'Berdasarkan isu jadwal kuliah dan program studi pelapor.',
-            'dasar_penyaluran' => 'Isu jadwal perkuliahan dikelola program studi pelapor.',
-        ],
-        'CV-2026-00131' => [
-            'tiket' => 'CV-2026-00131',
-            'judul' => 'Lampu koridor Gedung A mati',
-            'waktu' => 'Diterima hari ini, 08.15 WIB',
-            'anonim' => true,
-            'kategori' => 'Satpras',
-            'lokasi' => 'Koridor Lantai 2, Gedung A',
-            'pelapor' => 'Bima Pratama • 102042400045',
-            'prodi' => 'S1 Teknik Industri',
-            'deskripsi' => 'Lampu penerangan di sepanjang koridor lantai 2 Gedung A padam sejak kemarin sore sehingga area cukup gelap saat perkuliahan malam.',
-            'lampiran_nama' => 'foto_koridor_gedung_a.jpg',
-            'lampiran_meta' => '1.4 MB • JPG',
-            'rekomendasi_unit' => 'SATPRAS (Sarana Prasarana)',
-            'rekomendasi_alasan' => 'Berdasarkan kategori fasilitas gedung dan lokasi fisik.',
-            'dasar_penyaluran' => 'Perbaikan fasilitas listrik dan penerangan gedung dikelola oleh Satpras.',
-        ],
-        'CV-2026-00130' => [
-            'tiket' => 'CV-2026-00130',
-            'judul' => 'Akses Wi-Fi laboratorium terputus',
-            'waktu' => 'Diterima kemarin, 16.30 WIB',
-            'anonim' => false,
-            'kategori' => 'SSC',
-            'lokasi' => 'Laboratorium Komputer B-204',
-            'pelapor' => 'Raka Aditya • 102012400112',
-            'prodi' => 'S1 Teknik Informatika',
-            'deskripsi' => 'Koneksi jaringan Wi-Fi di Laboratorium Komputer B-204 terputus secara berkala dan tidak dapat terhubung ke server praktikum.',
-            'lampiran_nama' => 'log_koneksi_lab.pdf',
-            'lampiran_meta' => '540 KB • PDF',
-            'rekomendasi_unit' => 'Direktorat Pusat Teknologi Informasi',
-            'rekomendasi_alasan' => 'Berdasarkan kendala infrastruktur jaringan Wi-Fi laboratorium.',
-            'dasar_penyaluran' => 'Gangguan konektivitas jaringan kampus ditangani oleh Direktorat Pusat Teknologi Informasi.',
-        ],
+    $tiketId = $tiket ?? request()->route('tiket') ?? '';
+    $laporan = $laporan ?? [
+        'tiket' => $tiketId,
+        'judul' => '-',
+        'waktu' => '-',
+        'anonim' => false,
+        'kategori' => '-',
+        'lokasi' => '-',
+        'pelapor' => '-',
+        'prodi' => '-',
+        'deskripsi' => '-',
+        'lampiran_nama' => '',
+        'lampiran_meta' => '',
+        'rekomendasi_unit' => 'Belum ditentukan',
+        'rekomendasi_alasan' => '',
+        'dasar_penyaluran' => '',
     ];
-
-    $laporan = $daftarLaporan[$tiketId] ?? $daftarLaporan['CV-2026-00132'];
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#FFFFFF]">
@@ -168,20 +131,65 @@
         handleTeruskan() {
             this.showConfirmModal = true;
         },
-        confirmPenyaluran() {
+        async confirmPenyaluran() {
             this.isSubmittingForward = true;
-            setTimeout(() => {
-                const targetUnit = this.unitPenangan || @js($laporan['rekomendasi_unit']);
+            const targetUnit = this.unitPenangan || @js($laporan['rekomendasi_unit']);
+            try {
+                const res = await fetch('{{ route('admin.verifikasi.submit', $laporan['tiket']) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        action: 'teruskan',
+                        prioritas: this.prioritas || 'Sedang',
+                        unit_penangan: targetUnit,
+                        catatan: this.catatanInternal
+                    })
+                });
+                const data = await res.json();
                 this.isSubmittingForward = false;
                 this.showConfirmModal = false;
-                this.actionType = 'success';
-                this.actionMessage = 'Laporan {{ $laporan['tiket'] }} berhasil diverifikasi dan diteruskan ke ' + targetUnit + '.';
-            }, 600);
+                if (res.ok && data.success) {
+                    this.actionType = 'success';
+                    this.actionMessage = data.message;
+                    setTimeout(() => { window.location.href = data.redirect; }, 900);
+                } else {
+                    alert(data.message || 'Gagal meneruskan laporan.');
+                }
+            } catch (e) {
+                this.isSubmittingForward = false;
+                alert('Terjadi kesalahan jaringan.');
+            }
         },
-        handleTolak() {
-            this.showRejectModal = false;
-            this.actionType = 'rejected';
-            this.actionMessage = 'Laporan {{ $laporan['tiket'] }} telah ditolak dan dikembalikan dengan catatan.';
+        async handleTolak() {
+            try {
+                const res = await fetch('{{ route('admin.verifikasi.submit', $laporan['tiket']) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        action: 'tolak',
+                        catatan: this.alasanTolak
+                    })
+                });
+                const data = await res.json();
+                this.showRejectModal = false;
+                if (res.ok && data.success) {
+                    this.actionType = 'rejected';
+                    this.actionMessage = data.message;
+                    setTimeout(() => { window.location.href = data.redirect; }, 900);
+                } else {
+                    alert(data.message || 'Gagal menolak laporan.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan jaringan.');
+            }
         }
     }"
     x-effect="
@@ -190,13 +198,13 @@
         document.body.classList.toggle('overflow-hidden', locked);
     "
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (ADMIN SSC) -->
         <!-- ========================================================= -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
@@ -278,26 +286,29 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                3
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount ?? 0 }}
+                                </span>
+                            @endif
+                        </a>
+
+                        <!-- Menu 6: Profil Saya -->
+                        <a
+                            href="{{ route('admin.profil') }}"
+                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
+                        >
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Bagian Bawah: Profil & Keluar -->
+                <!-- Bagian Bawah: Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
-                    <a
-                        href="{{ route('admin.profil') }}"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                    >
-                        <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span>Profil Saya</span>
-                    </a>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
@@ -333,7 +344,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -375,9 +386,11 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center shadow-xs">
-                            3
-                        </span>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center shadow-xs">
+                                {{ $unreadCount ?? 0 }}
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Profil Admin SSC: Siti Rahmawati -->
@@ -396,7 +409,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF] overflow-y-auto">
+            <main class="flex-1 min-h-0 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF] overflow-y-auto">
                 <div class="max-w-7xl mx-auto space-y-6">
 
                     <!-- Header Bagian Konten & Navigasi Kembali -->
@@ -507,24 +520,37 @@
 
                             <!-- Kotak Bukti Pendukung -->
                             <div class="mt-5 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] p-3.5 flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] shrink-0">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
+                                @if (!empty($laporan['lampiran_url']) || !empty($laporan['lampiran_nama']))
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p class="text-xs sm:text-sm font-bold text-[#252525] truncate">{{ $laporan['lampiran_nama'] ?: 'Lampiran Bukti' }}</p>
+                                            @if (!empty($laporan['lampiran_meta']))
+                                                <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_meta'] }}</p>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs sm:text-sm font-bold text-[#252525] truncate">{{ $laporan['lampiran_nama'] }}</p>
-                                        <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_meta'] }}</p>
+                                    <button
+                                        type="button"
+                                        @click="showPreviewModal = true"
+                                        class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#970e13] hover:underline shrink-0 cursor-pointer px-2 py-1"
+                                    >
+                                        Lihat
+                                    </button>
+                                @else
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] shrink-0">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            </svg>
+                                        </div>
+                                        <p class="text-xs text-[#6B7280]">Tidak ada lampiran bukti pendukung.</p>
                                     </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    @click="showPreviewModal = true"
-                                    class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#970e13] hover:underline shrink-0 cursor-pointer px-2 py-1"
-                                >
-                                    Lihat
-                                </button>
+                                @endif
                             </div>
                         </div>
 
@@ -749,20 +775,41 @@
             <div class="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
                 <div>
                     <h3 class="text-sm font-bold text-[#252525]">Pratinjau Bukti Pendukung</h3>
-                    <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_nama'] }} ({{ $laporan['lampiran_meta'] }})</p>
+                    @if (!empty($laporan['lampiran_nama']))
+                        <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_nama'] }}{{ !empty($laporan['lampiran_meta']) ? ' (' . $laporan['lampiran_meta'] . ')' : '' }}</p>
+                    @endif
                 </div>
                 <button type="button" @click="showPreviewModal = false" class="p-1 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="my-5 rounded-xl bg-[#F9FAFB] border border-dashed border-[#E5E7EB] p-8 text-center">
-                <svg class="w-12 h-12 mx-auto text-[#B01116] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <p class="text-sm font-bold text-[#252525]">{{ $laporan['lampiran_nama'] }}</p>
-                <p class="text-xs text-[#6B7280] mt-1">Dokumen lampiran laporan siap diperiksa oleh Admin SSC.</p>
+            @php
+                $lampiranUrl = $laporan['lampiran_url'] ?? null;
+                $lampiranExt = $lampiranUrl ? strtolower(pathinfo(parse_url($lampiranUrl, PHP_URL_PATH), PATHINFO_EXTENSION)) : '';
+                $isImage = in_array($lampiranExt, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                $isPdf = $lampiranExt === 'pdf';
+            @endphp
+            <div class="my-5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-4 text-center overflow-hidden">
+                @if ($lampiranUrl && $isImage)
+                    <img src="{{ $lampiranUrl }}" alt="{{ $laporan['lampiran_nama'] ?: 'Bukti Pendukung' }}" class="max-h-96 mx-auto rounded-lg object-contain" />
+                @elseif ($lampiranUrl && $isPdf)
+                    <iframe src="{{ $lampiranUrl }}" class="w-full h-96 rounded-lg border border-[#E5E7EB]"></iframe>
+                @elseif ($lampiranUrl)
+                    <svg class="w-12 h-12 mx-auto text-[#B01116] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-sm font-bold text-[#252525]">{{ $laporan['lampiran_nama'] ?: 'Lampiran Bukti' }}</p>
+                    <p class="text-xs text-[#6B7280] mt-1">Klik tombol di bawah untuk membuka berkas lampiran.</p>
+                @else
+                    <p class="text-xs text-[#6B7280] py-6">Pelapor tidak melampirkan berkas bukti pendukung.</p>
+                @endif
             </div>
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-2">
+                @if ($lampiranUrl)
+                    <a href="{{ $lampiranUrl }}" target="_blank" class="px-4 py-2 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#252525] hover:bg-gray-50 transition">
+                        Buka di Tab Baru
+                    </a>
+                @endif
                 <button type="button" @click="showPreviewModal = false" class="px-4 py-2 rounded-xl bg-[#B01116] text-xs font-bold text-[#FFFFFF] hover:bg-[#970e13] transition cursor-pointer">
                     Tutup
                 </button>

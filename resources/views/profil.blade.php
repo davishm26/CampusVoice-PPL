@@ -116,7 +116,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI -->
@@ -237,7 +237,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] h-16 flex items-center justify-between px-4 sm:px-8 shrink-0">
@@ -290,7 +290,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto">
 
                     <!-- Alert Notifikasi Update Kontak -->

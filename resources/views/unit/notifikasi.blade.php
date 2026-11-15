@@ -1,3 +1,18 @@
+@php
+    $authUser = $authUser ?? Auth::user();
+    $notifications = $notifications ?? ($authUser?->id ? \App\Models\AppNotification::where('user_id', $authUser->id)->orderBy('created_at', 'desc')->get() : collect());
+    $unreadCount = $unreadCount ?? $notifications->where('is_read', false)->count();
+    $notifItems = $notifications->map(function ($n) {
+        return [
+            'id' => $n->id,
+            'icon' => $n->icon,
+            'title' => $n->title,
+            'desc' => $n->desc,
+            'time' => $n->formatted_time,
+            'unread' => !$n->is_read,
+        ];
+    })->values()->all();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#FFFFFF]">
 <head>
@@ -45,49 +60,8 @@
         mobileSidebarOpen: false,
         searchHeader: '',
         activeTab: 'all',
-        totalBadge: 6,
-        items: [
-            {
-                id: 1,
-                icon: 'progress',
-                title: 'Progres laporan diperbarui',
-                desc: 'Tim unit telah memperbarui progres CV-2026-00124 menjadi 65%.',
-                time: '5 menit lalu',
-                unread: true
-            },
-            {
-                id: 2,
-                icon: 'forward',
-                title: 'Laporan telah diteruskan',
-                desc: 'CV-2026-00119 diteruskan ke Direktorat Pusat Teknologi Informasi.',
-                time: '2 jam lalu',
-                unread: true
-            },
-            {
-                id: 3,
-                icon: 'response',
-                title: 'Tanggapan baru dari unit',
-                desc: 'Budi Santoso memberikan tanggapan pada laporan CV-2026-00124.',
-                time: 'Kemarin, 16.20',
-                unread: true
-            },
-            {
-                id: 4,
-                icon: 'completed',
-                title: 'Laporan telah selesai',
-                desc: 'CV-2026-00108 telah ditandai selesai. Anda dapat memberikan penilaian.',
-                time: '12 Okt 2026',
-                unread: false
-            },
-            {
-                id: 5,
-                icon: 'submitted',
-                title: 'Laporan berhasil dikirim',
-                desc: 'Laporan CV-2026-00097 telah diterima dan menunggu verifikasi SSC.',
-                time: '8 Okt 2026',
-                unread: false
-            }
-        ],
+        totalBadge: {{ $unreadCount }},
+        items: @js($notifItems),
         get unreadCount() {
             return this.items.filter(i => i.unread).length;
         },
@@ -108,7 +82,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (PETUGAS UNIT) -->
@@ -245,7 +219,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -309,7 +283,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 overflow-y-auto">
+            <main class="flex-1 min-h-0 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 overflow-y-auto">
                 <div class="max-w-7xl mx-auto">
 
                     <!-- Header Halaman -->

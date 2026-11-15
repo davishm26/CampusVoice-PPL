@@ -47,16 +47,59 @@
         searchTable: '',
         filterStatus: '',
         filterKategori: '',
-        filterPrioritas: ''
+        filterPrioritas: '',
+        filterTanggalDari: '',
+        filterTanggalSampai: '',
+        datePopoverOpen: false,
+        get hasActiveFilters() {
+            return Boolean(
+                this.searchHeader.trim() ||
+                this.searchTable.trim() ||
+                this.filterStatus ||
+                this.filterKategori ||
+                this.filterPrioritas ||
+                this.filterTanggalDari ||
+                this.filterTanggalSampai
+            );
+        },
+        resetFilters() {
+            this.searchHeader = '';
+            this.searchTable = '';
+            this.filterStatus = '';
+            this.filterKategori = '';
+            this.filterPrioritas = '';
+            this.filterTanggalDari = '';
+            this.filterTanggalSampai = '';
+            this.datePopoverOpen = false;
+        },
+        get dateLabel() {
+            if (!this.filterTanggalDari && !this.filterTanggalSampai) return 'Semua Tanggal';
+            const fmt = (d) => {
+                if (!d) return '...';
+                const dt = new Date(d + 'T00:00:00');
+                return dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            };
+            return fmt(this.filterTanggalDari) + ' — ' + fmt(this.filterTanggalSampai);
+        },
+        matchesFilter(item) {
+            const q = (this.searchTable || this.searchHeader).trim().toLowerCase();
+            if (q && !item.tiket.toLowerCase().includes(q) && !item.judul.toLowerCase().includes(q)) return false;
+            if (this.filterStatus && item.status.toLowerCase() !== this.filterStatus.toLowerCase()) return false;
+            if (this.filterKategori && !item.kategori.toLowerCase().includes(this.filterKategori.toLowerCase())) return false;
+            if (this.filterPrioritas && !item.prioritas.toLowerCase().includes(this.filterPrioritas.toLowerCase())) return false;
+            if (this.filterTanggalDari && (!item.tanggal || item.tanggal < this.filterTanggalDari)) return false;
+            if (this.filterTanggalSampai && (!item.tanggal || item.tanggal > this.filterTanggalSampai)) return false;
+            return true;
+        }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (ADMIN SSC) -->
         <!-- ========================================================= -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
@@ -138,26 +181,29 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                3
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount ?? 0 }}
+                                </span>
+                            @endif
+                        </a>
+
+                        <!-- Menu 6: Profil Saya -->
+                        <a
+                            href="{{ route('admin.profil') }}"
+                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
+                        >
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Bagian Bawah: Profil & Keluar -->
+                <!-- Bagian Bawah: Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
-                    <a
-                        href="{{ route('admin.profil') }}"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                    >
-                        <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span>Profil Saya</span>
-                    </a>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
@@ -193,7 +239,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -232,9 +278,11 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
-                            3
-                        </span>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
+                                {{ $unreadCount ?? 0 }}
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Pemisah Vertikal -->
@@ -256,7 +304,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-6">
 
                     <!-- Header Bagian Konten -->
@@ -293,9 +341,11 @@
                                 class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                             >
                                 <option value="">Semua Status</option>
-                                <option value="menunggu">Menunggu Verifikasi</option>
-                                <option value="diproses">Diproses</option>
-                                <option value="selesai">Selesai</option>
+                                <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                                <option value="Diteruskan">Diteruskan</option>
+                                <option value="Diproses">Diproses</option>
+                                <option value="Selesai">Selesai</option>
+                                <option value="Ditolak">Ditolak</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -341,10 +391,78 @@
                             </div>
                         </div>
 
-                        <!-- Input/Teks Tanggal -->
-                        <div class="bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 px-4 text-xs sm:text-sm font-medium text-[#252525] shadow-sm whitespace-nowrap shrink-0 flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition">
-                            <span>19 Sep — 19 Okt 2026</span>
+                        <!-- Filter Rentang Tanggal -->
+                        <div class="relative shrink-0" @click.outside="datePopoverOpen = false">
+                            <button
+                                type="button"
+                                @click="datePopoverOpen = !datePopoverOpen"
+                                class="bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 px-4 text-xs sm:text-sm font-medium text-[#252525] shadow-sm whitespace-nowrap flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition"
+                            >
+                                <svg class="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span x-text="dateLabel"></span>
+                            </button>
+
+                            <div
+                                x-show="datePopoverOpen"
+                                x-cloak
+                                x-transition
+                                class="absolute right-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5E7EB] p-4 z-30 text-[#252525] space-y-3"
+                            >
+                                <div>
+                                    <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Dari Tanggal</label>
+                                    <input
+                                        type="date"
+                                        x-model="filterTanggalDari"
+                                        class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Sampai Tanggal</label>
+                                    <input
+                                        type="date"
+                                        x-model="filterTanggalSampai"
+                                        class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                                    />
+                                </div>
+                                <div class="flex items-center justify-between pt-1">
+                                    <button
+                                        type="button"
+                                        @click="filterTanggalDari = ''; filterTanggalSampai = ''; datePopoverOpen = false;"
+                                        class="text-xs font-semibold text-[#6B7280] hover:text-[#B01116] transition cursor-pointer"
+                                    >
+                                        Reset
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="datePopoverOpen = false"
+                                        class="px-3 py-1.5 rounded-lg bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#970e13] transition cursor-pointer"
+                                    >
+                                        Terapkan
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Tombol Hapus Semua Filter -->
+                        <button
+                            type="button"
+                            x-show="hasActiveFilters"
+                            x-cloak
+                            x-transition
+                            @click="resetFilters()"
+                            class="bg-[#FFFFFF] hover:bg-[#FCE8E8] text-[#B01116] rounded-xl border border-transparent py-2.5 px-4 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer transition"
+                            title="Hapus semua filter"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>Hapus Filter</span>
+                        </button>
                     </div>
 
                     <!-- Tabel Daftar Laporan Masuk (Kartu Putih Besar #FFFFFF) -->
@@ -374,81 +492,52 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-[#E5E7EB] bg-[#FFFFFF]">
-                                    <!-- Baris 1: Nadia Putri -->
-                                    <tr class="hover:bg-gray-50/80 transition">
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]">
-                                            CV-2026-00132
-                                        </td>
-                                        <td class="py-5 px-6">
-                                            <div class="font-bold text-sm text-[#252525] leading-snug">Jadwal kuliah belum sinkron</div>
-                                            <div class="text-xs text-[#6B7280] mt-0.5 font-normal">SSC</div>
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            Nadia Putri
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            S1 Sistem Informasi
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            Hari ini, 09.42
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00132') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
-                                                Verifikasi &rarr;
-                                            </a>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Baris 2: Pelapor Anonim -->
-                                    <tr class="hover:bg-gray-50/80 transition">
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]">
-                                            CV-2026-00131
-                                        </td>
-                                        <td class="py-5 px-6">
-                                            <div class="font-bold text-sm text-[#252525] leading-snug">Lampu koridor Gedung A mati</div>
-                                            <div class="text-xs text-[#6B7280] mt-0.5 font-normal">Satpras</div>
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap">
-                                            <div class="text-sm text-[#252525] leading-snug">Pelapor anonim</div>
-                                            <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            S1 Teknik Industri
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            Hari ini, 08.15
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00131') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
-                                                Verifikasi &rarr;
-                                            </a>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Baris 3: Raka Aditya -->
-                                    <tr class="hover:bg-gray-50/80 transition">
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]">
-                                            CV-2026-00130
-                                        </td>
-                                        <td class="py-5 px-6">
-                                            <div class="font-bold text-sm text-[#252525] leading-snug">Akses Wi-Fi laboratorium terputus</div>
-                                            <div class="text-xs text-[#6B7280] mt-0.5 font-normal">SSC</div>
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            Raka Aditya
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            S1 Teknik Informatika
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                            Kemarin, 16.30
-                                        </td>
-                                        <td class="py-5 px-6 whitespace-nowrap text-right">
-                                            <a href="{{ route('admin.verifikasi.detail', 'CV-2026-00130') }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
-                                                Verifikasi &rarr;
-                                            </a>
-                                        </td>
-                                    </tr>
+                                    @forelse ($laporans ?? [] as $item)
+                                        <tr
+                                            class="hover:bg-gray-50/80 transition"
+                                            x-show="matchesFilter({
+                                                tiket: '{{ addslashes($item->nomor_tiket) }}',
+                                                judul: '{{ addslashes($item->judul) }}',
+                                                status: '{{ addslashes($item->status ?? '') }}',
+                                                kategori: '{{ addslashes(($item->kategori ?? '') . ' ' . ($item->kategori_label ?? '') . ' ' . ($item->short_kategori ?? '')) }}',
+                                                prioritas: '{{ addslashes($item->prioritas ?? '') }}',
+                                                tanggal: '{{ $item->created_at ? $item->created_at->format('Y-m-d') : '' }}'
+                                            })"
+                                        >
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]">
+                                                {{ $item->nomor_tiket }}
+                                            </td>
+                                            <td class="py-5 px-6">
+                                                <div class="font-bold text-sm text-[#252525] leading-snug">{{ $item->judul }}</div>
+                                                <div class="text-xs text-[#6B7280] mt-0.5 font-normal">{{ $item->short_kategori ?? $item->kategori_label ?? $item->kategori }}</div>
+                                            </td>
+                                            <td class="py-5 px-6 whitespace-nowrap">
+                                                @if ($item->is_anonim)
+                                                    <div class="text-sm text-[#252525] leading-snug">Pelapor anonim</div>
+                                                    <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
+                                                @else
+                                                    <div class="text-sm text-[#252525]">{{ $item->user->name ?? 'Mahasiswa' }}</div>
+                                                @endif
+                                            </td>
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
+                                                {{ $item->user->prodi ?? '-' }}
+                                            </td>
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
+                                                {{ $item->created_at ? $item->created_at->diffForHumans() : '-' }}
+                                            </td>
+                                            <td class="py-5 px-6 whitespace-nowrap text-right">
+                                                <a href="{{ route('admin.verifikasi.detail', $item->nomor_tiket) }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
+                                                    Verifikasi &rarr;
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="py-10 px-6 text-center text-sm text-[#6B7280]">
+                                                Tidak ada laporan yang menunggu verifikasi saat ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -456,7 +545,7 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan 1-6 dari 8 laporan
+                                Menampilkan {{ isset($laporans) ? $laporans->count() : 0 }} laporan
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <!-- Tombol Panah Kiri -->

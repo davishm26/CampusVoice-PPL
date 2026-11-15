@@ -49,81 +49,20 @@
         filterPrioritas: '',
         filterKategori: '',
         filterUnit: '',
+        filterTanggalDari: '',
+        filterTanggalSampai: '',
+        datePopoverOpen: false,
         onlyOverdue: false,
-        rows: [
-            {
-                tiket: 'CV-2026-00124',
-                judul: 'Permohonan Perbaikan AC Ruang Kelas',
-                kategori: 'Satpras',
-                prioritas: 'Tinggi',
-                unit: 'Direktorat Logistik dan Aset',
-                dikirim: '18 Okt 2026',
-                diperbarui: 'Update: 19 Okt 2026, 08.45',
-                durasi: '1 hari',
-                overdue: false,
-                status: 'Diproses'
-            },
-            {
-                tiket: 'CV-2026-00119',
-                judul: 'Kendala Akses Portal Akademik',
-                kategori: 'SSC',
-                prioritas: 'Sedang',
-                unit: 'Direktorat Pusat Teknologi Informasi',
-                dikirim: '16 Okt 2026',
-                diperbarui: 'Update: 18 Okt 2026, 14.20',
-                durasi: '3 hari',
-                overdue: false,
-                status: 'Diteruskan'
-            },
-            {
-                tiket: 'CV-2026-00108',
-                judul: 'Permasalahan Transkrip Nilai',
-                kategori: 'SSC',
-                prioritas: 'Tinggi',
-                unit: 'Program Studi S1 Sistem Informasi',
-                dikirim: '12 Okt 2026',
-                diperbarui: 'Update: 16 Okt 2026, 10.05',
-                durasi: '4 hari',
-                overdue: false,
-                status: 'Selesai'
-            },
-            {
-                tiket: 'CV-2026-00097',
-                judul: 'Usulan Penambahan Fasilitas Belajar',
-                kategori: 'Satpras',
-                prioritas: '',
-                unit: 'Belum Ditentukan',
-                dikirim: '8 Okt 2026',
-                diperbarui: 'Update: 8 Okt 2026, 09.18',
-                durasi: '11 hari',
-                overdue: true,
-                status: 'Menunggu Verifikasi'
-            },
-            {
-                tiket: 'CV-2026-00088',
-                judul: 'Perbaikan akses ruang laboratorium',
-                kategori: 'Satpras',
-                prioritas: 'Sedang',
-                unit: 'Direktorat Logistik dan Aset',
-                dikirim: '10 Okt 2026',
-                diperbarui: 'Update: 11 Okt 2026, 13.10',
-                durasi: '9 hari',
-                overdue: true,
-                status: 'Diteruskan'
-            },
-            {
-                tiket: 'CV-2026-00081',
-                judul: 'Permohonan koreksi data akademik',
-                kategori: 'SSC',
-                prioritas: 'Sedang',
-                unit: 'Program Studi S1 Sistem Informasi',
-                dikirim: '6 Okt 2026',
-                diperbarui: 'Update: 7 Okt 2026, 15.42',
-                durasi: '1 hari',
-                overdue: false,
-                status: 'Ditolak'
-            }
-        ],
+        rows: @js($rows ?? []),
+        get dateLabel() {
+            if (!this.filterTanggalDari && !this.filterTanggalSampai) return 'Semua Tanggal';
+            const fmt = (d) => {
+                if (!d) return '...';
+                const dt = new Date(d + 'T00:00:00');
+                return dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            };
+            return fmt(this.filterTanggalDari) + ' — ' + fmt(this.filterTanggalSampai);
+        },
         get filteredRows() {
             const q = (this.searchQuery || this.searchHeader).trim().toLowerCase();
             return this.rows.filter(r => {
@@ -132,6 +71,8 @@
                 if (this.filterPrioritas && r.prioritas !== this.filterPrioritas) return false;
                 if (this.filterKategori && r.kategori !== this.filterKategori) return false;
                 if (this.filterUnit && r.unit !== this.filterUnit) return false;
+                if (this.filterTanggalDari && (!r.tanggal_ymd || r.tanggal_ymd < this.filterTanggalDari)) return false;
+                if (this.filterTanggalSampai && (!r.tanggal_ymd || r.tanggal_ymd > this.filterTanggalSampai)) return false;
                 if (q && !r.tiket.toLowerCase().includes(q) && !r.judul.toLowerCase().includes(q)) return false;
                 return true;
             });
@@ -143,17 +84,20 @@
             this.filterPrioritas = '';
             this.filterKategori = '';
             this.filterUnit = '';
+            this.filterTanggalDari = '';
+            this.filterTanggalSampai = '';
+            this.datePopoverOpen = false;
             this.onlyOverdue = false;
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (ADMIN SSC) -->
         <!-- ========================================================= -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
             :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
         >
             <div class="flex flex-col flex-1 overflow-y-auto">
@@ -235,26 +179,29 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                3
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount ?? 0 }}
+                                </span>
+                            @endif
+                        </a>
+
+                        <!-- Menu 6: Profil Saya -->
+                        <a
+                            href="{{ route('admin.profil') }}"
+                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
+                        >
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
                         </a>
                     </nav>
                 </div>
 
-                <!-- Bagian Bawah: Profil & Keluar -->
+                <!-- Bagian Bawah: Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
-                    <a
-                        href="{{ route('admin.profil') }}"
-                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                    >
-                        <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        <span>Profil Saya</span>
-                    </a>
-
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
@@ -290,7 +237,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -328,9 +275,11 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center shadow-xs">
-                            3
-                        </span>
+                        @if (($unreadCount ?? 0) > 0)
+                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center shadow-xs">
+                                {{ $unreadCount ?? 0 }}
+                            </span>
+                        @endif
                     </a>
 
                     <!-- Profil Admin SSC: Siti Rahmawati -->
@@ -349,7 +298,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Header Halaman (Atas) -->
@@ -373,7 +322,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Total Laporan</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">1.248</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ number_format($stats['total'] ?? 0, 0, ',', '.') }}</p>
                             </div>
                         </div>
 
@@ -387,7 +336,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Menunggu Verifikasi</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">89</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ $stats['menunggu'] ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -400,7 +349,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Diteruskan ke Unit</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">145</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ $stats['diteruskan'] ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -413,7 +362,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Sedang Diproses</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">122</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ $stats['diproses'] ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -426,7 +375,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Laporan Selesai</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">892</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ $stats['selesai'] ?? 0 }}</p>
                             </div>
                         </div>
 
@@ -439,7 +388,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-medium text-[#6B7280] leading-tight">Laporan Ditolak</p>
-                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">34</p>
+                                <p class="text-xl font-extrabold text-[#252525] mt-0.5 leading-none">{{ $stats['ditolak'] ?? 0 }}</p>
                             </div>
                         </div>
                     </div>
@@ -531,20 +480,45 @@
                                 </div>
 
                                 <!-- Range Tanggal -->
-                                <div class="bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 px-4 text-xs sm:text-sm font-medium text-[#252525] whitespace-nowrap flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition">
-                                    <span>19 Sep — 19 Okt 2026</span>
+                                <div class="relative" @click.outside="datePopoverOpen = false">
+                                    <button
+                                        type="button"
+                                        @click="datePopoverOpen = !datePopoverOpen"
+                                        class="bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 px-4 text-xs sm:text-sm font-medium text-[#252525] whitespace-nowrap flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition"
+                                    >
+                                        <span x-text="dateLabel"></span>
+                                    </button>
+                                    <div
+                                        x-show="datePopoverOpen"
+                                        x-cloak
+                                        x-transition
+                                        class="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5E7EB] p-4 z-30 text-[#252525] space-y-3"
+                                    >
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Dari Tanggal</label>
+                                            <input type="date" x-model="filterTanggalDari" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Sampai Tanggal</label>
+                                            <input type="date" x-model="filterTanggalSampai" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
+                                        </div>
+                                        <div class="flex items-center justify-between pt-1">
+                                            <button type="button" @click="filterTanggalDari = ''; filterTanggalSampai = ''; datePopoverOpen = false;" class="text-xs font-semibold text-[#6B7280] hover:text-[#B01116] cursor-pointer">Reset</button>
+                                            <button type="button" @click="datePopoverOpen = false" class="px-3 py-1.5 rounded-lg bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#970e13] cursor-pointer">Terapkan</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Indikator/Reset Filter Jika Aktif -->
                             <button
-                                x-show="onlyOverdue || searchQuery || searchHeader || filterStatus || filterPrioritas || filterKategori || filterUnit"
+                                x-show="onlyOverdue || searchQuery || searchHeader || filterStatus || filterPrioritas || filterKategori || filterUnit || filterTanggalDari || filterTanggalSampai"
                                 x-cloak
                                 type="button"
                                 @click="resetFilters()"
                                 class="text-xs font-bold text-[#B01116] hover:underline cursor-pointer"
                             >
-                                Reset Filter
+                                Hapus Filter
                             </button>
                         </div>
                     </div>
@@ -697,7 +671,7 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan 1-6 dari 8 laporan
+                                Menampilkan <span x-text="filteredRows.length"></span> dari <span x-text="rows.length"></span> laporan
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <button
@@ -745,7 +719,7 @@
                             </div>
                             <div>
                                 <p class="text-xs sm:text-sm font-bold text-[#252525]">
-                                    12 laporan berada pada status yang sama lebih dari 7 hari
+                                    {{ $stats['overdueCount'] ?? 0 }} laporan berada pada status yang sama lebih dari 7 hari
                                 </p>
                                 <p class="text-[11px] sm:text-xs text-[#6B7280] mt-0.5">
                                     Durasi ditampilkan berdasarkan riwayat timestamp untuk membantu pemantauan SSC. Tidak ada eskalasi otomatis.

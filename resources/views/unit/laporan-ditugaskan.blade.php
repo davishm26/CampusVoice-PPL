@@ -93,7 +93,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (PETUGAS UNIT) -->
@@ -171,9 +171,11 @@
                                 </svg>
                                 <span>Notifikasi</span>
                             </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                {{ $unreadCount }}
-                            </span>
+                            @if (($unreadCount ?? 0) > 0)
+                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
+                                    {{ $unreadCount }}
+                                </span>
+                            @endif
                         </a>
 
                         <!-- Menu 5: Profil Unit -->
@@ -227,7 +229,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten Laporan Ditugaskan) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
@@ -292,7 +294,7 @@
             <!-- ========================================================= -->
             <!-- KONTEN UTAMA: LAPORAN DITUGASKAN -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-8">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-8">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Baris Filter & Pencarian -->

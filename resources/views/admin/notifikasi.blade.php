@@ -17,75 +17,19 @@
 
     $notifications = $notifications ?? ($authUser?->id ? \App\Models\AppNotification::where('user_id', $authUser->id)->orderBy('created_at', 'desc')->get() : collect());
 
-    if ($notifications->isEmpty()) {
-        $notifItems = [
-            [
-                'id' => 1,
-                'icon' => 'progress',
-                'title' => 'Progres laporan diperbarui',
-                'desc' => 'Tim unit telah memperbarui progres CV-2026-00124 menjadi 65%.',
-                'time' => '5 menit lalu',
-                'unread' => true,
-                'tiket' => 'CV-2026-00124',
-                'url' => '#',
-            ],
-            [
-                'id' => 2,
-                'icon' => 'forward',
-                'title' => 'Laporan telah diteruskan',
-                'desc' => 'CV-2026-00119 diteruskan ke Direktorat Pusat Teknologi Informasi.',
-                'time' => '2 jam lalu',
-                'unread' => true,
-                'tiket' => 'CV-2026-00119',
-                'url' => '#',
-            ],
-            [
-                'id' => 3,
-                'icon' => 'response',
-                'title' => 'Tanggapan baru dari unit',
-                'desc' => 'Budi Santoso memberikan tanggapan pada laporan CV-2026-00124.',
-                'time' => 'Kemarin, 16.20',
-                'unread' => true,
-                'tiket' => 'CV-2026-00124',
-                'url' => '#',
-            ],
-            [
-                'id' => 4,
-                'icon' => 'completed',
-                'title' => 'Laporan telah selesai',
-                'desc' => 'CV-2026-00108 telah ditandai selesai. Anda dapat memberikan penilaian.',
-                'time' => '12 Okt 2026',
-                'unread' => false,
-                'tiket' => 'CV-2026-00108',
-                'url' => '#',
-            ],
-            [
-                'id' => 5,
-                'icon' => 'submitted',
-                'title' => 'Laporan berhasil dikirim',
-                'desc' => 'Laporan CV-2026-00097 telah diterima dan menunggu verifikasi SSC.',
-                'time' => '8 Okt 2026',
-                'unread' => false,
-                'tiket' => 'CV-2026-00097',
-                'url' => '#',
-            ],
+    $unreadCount = $notifications->where('is_read', false)->count();
+    $notifItems = $notifications->map(function ($n) {
+        return [
+            'id' => $n->id,
+            'icon' => $n->icon,
+            'title' => $n->title,
+            'desc' => $n->desc,
+            'time' => $n->formatted_time,
+            'unread' => !$n->is_read,
+            'tiket' => $n->tiket,
+            'url' => route('notifikasi.read', $n->id),
         ];
-        $unreadCount = 3;
-    } else {
-        $unreadCount = $notifications->where('is_read', false)->count();
-        $notifItems = $notifications->map(function ($n) {
-            return [
-                'id' => $n->id,
-                'icon' => $n->icon,
-                'title' => $n->title,
-                'desc' => $n->desc,
-                'time' => $n->formatted_time,
-                'unread' => !$n->is_read,
-                'tiket' => $n->tiket,
-                'url' => route('notifikasi.read', $n->id),
-            ];
-        })->values()->all();
-    }
+    })->values()->all();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-white">
@@ -141,15 +85,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Gradient Latar Utama sesuai spesifikasi */
-        .main-gradient-bg {
-            background: linear-gradient(
-                135deg,
-                #704247 0%,
-                #9F171B 45%,
-                #B01116 75%,
-                #C31319 100%
-            );
+        /* Linear Gradient Konten Utama: Merah #B01116 ke Abu-abu Gelap #58595B */
+        .content-gradient-bg {
+            background: linear-gradient(to top right, #B01116 0%, #58595B 100%);
         }
     </style>
 </head>
@@ -186,235 +124,231 @@
         }
     }"
 >
-    <!-- ========================================================= -->
-    <!-- SIDEBAR KIRI FIXED (248px, Full Height, Background Putih) -->
-    <!-- ========================================================= -->
-    <aside
-        class="fixed top-0 bottom-0 left-0 z-40 w-[248px] bg-white border-r border-[#E5E7EB] flex flex-col justify-between transition-transform duration-200 lg:translate-x-0"
-        :class="mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'"
-    >
-        <div class="flex flex-col flex-1 overflow-y-auto">
-            <!-- Logo CampusVoice -->
-            <div class="pt-[22px] px-[20px] pb-[16px] flex items-center gap-[10px]">
-                <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-7 h-7 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/28x28/B01116/white?text=CV';" />
-                <div class="min-w-0">
-                    <span class="text-[16px] font-bold text-[#B01116] tracking-tight block leading-tight">CampusVoice</span>
-                    <p class="text-[10px] text-[#6B7280] font-medium leading-tight mt-[2px] truncate">Telkom University Surabaya</p>
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
+
+        <!-- ========================================================= -->
+        <!-- SIDEBAR KIRI (ADMIN SSC) -->
+        <!-- ========================================================= -->
+        <aside
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
+            :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+        >
+            <div class="flex flex-col flex-1 overflow-y-auto">
+                <!-- Logo -->
+                <div class="px-6 py-5 flex items-center gap-3">
+                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
+                    <div>
+                        <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight">CampusVoice</span>
+                        <p class="text-[10px] text-[#6B7280] font-medium leading-tight">Telkom University Surabaya</p>
+                    </div>
+                </div>
+
+                <!-- Navigasi Menu Admin SSC -->
+                <div class="px-4 py-3 flex-1">
+                    <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wider mb-2 uppercase">Admin SSC</p>
+
+                    <nav class="space-y-1">
+                        <!-- Dashboard -->
+                        <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+
+                        <!-- Verifikasi Laporan -->
+                        <a href="{{ route('admin.verifikasi') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="m9 12 2 2 4-4"/>
+                            </svg>
+                            <span>Verifikasi Laporan</span>
+                        </a>
+
+                        <!-- Monitoring Laporan -->
+                        <a href="{{ route('admin.monitoring') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="20" x2="12" y2="10"/>
+                                <line x1="18" y1="20" x2="18" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="16"/>
+                            </svg>
+                            <span>Monitoring Laporan</span>
+                        </a>
+
+                        <!-- Rekapitulasi -->
+                        <a href="{{ route('admin.rekapitulasi') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span>Rekapitulasi</span>
+                        </a>
+
+                        <!-- Notifikasi (AKTIF) -->
+                        <a
+                            href="{{ route('admin.notifikasi') }}"
+                            aria-current="page"
+                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition shadow-xs"
+                        >
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                                <span>Notifikasi</span>
+                            </div>
+                            <span
+                                class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center shrink-0"
+                                x-text="unreadCount"
+                                x-show="unreadCount > 0"
+                            >
+                                {{ $unreadCount }}
+                            </span>
+                        </a>
+
+                        <!-- Profil Saya -->
+                        <a href="{{ route('admin.profil') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group">
+                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <span>Profil Saya</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Bagian Bawah: Keluar -->
+                <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition cursor-pointer text-left">
+                                <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                                <span>Keluar</span>
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition text-left">
+                            <svg class="w-5 h-5 text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                                <polyline points="10 17 15 12 10 7"/>
+                                <line x1="15" y1="12" x2="3" y2="12"/>
+                            </svg>
+                            <span>Masuk Akun</span>
+                        </a>
+                    @endauth
                 </div>
             </div>
 
-            <!-- Navigasi Menu Admin SSC -->
-            <div class="px-[16px] flex-1">
-                <span class="text-[11px] font-semibold text-[#58595B] uppercase tracking-wider px-[8px] mt-[12px] mb-[8px] block">
-                    Admin SSC
-                </span>
-
-                <nav class="space-y-[4px]">
-                    <!-- Dashboard -->
-                    <a href="{{ route('admin.dashboard') }}" class="h-[44px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13.5px] font-medium text-[#252525] hover:bg-[#F8F8F9] transition group">
-                        <svg class="w-[18px] h-[18px] text-[#58595B] group-hover:text-[#252525] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="7" height="7" x="3" y="3" rx="1.5"/>
-                            <rect width="7" height="7" x="14" y="3" rx="1.5"/>
-                            <rect width="7" height="7" x="14" y="14" rx="1.5"/>
-                            <rect width="7" height="7" x="3" y="14" rx="1.5"/>
-                        </svg>
-                        <span>Dashboard</span>
+            <!-- Kartu Butuh Bantuan -->
+            <div class="p-4">
+                <div class="bg-[#B01116] rounded-2xl p-4 text-[#FFFFFF] shadow-lg">
+                    <h4 class="font-bold text-sm mb-1">Butuh bantuan?</h4>
+                    <p class="text-xs text-white/85 leading-relaxed mb-3">
+                        Hubungi pusat layanan CampusVoice.
+                    </p>
+                    <a href="{{ route('pusat.bantuan') }}" class="block w-full py-2 bg-[#FFFFFF] hover:bg-gray-50 text-[#B01116] text-xs font-bold rounded-xl text-center transition shadow-xs">
+                        Pusat Bantuan
                     </a>
+                </div>
+            </div>
+        </aside>
 
-                    <!-- Verifikasi Laporan -->
-                    <a href="{{ route('admin.verifikasi') }}" class="h-[44px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13.5px] font-medium text-[#252525] hover:bg-[#F8F8F9] transition group">
-                        <svg class="w-[18px] h-[18px] text-[#58595B] group-hover:text-[#252525] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="9"/>
-                            <polyline points="9 12 11.5 14.5 15.5 9.5"/>
+        <!-- Overlay Mobile -->
+        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/50 lg:hidden"></div>
+
+        <!-- ========================================================= -->
+        <!-- MAIN WRAPPER -->
+        <!-- ========================================================= -->
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+
+            <!-- HEADER -->
+            <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+                <div class="flex items-center gap-4">
+                    <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="p-2 -ml-2 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 lg:hidden" type="button" aria-label="Buka menu navigasi">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
-                        <span>Verifikasi Laporan</span>
-                    </a>
+                    </button>
 
-                    <!-- Monitoring Laporan -->
-                    <a href="{{ route('admin.monitoring') }}" class="h-[44px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13.5px] font-medium text-[#252525] hover:bg-[#F8F8F9] transition group">
-                        <svg class="w-[18px] h-[18px] text-[#58595B] group-hover:text-[#252525] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="20" x2="18" y2="10"/>
-                            <line x1="12" y1="20" x2="12" y2="4"/>
-                            <line x1="6" y1="20" x2="6" y2="14"/>
+                    <div class="relative w-64 sm:w-80 md:w-96">
+                        <input
+                            type="text"
+                            placeholder="Cari nomor tiket atau laporan..."
+                            onkeydown="if(event.key === 'Enter'){ window.location.href='{{ route('laporan.riwayat') }}?q=' + encodeURIComponent(this.value); }"
+                            class="w-full bg-gray-100 rounded-xl border border-transparent py-2 px-4 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:bg-[#FFFFFF] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
+                        />
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="{{ route('admin.notifikasi') }}" class="relative p-2 rounded-lg text-[#6B7280] hover:text-[#B01116] hover:bg-gray-100 transition" aria-label="Notifikasi">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
-                        <span>Monitoring Laporan</span>
-                    </a>
-
-                    <!-- Rekapitulasi -->
-                    <a href="{{ route('admin.rekapitulasi') }}" class="h-[44px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13.5px] font-medium text-[#252525] hover:bg-[#F8F8F9] transition group">
-                        <svg class="w-[18px] h-[18px] text-[#58595B] group-hover:text-[#252525] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        <span>Rekapitulasi</span>
-                    </a>
-
-                    <!-- Notifikasi (Menu Aktif: Background #FCE8E8, Color #B01116, border-radius 7px, badge circle 3) -->
-                    <a
-                        href="{{ route('admin.notifikasi') }}"
-                        aria-current="page"
-                        class="h-[44px] px-[12px] flex items-center justify-between rounded-[7px] text-[13.5px] font-medium bg-[#FCE8E8] text-[#B01116] transition"
-                    >
-                        <div class="flex items-center gap-[12px]">
-                            <svg class="w-[18px] h-[18px] text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                            </svg>
-                            <span>Notifikasi</span>
-                        </div>
                         <span
-                            class="w-[19px] h-[19px] rounded-full bg-[#B01116] text-white text-[11px] font-semibold flex items-center justify-center shrink-0"
+                            class="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center"
                             x-text="unreadCount"
                             x-show="unreadCount > 0"
                         >
                             {{ $unreadCount }}
                         </span>
                     </a>
-                </nav>
-            </div>
-        </div>
 
-        <!-- Bottom Sidebar: Profil Saya, Keluar, dan Help Card -->
-        <div class="px-[16px] pb-[18px] pt-[8px] space-y-[4px]">
-            <!-- Profil Saya -->
-            <a href="{{ route('admin.profil') }}" class="h-[38px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13px] font-medium text-[#252525] hover:bg-[#F8F8F9] transition group">
-                <svg class="w-[18px] h-[18px] text-[#58595B] group-hover:text-[#252525] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span>Profil Saya</span>
-            </a>
+                    <div class="h-6 w-px bg-[#E5E7EB]"></div>
 
-            <!-- Keluar -->
-            @auth
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full h-[38px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13px] font-medium text-[#B01116] hover:bg-[#FCE8E8]/50 transition text-left cursor-pointer">
-                        <svg class="w-[18px] h-[18px] text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                        <span>Keluar</span>
-                    </button>
-                </form>
-            @else
-                <a href="{{ route('login') }}" class="w-full h-[38px] px-[12px] flex items-center gap-[12px] rounded-[7px] text-[13px] font-medium text-[#B01116] hover:bg-[#FCE8E8]/50 transition text-left">
-                    <svg class="w-[18px] h-[18px] text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10 17 15 12 10 7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                    <span>Masuk Akun</span>
-                </a>
-            @endauth
-
-            <!-- Help Card (216px x 110px, background #B01116, border-radius 8px) -->
-            <div class="w-[216px] min-h-[108px] mx-auto bg-[#B01116] rounded-[8px] p-[13px] text-white flex flex-col justify-between mt-[10px]">
-                <div>
-                    <h4 class="text-[13px] font-semibold text-white leading-none">Butuh bantuan?</h4>
-                    <p class="text-[10px] font-normal text-white/85 leading-snug mt-[6px]">Hubungi pusat layanan CampusVoice.</p>
+                    <a href="{{ route('admin.profil') }}" class="flex items-center gap-2.5 group">
+                        <div class="w-9 h-9 rounded-xl bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 ring-1 ring-[#B01116]/20">
+                            {{ $authInitials }}
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">{{ $authName }}</p>
+                            <p class="text-[11px] text-[#6B7280] leading-tight">{{ $authRole }}</p>
+                        </div>
+                    </a>
                 </div>
-                <a href="{{ route('pusat.bantuan') }}" class="mt-[10px] w-full py-[6px] bg-white text-[#B01116] text-[11px] font-semibold rounded-[6px] text-center hover:bg-gray-50 transition block leading-none">
-                    Pusat Bantuan
-                </a>
-            </div>
-        </div>
-    </aside>
+            </header>
 
-    <!-- Overlay Mobile -->
-    <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-30 bg-black/40 lg:hidden"></div>
+            <!-- ========================================================= -->
+            <!-- MAIN CONTENT -->
+            <!-- ========================================================= -->
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+                <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- ========================================================= -->
-    <!-- MAIN WRAPPER (Di sebelah kanan Sidebar fixed) -->
-    <!-- ========================================================= -->
-    <div class="lg:pl-[248px] min-h-screen flex flex-col">
+                    <!-- Page Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <p class="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-white/80 mb-0.5">
+                                OPERASIONAL SSC
+                            </p>
+                            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Notifikasi</h1>
+                            <p class="text-xs sm:text-sm text-white/90 mt-0.5">Pembaruan penting terkait laporan dan aktivitas akun Anda.</p>
+                        </div>
 
-        <!-- ========================================================= -->
-        <!-- HEADER (Tinggi 78px, Background Putih) -->
-        <!-- ========================================================= -->
-        <header class="h-[78px] bg-white border-b border-[#E5E7EB] px-[32px] flex items-center justify-between shrink-0 sticky top-0 z-20">
-            <div class="flex items-center gap-[16px]">
-                <!-- Mobile toggle button -->
-                <button @click="mobileSidebarOpen = !mobileSidebarOpen" class="p-2 -ml-2 rounded-lg text-[#58595B] hover:text-[#252525] hover:bg-[#F8F8F9] lg:hidden" type="button" aria-label="Buka menu navigasi">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-
-                <!-- Search bar (360px x 45px, background #F7F7F8, border 1px #E5E7EB, border-radius 8px) -->
-                <div class="relative w-[240px] sm:w-[320px] md:w-[360px]">
-                    <input
-                        type="text"
-                        placeholder="Cari nomor tiket atau laporan..."
-                        onkeydown="if(event.key === 'Enter'){ window.location.href='{{ route('laporan.riwayat') }}?q=' + encodeURIComponent(this.value); }"
-                        class="w-full h-[45px] bg-[#F7F7F8] border border-[#E5E7EB] rounded-[8px] px-[14px] text-[13px] text-[#252525] placeholder-[#9CA3AF] focus:outline-none focus:border-[#B01116] focus:bg-white transition"
-                    />
-                </div>
-            </div>
-
-            <!-- Header Kanan (Lonceng notifikasi badge 3, Avatar SR, Nama Siti Rahmawati, Role Admin SSC) -->
-            <div class="flex items-center gap-[18px]">
-                <!-- Lonceng Notifikasi -->
-                <a href="{{ route('admin.notifikasi') }}" class="relative w-[38px] h-[38px] rounded-full flex items-center justify-center text-[#252525] hover:bg-[#F8F8F9] transition" aria-label="Notifikasi">
-                    <svg class="w-5 h-5 text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                    </svg>
-                    <span
-                        class="absolute top-[6px] right-[6px] w-[15px] h-[15px] rounded-full bg-[#B01116] text-white text-[9px] font-bold flex items-center justify-center"
-                        x-text="unreadCount"
-                        x-show="unreadCount > 0"
-                    >
-                        {{ $unreadCount }}
-                    </span>
-                </a>
-
-                <!-- Profil Pengguna -->
-                <a href="{{ route('admin.profil') }}" class="flex items-center gap-[10px] group">
-                    <div class="w-[34px] h-[34px] rounded-[6px] bg-[#FCE8E8] text-[#B01116] font-semibold text-[12px] flex items-center justify-center shrink-0">
-                        {{ $authInitials }}
-                    </div>
-                    <div class="hidden sm:block text-left">
-                        <span class="text-[13px] font-semibold text-[#252525] leading-tight block group-hover:text-[#B01116] transition">{{ $authName }}</span>
-                        <span class="text-[11px] font-normal text-[#6B7280] leading-tight block mt-[1px]">{{ $authRole }}</span>
-                    </div>
-                </a>
-            </div>
-        </header>
-
-        <!-- ========================================================= -->
-        <!-- MAIN CONTENT (Background Gradient Merah, Padding 32px) -->
-        <!-- ========================================================= -->
-        <main class="flex-1 main-gradient-bg p-[32px]">
-            <div class="max-w-[1220px] mx-auto">
-
-                <!-- Page Header: Judul (28px font-weight 400), Subtitle (14px), Tombol "Tandai semua telah dibaca" (42px) -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[16px] mb-[24px]">
-                    <div>
-                        <h1 class="text-[28px] font-normal text-white tracking-tight leading-tight">Notifikasi</h1>
-                        <p class="text-[14px] font-normal text-white/85 mt-[4px]">Pembaruan penting terkait laporan dan aktivitas akun Anda.</p>
+                        <div>
+                            <button
+                                type="button"
+                                @click="markAllAsRead()"
+                                class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#FFFFFF] hover:bg-gray-50 text-xs sm:text-sm font-bold text-[#B01116] shadow-md transition cursor-pointer"
+                            >
+                                Tandai semua telah dibaca
+                            </button>
+                        </div>
                     </div>
 
-                    <div>
-                        <button
-                            type="button"
-                            @click="markAllAsRead()"
-                            class="h-[42px] px-[18px] bg-white hover:bg-gray-50 text-[#252525] text-[14px] font-medium rounded-[9px] shadow-none transition cursor-pointer flex items-center justify-center active:scale-95"
-                        >
-                            Tandai semua telah dibaca
-                        </button>
-                    </div>
-                </div>
+                    <!-- Layout Dua Kolom -->
+                    <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
 
-                <!-- Layout Dua Kolom: Notification Card (~920px) & Information Card (~280px), Gap 18px -->
-                <div class="flex flex-col xl:flex-row items-start gap-[18px]">
-
-                    <!-- ===================================================== -->
-                    <!-- NOTIFICATION CARD (Kolom Utama ~920px, Background Putih) -->
-                    <!-- ===================================================== -->
-                    <div class="w-full xl:w-[920px] max-w-[920px] bg-white rounded-[10px] p-[20px] shadow-sm">
+                        <!-- NOTIFICATION CARD -->
+                        <div class="xl:col-span-9 bg-[#FFFFFF] rounded-2xl p-6 shadow-xl text-[#252525]">
 
                         <!-- Tab Header (Semua & Belum dibaca, jarak antar tab 30px) -->
                         <div class="flex items-center gap-[30px] border-b border-[#E5E7EB] pb-[12px] mb-[4px]">
@@ -526,9 +460,9 @@
                     </div>
 
                     <!-- ===================================================== -->
-                    <!-- INFORMATION CARD (Kolom Kanan ~280px x 145px, Background Putih) -->
+                    <!-- INFORMATION CARD (Kolom Kanan) -->
                     <!-- ===================================================== -->
-                    <div class="w-full xl:w-[280px] bg-white rounded-[10px] p-[20px] shadow-sm shrink-0 min-h-[145px]">
+                    <div class="xl:col-span-3 bg-[#FFFFFF] rounded-2xl p-6 shadow-xl text-[#252525]">
                         <!-- Icon Notification Merah -->
                         <div class="w-[20px] h-[20px] text-[#B01116] mb-[12px]">
                             <svg class="w-[20px] h-[20px] text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -553,6 +487,7 @@
             </div>
         </main>
 
+    </div>
     </div>
 </body>
 </html>

@@ -59,26 +59,23 @@ Route::get('/admin', fn () => redirect()->route('admin.dashboard'));
 Route::get('/dashboard-admin', fn () => redirect()->route('admin.dashboard'));
 
 // Admin SSC: Verifikasi Laporan & Detail Verifikasi
-Route::get('/admin/verifikasi-laporan', function () {
-    return view('admin.verifikasi');
-})->name('admin.verifikasi');
-Route::get('/admin/verifikasi-laporan/{tiket}', function ($tiket) {
-    return view('admin.verifikasi-detail', compact('tiket'));
-})->name('admin.verifikasi.detail');
+Route::get('/admin/verifikasi-laporan', [LaporanController::class, 'adminVerifikasi'])->name('admin.verifikasi');
+Route::get('/admin/verifikasi-laporan/{tiket}', [LaporanController::class, 'adminVerifikasiDetail'])->name('admin.verifikasi.detail');
+Route::post('/admin/verifikasi-laporan/{tiket}', [LaporanController::class, 'adminVerifikasiSubmit'])->name('admin.verifikasi.submit');
 Route::get('/admin/verifikasi', fn () => redirect()->route('admin.verifikasi'));
 Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi'));
 
 // Admin SSC: Monitoring Laporan
-Route::get('/admin/monitoring-laporan', function () {
-    return view('admin.monitoring');
-})->name('admin.monitoring');
+Route::get('/admin/monitoring-laporan', [LaporanController::class, 'adminMonitoring'])->name('admin.monitoring');
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 
+// Admin SSC: Rekapitulasi Pengaduan
+Route::get('/admin/rekapitulasi', [LaporanController::class, 'adminRekapitulasi'])->name('admin.rekapitulasi');
+Route::get('/rekapitulasi', fn () => redirect()->route('admin.rekapitulasi'));
+
 // Petugas Unit: Dashboard & Notifikasi Unit
-Route::get('/unit/dashboard', function () {
-    return view('unit.dashboard');
-})->name('unit.dashboard');
+Route::get('/unit/dashboard', [DashboardController::class, 'unitDashboard'])->name('unit.dashboard');
 Route::get('/dashboard-unit', fn () => redirect()->route('unit.dashboard'));
 Route::get('/unit', fn () => redirect()->route('unit.dashboard'));
 
@@ -92,28 +89,20 @@ Route::post('/unit/laporan-ditugaskan/{tiket}/update', [LaporanController::class
 Route::get('/laporan-ditugaskan', fn () => redirect()->route('unit.laporan-ditugaskan'));
 Route::get('/petugas/laporan-ditugaskan', fn () => redirect()->route('unit.laporan-ditugaskan'));
 
-Route::get('/unit/notifikasi', function () {
-    return view('unit.notifikasi');
-})->name('unit.notifikasi');
+Route::get('/unit/notifikasi', [NotificationController::class, 'index'])->name('unit.notifikasi');
 Route::get('/notifikasi-unit', fn () => redirect()->route('unit.notifikasi'));
 
 Route::get('/unit/profil', [ProfileController::class, 'show'])->name('unit.profil');
 Route::get('/profil-unit', fn () => redirect()->route('unit.profil'));
 
 // Super Admin: Dashboard & Log Aktivitas
-Route::get('/super-admin/dashboard', function () {
-    return view('superadmin.dashboard');
-})->name('superadmin.dashboard');
+Route::get('/super-admin/dashboard', [DashboardController::class, 'superAdminDashboard'])->name('superadmin.dashboard');
 Route::get('/dashboard-super-admin', fn () => redirect()->route('superadmin.dashboard'));
 
-Route::get('/super-admin/log-aktivitas', function () {
-    return view('superadmin.log-aktivitas');
-})->name('superadmin.log');
+Route::get('/super-admin/log-aktivitas', [DashboardController::class, 'superAdminLog'])->name('superadmin.log');
 Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
 
-Route::get('/super-admin/unit-penangan', function () {
-    return view('superadmin.unit-penangan');
-})->name('superadmin.unit-penangan');
+Route::get('/super-admin/unit-penangan', [DashboardController::class, 'superAdminUnitPenangan'])->name('superadmin.unit-penangan');
 Route::get('/unit-penangan', fn () => redirect()->route('superadmin.unit-penangan'));
 
 // Super Admin: Manajemen Akun
@@ -131,9 +120,7 @@ Route::put('/super-admin/kategori-penyaluran/{kategoriPenyaluran}', [SuperAdminK
 Route::delete('/super-admin/kategori-penyaluran/{kategoriPenyaluran}', [SuperAdminKategoriController::class, 'destroy'])->name('superadmin.kategori.destroy');
 
 // Petugas Unit: Riwayat Penanganan
-Route::get('/petugas/riwayat-penanganan', function () {
-    return view('petugas.riwayat-penanganan');
-})->name('petugas.riwayat');
+Route::get('/petugas/riwayat-penanganan', [LaporanController::class, 'petugasRiwayat'])->name('petugas.riwayat');
 Route::get('/riwayat-penanganan', fn () => redirect()->route('petugas.riwayat'));
 
 // Breeze default profile routes

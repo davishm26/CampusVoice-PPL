@@ -45,36 +45,9 @@
         mobileSidebarOpen: false,
         activeTab: 'direktorat',
         searchHeader: '',
-        direktoratBadgeOffset: -1,
-        direktoratUnits: [
-            { id: 1, nama: 'Direktorat Sekretariat & Perencanaan Strategis', tipe: 'Direktorat', jumlahLabel: '1 petugas', status: 'Aktif' },
-            { id: 2, nama: 'Direktorat Bandung Techno Park', tipe: 'Direktorat', jumlahLabel: '2 petugas', status: 'Aktif' },
-            { id: 3, nama: 'Direktorat Akademik', tipe: 'Direktorat', jumlahLabel: '3 petugas', status: 'Aktif' },
-            { id: 4, nama: 'Direktorat Pasca Sarjana dan Advance Learning', tipe: 'Direktorat', jumlahLabel: '4 petugas', status: 'Aktif' },
-            { id: 5, nama: 'Direktorat Logistik dan Aset', tipe: 'Direktorat', jumlahLabel: '1 petugas', status: 'Aktif' },
-            { id: 6, nama: 'Direktorat Keuangan', tipe: 'Direktorat', jumlahLabel: '2 petugas', status: 'Aktif' },
-            { id: 7, nama: 'Direktorat Sumber Daya Manusia', tipe: 'Direktorat', jumlahLabel: '3 petugas', status: 'Aktif' },
-            { id: 8, nama: 'Direktorat Pusat Teknologi Informasi', tipe: 'Direktorat', jumlahLabel: '4 petugas', status: 'Aktif' },
-            { id: 9, nama: 'Direktorat Pemasaran & Admisi', tipe: 'Direktorat', jumlahLabel: '1 petugas', status: 'Aktif' },
-            { id: 10, nama: 'Direktorat Pengembangan Karir, Alumni, & Endowment', tipe: 'Direktorat', jumlahLabel: '2 petugas', status: 'Aktif' },
-            { id: 11, nama: 'Direktorat Kemahasiswaan', tipe: 'Direktorat', jumlahLabel: '3 petugas', status: 'Aktif' },
-            { id: 12, nama: 'Direktorat Kerjasama Strategis & Kantor Urusan Internasional', tipe: 'Direktorat', jumlahLabel: '4 petugas', status: 'Aktif' },
-            { id: 13, nama: 'Direktorat Penelitian dan Pengabdian Masyarakat', tipe: 'Direktorat', jumlahLabel: '1 petugas', status: 'Aktif' },
-            { id: 14, nama: 'Satpras', tipe: 'Direktorat', jumlahLabel: '2 petugas', status: 'Aktif' }
-        ],
-        prodiUnits: [
-            { id: 1, nama: 'Program Studi S1 Sistem Informasi', tipe: 'Program Studi', jumlahLabel: '35 mahasiswa', status: 'Aktif' },
-            { id: 2, nama: 'Program Studi S1 Teknologi Informasi', tipe: 'Program Studi', jumlahLabel: '28 mahasiswa', status: 'Aktif' },
-            { id: 3, nama: 'Program Studi S1 Teknik Informatika', tipe: 'Program Studi', jumlahLabel: '42 mahasiswa', status: 'Aktif' },
-            { id: 4, nama: 'Program Studi S1 Rekayasa Perangkat Lunak', tipe: 'Program Studi', jumlahLabel: '30 mahasiswa', status: 'Aktif' },
-            { id: 5, nama: 'Program Studi S1 Sains Data', tipe: 'Program Studi', jumlahLabel: '25 mahasiswa', status: 'Aktif' },
-            { id: 6, nama: 'Program Studi S1 Teknik Elektro', tipe: 'Program Studi', jumlahLabel: '22 mahasiswa', status: 'Aktif' },
-            { id: 7, nama: 'Program Studi S1 Teknik Industri', tipe: 'Program Studi', jumlahLabel: '29 mahasiswa', status: 'Aktif' },
-            { id: 8, nama: 'Program Studi S1 Teknik Komputer', tipe: 'Program Studi', jumlahLabel: '20 mahasiswa', status: 'Aktif' },
-            { id: 9, nama: 'Program Studi S1 Teknik Logistik', tipe: 'Program Studi', jumlahLabel: '18 mahasiswa', status: 'Aktif' },
-            { id: 10, nama: 'Program Studi S1 Bisnis Digital', tipe: 'Program Studi', jumlahLabel: '33 mahasiswa', status: 'Aktif' },
-            { id: 11, nama: 'Program Studi S1 Teknik Telekomunikasi', tipe: 'Program Studi', jumlahLabel: '24 mahasiswa', status: 'Aktif' }
-        ],
+        direktoratBadgeOffset: 0,
+        direktoratUnits: @js($direktoratUnits ?? []),
+        prodiUnits: @js($prodiUnits ?? []),
         showAddModal: false,
         showManageModal: false,
         toastMessage: '',
@@ -143,7 +116,7 @@
         }
     }"
 >
-    <div class="min-h-screen flex flex-col lg:flex-row">
+    <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
         <!-- ========================================================= -->
         <!-- SIDEBAR KIRI (SUPER ADMIN) -->
@@ -302,7 +275,7 @@
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
@@ -365,7 +338,7 @@
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
             <!-- ========================================================= -->
-            <main class="flex-1 content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-7 text-[#FFFFFF]">
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Toast Notifikasi -->
