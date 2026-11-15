@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('kategori_penyalurans', function (Blueprint $table) {
+            $table->id();
+            $table->string('kategori_kata_kunci');
+            $table->string('tipe_tujuan', 50);
+            $table->string('rekomendasi_default');
+            $table->string('status', 20)->default('Aktif');
+            $table->unsignedInteger('urutan')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('kategori_penyalurans');
+    }
+};
