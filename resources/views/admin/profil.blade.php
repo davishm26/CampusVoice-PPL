@@ -331,10 +331,7 @@
 
                     <!-- Header Halaman -->
                     <div class="mb-6">
-                        <p class="text-[11px] font-bold uppercase tracking-widest text-[#FFFFFF]/85">
-                            OPERASIONAL SSC
-                        </p>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight mt-0.5">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                             Profil Saya
                         </h1>
                         <p class="text-xs sm:text-sm text-[#FFFFFF]/85 mt-1 font-normal">

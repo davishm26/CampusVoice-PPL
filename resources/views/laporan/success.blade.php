@@ -12,7 +12,7 @@
     $unreadCount = $unreadCount ?? \App\Models\AppNotification::where('user_id', $authUser?->id)->where('is_read', false)->count();
 
     $ticketNumber = $tiket ?? ($laporan ? $laporan->nomor_tiket : '-');
-    $waktuKirim = $laporan ? $laporan->formatted_date_time : now()->locale('id')->isoFormat('D MMMM YYYY, HH.mm') . ' WIB';
+    $waktuKirim = $laporan ? $laporan->formatted_date_time : now()->wib()->isoFormat('D MMMM YYYY, HH.mm') . ' WIB';
     $statusAwal = $laporan ? $laporan->status : 'Menunggu Verifikasi';
     $unitPenangan = $laporan ? $laporan->unit_penangan : 'Belum ditentukan';
 @endphp
@@ -196,6 +196,14 @@
                         <span>Masuk Akun</span>
                     </a>
                 @endauth
+
+                <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
+                    <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
+                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
+                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
+                        Pusat Bantuan
+                    </a>
+                </div>
             </div>
         </aside>
 

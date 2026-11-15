@@ -80,12 +80,12 @@ class Laporan extends Model
 
     public function getFormattedTanggalAttribute(): string
     {
-        return $this->created_at ? $this->created_at->locale('id')->isoFormat('D MMM YYYY') : '-';
+        return $this->created_at ? $this->created_at->wib()->isoFormat('D MMM YYYY') : '-';
     }
 
     public function getFormattedDateTimeAttribute(): string
     {
-        return $this->created_at ? $this->created_at->locale('id')->isoFormat('D MMMM YYYY, HH.mm') . ' WIB' : '-';
+        return $this->created_at ? $this->created_at->wib()->isoFormat('D MMMM YYYY, HH.mm') . ' WIB' : '-';
     }
 
     public function getDisplayPelaporAttribute(): string

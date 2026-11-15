@@ -85,7 +85,7 @@
 
                 <!-- Navigasi Menu Admin SSC -->
                 <div class="px-4 py-3 flex-1">
-                    <p class="px-3 text-[11px] font-bold text-[#6B7280] tracking-wider mb-2 uppercase">Menu Utama</p>
+                    <p class="px-3 text-[11px] font-bold text-[#000000] tracking-wider mb-2 uppercase">ADMIN SSC</p>
 
                     <nav class="space-y-1">
                         <!-- Menu 1: Dashboard (AKTIF) -->
@@ -280,9 +280,6 @@
                 <!-- Header Action: Judul Halaman & Tombol Buka Antrian Verifikasi -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <p class="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-white/80 mb-0.5">
-                            OPERASIONAL SSC
-                        </p>
                         <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                             Dashboard Admin SSC
                         </h1>
@@ -305,7 +302,7 @@
                 <!-- 1. 6 KARTU STATISTIK LAPORAN -->
                 <!-- ========================================================= -->
                 <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
-                    
+
                     <!-- Kartu 1: Total Laporan -->
                     <div class="bg-white rounded-2xl p-4 shadow-xl flex items-center gap-3.5 transition hover:shadow-2xl">
                         <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center shrink-0 text-[#B01116]">
@@ -573,7 +570,7 @@
                                             {{ $item->user->prodi ?? '-' }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $item->created_at ? $item->created_at->diffForHumans() : '-' }}
+                                            {{ $item->created_at ? $item->created_at->wib()->diffForHumans() : '-' }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-right">
                                             <a

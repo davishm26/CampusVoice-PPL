@@ -286,9 +286,6 @@
                 <div class="max-w-7xl mx-auto">
                     <!-- Header Bagian Konten -->
                     <div class="mb-6">
-                        <p class="text-[11px] font-bold uppercase tracking-widest text-[#FFFFFF]/85">
-                            LAPORAN BARU
-                        </p>
                         <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight mt-0.5">
                             Buat Laporan Baru
                         </h1>

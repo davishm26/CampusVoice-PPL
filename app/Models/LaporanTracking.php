@@ -32,7 +32,7 @@ class LaporanTracking extends Model
     public function getFormattedWaktuAttribute(): string
     {
         $time = $this->waktu ?? $this->created_at;
-        return $time ? $time->locale('id')->isoFormat('D MMM YYYY, HH.mm') : '-';
+        return $time ? $time->wib()->isoFormat('D MMM YYYY, HH.mm') . ' WIB' : '-';
     }
 }
 
