@@ -393,7 +393,7 @@ class LaporanController extends Controller
 
             $items[] = [
                 'tiket' => $l->nomor_tiket,
-                'tanggal' => $l->created_at ? $l->created_at->locale('id')->translatedFormat('d M Y') : '18 Okt 2026',
+                'tanggal' => $l->created_at ? $l->created_at->wib()->isoFormat('D MMM YYYY') : '18 Okt 2026',
                 'judul' => $l->judul,
                 'kategori' => $kategoriShort,
                 'prioritas' => $prioritasShort,
@@ -472,7 +472,7 @@ class LaporanController extends Controller
                     'nama' => $t->pengirim_nama ?? 'Admin SSC',
                     'role' => $t->pengirim_role ?? 'Admin SSC',
                     'pesan' => $t->pesan,
-                    'waktu' => $t->created_at ? $t->created_at->diffForHumans() : 'Baru saja',
+                    'waktu' => $t->created_at ? $t->created_at->wib()->diffForHumans() : 'Baru saja',
                 ];
             }
 
@@ -640,7 +640,7 @@ class LaporanController extends Controller
         $laporan = [
             'tiket' => $dbLaporan->nomor_tiket,
             'judul' => $dbLaporan->judul,
-            'waktu' => $dbLaporan->created_at ? 'Diterima ' . $dbLaporan->created_at->locale('id')->translatedFormat('d M Y, H.i') . ' WIB' : '-',
+            'waktu' => $dbLaporan->created_at ? 'Diterima ' . $dbLaporan->created_at->wib()->isoFormat('D MMM YYYY, HH.mm') . ' WIB' : '-',
             'anonim' => (bool) $dbLaporan->is_anonim,
             'kategori' => $dbLaporan->short_kategori ?? $dbLaporan->kategori_label ?? $dbLaporan->kategori,
             'lokasi' => $dbLaporan->lokasi ?? '-',
@@ -791,9 +791,9 @@ class LaporanController extends Controller
                 'kategori' => $l->short_kategori ?? $l->kategori_label ?? $l->kategori ?? 'Umum',
                 'prioritas' => $prioritasShort,
                 'unit' => $l->unit_penangan ?? 'Belum Ditentukan',
-                'dikirim' => $l->created_at ? $l->created_at->locale('id')->translatedFormat('d M Y') : '-',
-                'tanggal_ymd' => $l->created_at ? $l->created_at->format('Y-m-d') : '',
-                'diperbarui' => $l->updated_at ? 'Update: ' . $l->updated_at->locale('id')->translatedFormat('d M Y, H.i') : '-',
+                'dikirim' => $l->created_at ? $l->created_at->wib()->isoFormat('D MMM YYYY') : '-',
+                'tanggal_ymd' => $l->created_at ? $l->created_at->wib()->format('Y-m-d') : '',
+                'diperbarui' => $l->updated_at ? 'Update: ' . $l->updated_at->wib()->isoFormat('D MMM YYYY, HH.mm') . ' WIB' : '-',
                 'durasi' => $days . ' hari',
                 'overdue' => $overdue,
                 'status' => $l->status,
@@ -897,8 +897,8 @@ class LaporanController extends Controller
             return [
                 'tiket' => $l->nomor_tiket,
                 'judul' => $l->judul,
-                'diterima' => $l->created_at ? $l->created_at->locale('id')->translatedFormat('d M Y') : '-',
-                'selesai' => $l->status === 'Selesai' && $l->updated_at ? $l->updated_at->locale('id')->translatedFormat('d M Y') : '—',
+                'diterima' => $l->created_at ? $l->created_at->wib()->isoFormat('D MMM YYYY') : '-',
+                'selesai' => $l->status === 'Selesai' && $l->updated_at ? $l->updated_at->wib()->isoFormat('D MMM YYYY') : '—',
                 'status' => $l->status,
                 'durasi' => $l->status === 'Selesai' ? "{$days} hari" : "{$days} hari berjalan",
                 'kategori' => $l->kategori_label ?? $l->kategori ?? 'Umum',

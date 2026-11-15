@@ -326,9 +326,6 @@
                     <!-- Page Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p class="text-[11px] sm:text-xs font-bold tracking-wider uppercase text-white/80 mb-0.5">
-                                OPERASIONAL SSC
-                            </p>
                             <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Notifikasi</h1>
                             <p class="text-xs sm:text-sm text-white/90 mt-0.5">Pembaruan penting terkait laporan dan aktivitas akun Anda.</p>
                         </div>

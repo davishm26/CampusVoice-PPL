@@ -114,8 +114,11 @@ class DashboardController extends Controller
         $dayMap = ['Mon' => ['Sen', 'Senin'], 'Tue' => ['Sel', 'Selasa'], 'Wed' => ['Rab', 'Rabu'], 'Thu' => ['Kam', 'Kamis'], 'Fri' => ['Jum', 'Jumat'], 'Sat' => ['Sab', 'Sabtu'], 'Sun' => ['Min', 'Minggu']];
         $rawCounts = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $count = Laporan::whereDate('created_at', $date->toDateString())->count();
+            $date = now()->wib()->subDays($i);
+            $count = Laporan::whereBetween('created_at', [
+                $date->copy()->startOfDay()->utc(),
+                $date->copy()->endOfDay()->utc(),
+            ])->count();
             $dKey = $date->format('D');
             $rawCounts[] = [
                 'hari' => $dayMap[$dKey][0] ?? $dKey,
@@ -206,7 +209,7 @@ class DashboardController extends Controller
 
             return [
                 'tiket' => $lap->nomor_tiket,
-                'tanggal' => $lap->created_at ? $lap->created_at->locale('id')->translatedFormat('d M Y') : '-',
+                'tanggal' => $lap->created_at ? $lap->created_at->wib()->isoFormat('D MMM YYYY') : '-',
                 'judul' => $lap->judul,
                 'kategori' => $lap->short_kategori ?? $lap->kategori_label ?? $lap->kategori ?? 'Umum',
                 'prioritas' => $lap->prioritas ?? 'Sedang',

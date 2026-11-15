@@ -11,7 +11,7 @@
     $authInitials = substr($authInitials, 0, 2) ?: 'CV';
 
     $authFirstName = $authWords[0] ?? $authName;
-    $hariIni = now()->locale('id')->isoFormat('dddd, D MMMM YYYY');
+    $hariIni = now()->wib()->isoFormat('dddd, D MMMM YYYY');
 
     $unreadCount = $unreadCount ?? \App\Models\AppNotification::where('user_id', $authUser?->id)->where('is_read', false)->count();
     $totalLaporan = $totalLaporan ?? \App\Models\Laporan::where('user_id', $authUser?->id)->count();

@@ -53,6 +53,8 @@
         filterTanggalSampai: '',
         datePopoverOpen: false,
         onlyOverdue: false,
+        currentPage: 1,
+        perPage: 10,
         rows: @js($rows ?? []),
         get dateLabel() {
             if (!this.filterTanggalDari && !this.filterTanggalSampai) return 'Semua Tanggal';
@@ -77,6 +79,32 @@
                 return true;
             });
         },
+        get totalPages() {
+            return Math.max(1, Math.ceil(this.filteredRows.length / this.perPage));
+        },
+        get paginatedRows() {
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = 1;
+            }
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredRows.slice(start, start + this.perPage);
+        },
+        get rangeStart() {
+            if (this.filteredRows.length === 0) return 0;
+            return (this.currentPage - 1) * this.perPage + 1;
+        },
+        get rangeEnd() {
+            return Math.min(this.currentPage * this.perPage, this.filteredRows.length);
+        },
+        prevPage() {
+            if (this.currentPage > 1) this.currentPage--;
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) this.currentPage++;
+        },
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) this.currentPage = page;
+        },
         resetFilters() {
             this.searchHeader = '';
             this.searchQuery = '';
@@ -88,6 +116,7 @@
             this.filterTanggalSampai = '';
             this.datePopoverOpen = false;
             this.onlyOverdue = false;
+            this.currentPage = 1;
         }
     }"
 >
@@ -393,25 +422,28 @@
                         </div>
                     </div>
 
-                    <!-- Baris Filter & Pencarian (Dua Baris Kompak di dalam Kotak Putih) -->
-                    <div class="bg-[#FFFFFF] rounded-2xl p-4 shadow-lg border border-[#E5E7EB] space-y-3">
-                        <!-- Baris Filter 1 -->
-                        <div class="flex flex-wrap items-center gap-3">
+                    <!-- Baris Filter & Pencarian (Satu Baris Kompak di dalam Kotak Putih) -->
+                    <div class="bg-[#FFFFFF] rounded-2xl p-3.5 shadow-lg border border-[#E5E7EB]">
+                        <div class="flex flex-wrap xl:flex-nowrap items-center gap-2">
                             <!-- Input Pencarian -->
-                            <div class="flex-1 min-w-[240px]">
+                            <div class="relative w-full sm:flex-1 min-w-[140px]">
+                                <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="7"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
                                 <input
                                     type="text"
                                     x-model="searchQuery"
                                     placeholder="Cari nomor tiket atau judul..."
-                                    class="w-full bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
+                                    class="w-full h-10 bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] pl-9 pr-3 text-[13px] text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
                                 />
                             </div>
 
                             <!-- Dropdown Status -->
-                            <div class="relative min-w-[155px] shrink-0">
+                            <div class="relative w-full sm:w-auto xl:w-[142px] shrink-0">
                                 <select
                                     x-model="filterStatus"
-                                    class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                    class="w-full h-10 appearance-none bg-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] pl-3 pr-8 text-[13px] font-medium text-[#252525] truncate focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                 >
                                     <option value="">Semua Status</option>
                                     <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
@@ -420,32 +452,32 @@
                                     <option value="Selesai">Selesai</option>
                                     <option value="Ditolak">Ditolak</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-[#6B7280]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
 
                             <!-- Dropdown Prioritas -->
-                            <div class="relative min-w-[155px] shrink-0">
+                            <div class="relative w-full sm:w-auto xl:w-[148px] shrink-0">
                                 <select
                                     x-model="filterPrioritas"
-                                    class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                    class="w-full h-10 appearance-none bg-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] pl-3 pr-8 text-[13px] font-medium text-[#252525] truncate focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                 >
                                     <option value="">Semua Prioritas</option>
                                     <option value="Tinggi">Tinggi</option>
                                     <option value="Sedang">Sedang</option>
                                     <option value="Rendah">Rendah</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-[#6B7280]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
 
                             <!-- Dropdown Kategori -->
-                            <div class="relative min-w-[155px] shrink-0">
+                            <div class="relative w-full sm:w-auto xl:w-[152px] shrink-0">
                                 <select
                                     x-model="filterKategori"
-                                    class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                    class="w-full h-10 appearance-none bg-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] pl-3 pr-8 text-[13px] font-medium text-[#252525] truncate focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                 >
                                     <option value="">Semua Kategori</option>
                                     <option value="Satpras">Satpras</option>
@@ -453,59 +485,54 @@
                                     <option value="Akademik">Akademik</option>
                                     <option value="Kemahasiswaan">Kemahasiswaan</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-[#6B7280]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Baris Filter 2 -->
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex flex-wrap items-center gap-3">
-                                <!-- Dropdown Unit -->
-                                <div class="relative min-w-[260px] sm:min-w-[320px]">
-                                    <select
-                                        x-model="filterUnit"
-                                        class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
-                                    >
-                                        <option value="">Semua Unit</option>
-                                        <option value="Direktorat Logistik dan Aset">Direktorat Logistik dan Aset</option>
-                                        <option value="Direktorat Pusat Teknologi Informasi">Direktorat Pusat Teknologi Informasi</option>
-                                        <option value="Program Studi S1 Sistem Informasi">Program Studi S1 Sistem Informasi</option>
-                                        <option value="Belum Ditentukan">Belum Ditentukan</option>
-                                    </select>
-                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </div>
+                            <!-- Dropdown Unit -->
+                            <div class="relative w-full sm:w-auto xl:w-[144px] shrink-0">
+                                <select
+                                    x-model="filterUnit"
+                                    class="w-full h-10 appearance-none bg-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] pl-3 pr-8 text-[13px] font-medium text-[#252525] truncate focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                >
+                                    <option value="">Semua Unit</option>
+                                    <option value="Direktorat Logistik dan Aset">Direktorat Logistik dan Aset</option>
+                                    <option value="Direktorat Pusat Teknologi Informasi">Direktorat Pusat Teknologi Informasi</option>
+                                    <option value="Program Studi S1 Sistem Informasi">Program Studi S1 Sistem Informasi</option>
+                                    <option value="Belum Ditentukan">Belum Ditentukan</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-[#6B7280]">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                 </div>
+                            </div>
 
-                                <!-- Range Tanggal -->
-                                <div class="relative" @click.outside="datePopoverOpen = false">
-                                    <button
-                                        type="button"
-                                        @click="datePopoverOpen = !datePopoverOpen"
-                                        class="bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2 px-4 text-xs sm:text-sm font-medium text-[#252525] whitespace-nowrap flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition"
-                                    >
-                                        <span x-text="dateLabel"></span>
-                                    </button>
-                                    <div
-                                        x-show="datePopoverOpen"
-                                        x-cloak
-                                        x-transition
-                                        class="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5E7EB] p-4 z-30 text-[#252525] space-y-3"
-                                    >
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Dari Tanggal</label>
-                                            <input type="date" x-model="filterTanggalDari" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Sampai Tanggal</label>
-                                            <input type="date" x-model="filterTanggalSampai" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
-                                        </div>
-                                        <div class="flex items-center justify-between pt-1">
-                                            <button type="button" @click="filterTanggalDari = ''; filterTanggalSampai = ''; datePopoverOpen = false;" class="text-xs font-semibold text-[#6B7280] hover:text-[#B01116] cursor-pointer">Reset</button>
-                                            <button type="button" @click="datePopoverOpen = false" class="px-3 py-1.5 rounded-lg bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#970e13] cursor-pointer">Terapkan</button>
-                                        </div>
+                            <!-- Range Tanggal -->
+                            <div class="relative w-full sm:w-auto shrink-0" @click.outside="datePopoverOpen = false">
+                                <button
+                                    type="button"
+                                    @click="datePopoverOpen = !datePopoverOpen"
+                                    class="w-full sm:w-auto h-10 bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] px-3.5 text-[13px] font-medium text-[#252525] whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition"
+                                >
+                                    <span x-text="dateLabel"></span>
+                                </button>
+                                <div
+                                    x-show="datePopoverOpen"
+                                    x-cloak
+                                    x-transition
+                                    class="absolute left-0 sm:right-0 sm:left-auto mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5E7EB] p-4 z-30 text-[#252525] space-y-3"
+                                >
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Dari Tanggal</label>
+                                        <input type="date" x-model="filterTanggalDari" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Sampai Tanggal</label>
+                                        <input type="date" x-model="filterTanggalSampai" class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]" />
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1">
+                                        <button type="button" @click="filterTanggalDari = ''; filterTanggalSampai = ''; datePopoverOpen = false;" class="text-xs font-semibold text-[#6B7280] hover:text-[#B01116] cursor-pointer">Reset</button>
+                                        <button type="button" @click="datePopoverOpen = false" class="px-3 py-1.5 rounded-lg bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#970e13] cursor-pointer">Terapkan</button>
                                     </div>
                                 </div>
                             </div>
@@ -516,7 +543,7 @@
                                 x-cloak
                                 type="button"
                                 @click="resetFilters()"
-                                class="text-xs font-bold text-[#B01116] hover:underline cursor-pointer"
+                                class="shrink-0 whitespace-nowrap text-xs font-bold text-[#B01116] hover:underline cursor-pointer px-1"
                             >
                                 Hapus Filter
                             </button>
@@ -563,7 +590,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-[#E5E7EB]">
-                                    <template x-for="row in filteredRows" :key="row.tiket">
+                                    <template x-for="row in paginatedRows" :key="row.tiket">
                                         <tr
                                             class="transition"
                                             :class="row.overdue ? 'bg-[#FEFCE8] hover:bg-[#fef9c3]/70' : 'bg-[#FFFFFF] hover:bg-gray-50/80'"
@@ -671,33 +698,36 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan <span x-text="filteredRows.length"></span> dari <span x-text="rows.length"></span> laporan
+                                Menampilkan <span class="font-semibold text-[#252525]" x-text="filteredRows.length ? (rangeStart + '–' + rangeEnd) : 0"></span> dari <span class="font-semibold text-[#252525]" x-text="filteredRows.length"></span> laporan
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="prevPage()"
+                                    :disabled="currentPage === 1"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Sebelumnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                                     </svg>
                                 </button>
+                                <template x-for="page in totalPages" :key="page">
+                                    <button
+                                        type="button"
+                                        @click="goToPage(page)"
+                                        class="w-8 h-8 rounded-lg text-xs flex items-center justify-center transition cursor-pointer"
+                                        :class="currentPage === page
+                                            ? 'bg-[#B01116] text-[#FFFFFF] font-bold shadow-xs'
+                                            : 'border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold hover:bg-gray-50 shadow-2xs'"
+                                        x-text="page"
+                                    ></button>
+                                </template>
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg bg-[#B01116] text-[#FFFFFF] font-bold text-xs flex items-center justify-center shadow-xs"
-                                >
-                                    1
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold text-xs flex items-center justify-center hover:bg-gray-50 transition cursor-pointer shadow-2xs"
-                                >
-                                    2
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="nextPage()"
+                                    :disabled="currentPage === totalPages"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Selanjutnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

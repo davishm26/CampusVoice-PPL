@@ -44,9 +44,10 @@ class SuperAdminAkunController extends Controller
     {
         $lastActivity = 'Baru saja';
         if ($user->updated_at) {
-            $lastActivity = $user->updated_at->gt(now()->subDay())
-                ? $user->updated_at->diffForHumans()
-                : $user->updated_at->translatedFormat('d M Y');
+            $updated = $user->updated_at->wib();
+            $lastActivity = $updated->gt(now()->wib()->subDay())
+                ? $updated->diffForHumans()
+                : $updated->isoFormat('D MMM YYYY');
         }
 
         $unit = $user->role === 'Mahasiswa'

@@ -44,13 +44,14 @@ class LaporanTanggapan extends Model
             return '-';
         }
 
-        if ($this->created_at->isToday()) {
-            return 'Hari ini, ' . $this->created_at->format('H.i');
-        } elseif ($this->created_at->isYesterday()) {
-            return 'Kemarin, ' . $this->created_at->format('H.i');
+        $created = $this->created_at->wib();
+        if ($created->isToday()) {
+            return 'Hari ini, ' . $created->format('H.i') . ' WIB';
+        } elseif ($created->isYesterday()) {
+            return 'Kemarin, ' . $created->format('H.i') . ' WIB';
         }
 
-        return $this->created_at->locale('id')->isoFormat('D MMM, HH.mm');
+        return $created->isoFormat('D MMM YYYY, HH.mm') . ' WIB';
     }
 }
 

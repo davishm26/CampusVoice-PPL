@@ -1,3 +1,21 @@
+@php
+    $verifikasiRows = collect($laporans ?? [])->map(function ($item) {
+        return [
+            'tiket' => $item->nomor_tiket,
+            'judul' => $item->judul,
+            'kategori_display' => $item->short_kategori ?? $item->kategori_label ?? $item->kategori,
+            'kategori' => trim(($item->kategori ?? '') . ' ' . ($item->kategori_label ?? '') . ' ' . ($item->short_kategori ?? '')),
+            'status' => $item->status ?? '',
+            'prioritas' => $item->prioritas ?? '',
+            'is_anonim' => (bool) $item->is_anonim,
+            'pelapor' => $item->user->name ?? 'Mahasiswa',
+            'prodi' => $item->user->prodi ?? '-',
+            'tanggal' => $item->created_at ? $item->created_at->wib()->format('Y-m-d') : '',
+            'waktu' => $item->created_at ? $item->created_at->wib()->diffForHumans() : '-',
+            'url' => route('admin.verifikasi.detail', $item->nomor_tiket),
+        ];
+    })->values()->all();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#FFFFFF]">
 <head>
@@ -51,6 +69,9 @@
         filterTanggalDari: '',
         filterTanggalSampai: '',
         datePopoverOpen: false,
+        currentPage: 1,
+        perPage: 10,
+        items: @js($verifikasiRows),
         get hasActiveFilters() {
             return Boolean(
                 this.searchHeader.trim() ||
@@ -71,6 +92,7 @@
             this.filterTanggalDari = '';
             this.filterTanggalSampai = '';
             this.datePopoverOpen = false;
+            this.currentPage = 1;
         },
         get dateLabel() {
             if (!this.filterTanggalDari && !this.filterTanggalSampai) return 'Semua Tanggal';
@@ -90,6 +112,35 @@
             if (this.filterTanggalDari && (!item.tanggal || item.tanggal < this.filterTanggalDari)) return false;
             if (this.filterTanggalSampai && (!item.tanggal || item.tanggal > this.filterTanggalSampai)) return false;
             return true;
+        },
+        get filteredItems() {
+            return this.items.filter(item => this.matchesFilter(item));
+        },
+        get totalPages() {
+            return Math.max(1, Math.ceil(this.filteredItems.length / this.perPage));
+        },
+        get paginatedItems() {
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = 1;
+            }
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredItems.slice(start, start + this.perPage);
+        },
+        get rangeStart() {
+            if (this.filteredItems.length === 0) return 0;
+            return (this.currentPage - 1) * this.perPage + 1;
+        },
+        get rangeEnd() {
+            return Math.min(this.currentPage * this.perPage, this.filteredItems.length);
+        },
+        prevPage() {
+            if (this.currentPage > 1) this.currentPage--;
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) this.currentPage++;
+        },
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) this.currentPage = page;
         }
     }"
 >
@@ -309,10 +360,7 @@
 
                     <!-- Header Bagian Konten -->
                     <div>
-                        <p class="text-[11px] font-bold uppercase tracking-widest text-[#FFFFFF]/85">
-                            OPERASIONAL SSC
-                        </p>
-                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight mt-0.5">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#FFFFFF] tracking-tight">
                             Verifikasi dan Penyaluran Laporan
                         </h1>
                         <p class="text-xs sm:text-sm text-[#FFFFFF]/85 mt-1 font-normal">
@@ -492,52 +540,38 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-[#E5E7EB] bg-[#FFFFFF]">
-                                    @forelse ($laporans ?? [] as $item)
-                                        <tr
-                                            class="hover:bg-gray-50/80 transition"
-                                            x-show="matchesFilter({
-                                                tiket: '{{ addslashes($item->nomor_tiket) }}',
-                                                judul: '{{ addslashes($item->judul) }}',
-                                                status: '{{ addslashes($item->status ?? '') }}',
-                                                kategori: '{{ addslashes(($item->kategori ?? '') . ' ' . ($item->kategori_label ?? '') . ' ' . ($item->short_kategori ?? '')) }}',
-                                                prioritas: '{{ addslashes($item->prioritas ?? '') }}',
-                                                tanggal: '{{ $item->created_at ? $item->created_at->format('Y-m-d') : '' }}'
-                                            })"
-                                        >
-                                            <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]">
-                                                {{ $item->nomor_tiket }}
-                                            </td>
+                                    <template x-for="item in paginatedItems" :key="item.tiket">
+                                        <tr class="hover:bg-gray-50/80 transition">
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm font-bold text-[#252525]" x-text="item.tiket"></td>
                                             <td class="py-5 px-6">
-                                                <div class="font-bold text-sm text-[#252525] leading-snug">{{ $item->judul }}</div>
-                                                <div class="text-xs text-[#6B7280] mt-0.5 font-normal">{{ $item->short_kategori ?? $item->kategori_label ?? $item->kategori }}</div>
+                                                <div class="font-bold text-sm text-[#252525] leading-snug" x-text="item.judul"></div>
+                                                <div class="text-xs text-[#6B7280] mt-0.5 font-normal" x-text="item.kategori_display"></div>
                                             </td>
                                             <td class="py-5 px-6 whitespace-nowrap">
-                                                @if ($item->is_anonim)
-                                                    <div class="text-sm text-[#252525] leading-snug">Pelapor anonim</div>
-                                                    <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
-                                                @else
-                                                    <div class="text-sm text-[#252525]">{{ $item->user->name ?? 'Mahasiswa' }}</div>
-                                                @endif
+                                                <template x-if="item.is_anonim">
+                                                    <div>
+                                                        <div class="text-sm text-[#252525] leading-snug">Pelapor anonim</div>
+                                                        <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
+                                                    </div>
+                                                </template>
+                                                <template x-if="!item.is_anonim">
+                                                    <div class="text-sm text-[#252525]" x-text="item.pelapor"></div>
+                                                </template>
                                             </td>
-                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                                {{ $item->user->prodi ?? '-' }}
-                                            </td>
-                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]">
-                                                {{ $item->created_at ? $item->created_at->diffForHumans() : '-' }}
-                                            </td>
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]" x-text="item.prodi"></td>
+                                            <td class="py-5 px-6 whitespace-nowrap text-sm text-[#252525]" x-text="item.waktu"></td>
                                             <td class="py-5 px-6 whitespace-nowrap text-right">
-                                                <a href="{{ route('admin.verifikasi.detail', $item->nomor_tiket) }}" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
+                                                <a :href="item.url" class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer">
                                                     Verifikasi &rarr;
                                                 </a>
                                             </td>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6" class="py-10 px-6 text-center text-sm text-[#6B7280]">
-                                                Tidak ada laporan yang menunggu verifikasi saat ini.
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                    </template>
+                                    <tr x-show="filteredItems.length === 0" x-cloak>
+                                        <td colspan="6" class="py-10 px-6 text-center text-sm text-[#6B7280]">
+                                            Tidak ada laporan yang menunggu verifikasi saat ini.
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -545,13 +579,15 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan {{ isset($laporans) ? $laporans->count() : 0 }} laporan
+                                Menampilkan <span class="font-semibold text-[#252525]" x-text="filteredItems.length ? (rangeStart + '–' + rangeEnd) : 0"></span> dari <span class="font-semibold text-[#252525]" x-text="filteredItems.length"></span> laporan
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <!-- Tombol Panah Kiri -->
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="prevPage()"
+                                    :disabled="currentPage === 1"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Sebelumnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -559,26 +595,25 @@
                                     </svg>
                                 </button>
 
-                                <!-- Angka 1 (AKTIF: Merah #B01116) -->
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg bg-[#B01116] text-[#FFFFFF] font-bold text-xs flex items-center justify-center shadow-xs"
-                                >
-                                    1
-                                </button>
-
-                                <!-- Angka 2 (Putih) -->
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold text-xs flex items-center justify-center hover:bg-gray-50 transition cursor-pointer shadow-2xs"
-                                >
-                                    2
-                                </button>
+                                <!-- Nomor Halaman Dinamis -->
+                                <template x-for="page in totalPages" :key="page">
+                                    <button
+                                        type="button"
+                                        @click="goToPage(page)"
+                                        class="w-8 h-8 rounded-lg text-xs flex items-center justify-center transition cursor-pointer"
+                                        :class="currentPage === page
+                                            ? 'bg-[#B01116] text-[#FFFFFF] font-bold shadow-xs'
+                                            : 'border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold hover:bg-gray-50 shadow-2xs'"
+                                        x-text="page"
+                                    ></button>
+                                </template>
 
                                 <!-- Tombol Panah Kanan -->
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="nextPage()"
+                                    :disabled="currentPage === totalPages"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Selanjutnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

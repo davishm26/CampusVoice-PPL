@@ -584,7 +584,7 @@
                 <!-- Sisi Kiri: Label Merah, Judul Besar, Deskripsi -->
                 <div class="lg:col-span-5">
                     <p class="text-xs sm:text-sm font-bold text-[#B01116] tracking-wider uppercase mb-3">
-                        DATA STATISTIK KAMPUS • {{ strtoupper(now()->locale('id')->isoFormat('MMMM Y')) }}
+                        DATA STATISTIK KAMPUS • {{ strtoupper(now()->wib()->isoFormat('MMMM Y')) }}
                     </p>
                     <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#252525] tracking-tight mb-4">
                         Transparansi dalam angka

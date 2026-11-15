@@ -47,6 +47,8 @@
         searchLog: '',
         filterStatus: '',
         filterKategori: '',
+        currentPage: 1,
+        perPage: 10,
         logs: @js($logs ?? []),
         get filteredLogs() {
             const q = (this.searchLog || this.searchHeader).trim().toLowerCase();
@@ -61,6 +63,32 @@
                 ) return false;
                 return true;
             });
+        },
+        get totalPages() {
+            return Math.max(1, Math.ceil(this.filteredLogs.length / this.perPage));
+        },
+        get paginatedLogs() {
+            if (this.currentPage > this.totalPages) {
+                this.currentPage = 1;
+            }
+            const start = (this.currentPage - 1) * this.perPage;
+            return this.filteredLogs.slice(start, start + this.perPage);
+        },
+        get rangeStart() {
+            if (this.filteredLogs.length === 0) return 0;
+            return (this.currentPage - 1) * this.perPage + 1;
+        },
+        get rangeEnd() {
+            return Math.min(this.currentPage * this.perPage, this.filteredLogs.length);
+        },
+        prevPage() {
+            if (this.currentPage > 1) this.currentPage--;
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) this.currentPage++;
+        },
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) this.currentPage = page;
         }
     }"
 >
@@ -359,7 +387,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-[#E5E7EB] bg-[#FFFFFF]">
-                                    <template x-for="log in filteredLogs" :key="log.id">
+                                    <template x-for="log in paginatedLogs" :key="log.id">
                                         <tr class="hover:bg-gray-50/80 transition">
                                             <!-- TIMESTAMP -->
                                             <td class="py-4 px-6 whitespace-nowrap text-xs sm:text-sm text-[#6B7280]" x-text="log.timestamp"></td>
@@ -418,33 +446,36 @@
                         <!-- Footer Tabel (Pagination) -->
                         <div class="py-4 px-6 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#FFFFFF]">
                             <p class="text-xs text-[#6B7280]">
-                                Menampilkan <span x-text="filteredLogs.length"></span> dari <span x-text="logs.length"></span> log aktivitas
+                                Menampilkan <span class="font-semibold text-[#252525]" x-text="filteredLogs.length ? (rangeStart + '–' + rangeEnd) : 0"></span> dari <span class="font-semibold text-[#252525]" x-text="filteredLogs.length"></span> log aktivitas
                             </p>
                             <div class="flex items-center gap-1.5">
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="prevPage()"
+                                    :disabled="currentPage === 1"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Sebelumnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                                     </svg>
                                 </button>
+                                <template x-for="page in totalPages" :key="page">
+                                    <button
+                                        type="button"
+                                        @click="goToPage(page)"
+                                        class="w-8 h-8 rounded-lg text-xs flex items-center justify-center transition cursor-pointer"
+                                        :class="currentPage === page
+                                            ? 'bg-[#B01116] text-[#FFFFFF] font-bold shadow-xs'
+                                            : 'border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold hover:bg-gray-50 shadow-2xs'"
+                                        x-text="page"
+                                    ></button>
+                                </template>
                                 <button
                                     type="button"
-                                    class="w-8 h-8 rounded-lg bg-[#B01116] text-[#FFFFFF] font-bold text-xs flex items-center justify-center shadow-xs"
-                                >
-                                    1
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] text-[#252525] font-semibold text-xs flex items-center justify-center hover:bg-gray-50 transition cursor-pointer shadow-2xs"
-                                >
-                                    2
-                                </button>
-                                <button
-                                    type="button"
-                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 transition cursor-pointer shadow-2xs"
+                                    @click="nextPage()"
+                                    :disabled="currentPage === totalPages"
+                                    class="w-8 h-8 rounded-lg border border-[#E5E7EB] bg-[#FFFFFF] flex items-center justify-center text-[#6B7280] hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
                                     title="Halaman Selanjutnya"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

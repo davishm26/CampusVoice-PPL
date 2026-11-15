@@ -43,18 +43,22 @@ class AppNotification extends Model
             return '-';
         }
 
-        $diffInMinutes = $this->created_at->diffInMinutes();
+        $created = $this->created_at->wib();
+        $now = now()->wib();
+        $diffInMinutes = (int) floor($created->diffInMinutes($now));
+
         if ($diffInMinutes < 1) {
             return 'Baru saja';
         } elseif ($diffInMinutes < 60) {
             return $diffInMinutes . ' menit lalu';
-        } elseif ($this->created_at->isToday()) {
-            return $this->created_at->diffInHours() . ' jam lalu';
-        } elseif ($this->created_at->isYesterday()) {
-            return 'Kemarin, ' . $this->created_at->format('H.i');
+        } elseif ($created->isToday()) {
+            $diffInHours = max(1, (int) floor($created->diffInHours($now)));
+            return $diffInHours . ' jam lalu';
+        } elseif ($created->isYesterday()) {
+            return 'Kemarin, ' . $created->format('H.i') . ' WIB';
         }
 
-        return $this->created_at->locale('id')->isoFormat('D MMM YYYY');
+        return $created->isoFormat('D MMM YYYY');
     }
 }
 
