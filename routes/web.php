@@ -6,6 +6,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PusatBantuanController;
 use App\Http\Controllers\SuperAdminAkunController;
+use App\Http\Controllers\SuperAdminKategoriController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman Depan / Welcome
@@ -121,6 +122,13 @@ Route::get('/manajemen-akun', fn () => redirect()->route('superadmin.akun'));
 Route::post('/super-admin/manajemen-akun', [SuperAdminAkunController::class, 'store'])->name('superadmin.akun.store');
 Route::put('/super-admin/manajemen-akun/{user}', [SuperAdminAkunController::class, 'update'])->name('superadmin.akun.update');
 Route::delete('/super-admin/manajemen-akun/{user}', [SuperAdminAkunController::class, 'destroy'])->name('superadmin.akun.destroy');
+
+// Super Admin: Kategori & Aturan Penyaluran
+Route::get('/super-admin/kategori-penyaluran', [SuperAdminKategoriController::class, 'index'])->name('superadmin.kategori');
+Route::get('/kategori-penyaluran', fn () => redirect()->route('superadmin.kategori'));
+Route::post('/super-admin/kategori-penyaluran', [SuperAdminKategoriController::class, 'store'])->name('superadmin.kategori.store');
+Route::put('/super-admin/kategori-penyaluran/{kategoriPenyaluran}', [SuperAdminKategoriController::class, 'update'])->name('superadmin.kategori.update');
+Route::delete('/super-admin/kategori-penyaluran/{kategoriPenyaluran}', [SuperAdminKategoriController::class, 'destroy'])->name('superadmin.kategori.destroy');
 
 // Petugas Unit: Riwayat Penanganan
 Route::get('/petugas/riwayat-penanganan', function () {
