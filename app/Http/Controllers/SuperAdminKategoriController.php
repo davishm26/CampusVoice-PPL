@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KategoriPenyaluran;
+use App\Models\LogAktivitas;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -103,6 +104,16 @@ class SuperAdminKategoriController extends Controller
             'urutan' => $nextOrder,
         ]);
 
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Menambahkan aturan penyaluran: {$rule->kategori_kata_kunci}",
+            recordTerkait: $rule->rekomendasi_default,
+            kategori: 'Kategori & Penyaluran',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Aturan penyaluran berhasil ditambahkan.',
@@ -140,6 +151,16 @@ class SuperAdminKategoriController extends Controller
             'status' => $validated['status'],
         ]);
 
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Memperbarui aturan penyaluran: {$kategoriPenyaluran->kategori_kata_kunci}",
+            recordTerkait: $kategoriPenyaluran->rekomendasi_default,
+            kategori: 'Kategori & Penyaluran',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
+
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Aturan penyaluran berhasil diperbarui.',
@@ -156,7 +177,18 @@ class SuperAdminKategoriController extends Controller
      */
     public function destroy(Request $request, KategoriPenyaluran $kategoriPenyaluran): JsonResponse|RedirectResponse
     {
+        $namaKategori = $kategoriPenyaluran->kategori_kata_kunci;
         $kategoriPenyaluran->delete();
+
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Menghapus aturan penyaluran: {$namaKategori}",
+            recordTerkait: '—',
+            kategori: 'Kategori & Penyaluran',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
