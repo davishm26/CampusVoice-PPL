@@ -124,5 +124,26 @@ class Laporan extends Model
 
         return route('laporan.bukti', $this->nomor_tiket);
     }
+
+    /**
+     * Selaraskan persentase progres agar konsisten dengan status laporan.
+     */
+    public static function resolveProgresForStatus(?string $status, ?int $progres = null): int
+    {
+        $val = max(0, min(100, (int) ($progres ?? 0)));
+
+        return match ($status) {
+            'Selesai' => 100,
+            'Menunggu Verifikasi' => ($val > 0 && $val <= 30) ? $val : 10,
+            'Diteruskan' => 35,
+            'Diproses' => ($val >= 40 && $val < 100) ? $val : 60,
+            default => $val,
+        };
+    }
+
+    public function getDisplayProgresAttribute(): int
+    {
+        return self::resolveProgresForStatus($this->status, $this->progres);
+    }
 }
 

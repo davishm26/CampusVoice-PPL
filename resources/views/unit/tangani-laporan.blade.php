@@ -49,11 +49,24 @@
         actionType: 'simpan',
         selectedFileName: '',
         previewModalOpen: false,
-        simulasikanPenyelesaian() {
-            this.status = 'Selesai';
-            this.progres = 100;
-            if (!this.catatan.trim()) {
-                this.catatan = 'Perbaikan dan penanganan laporan telah selesai dilakukan dan diverifikasi oleh tim unit.';
+        syncProgresWithStatus() {
+            const p = Number(this.progres);
+            if (this.status === 'Selesai') {
+                this.progres = 100;
+            } else if (this.status === 'Diteruskan') {
+                this.progres = 35;
+            } else if (this.status === 'Diproses' && (p < 40 || p >= 100)) {
+                this.progres = 60;
+            }
+        },
+        syncStatusWithProgres() {
+            const p = Number(this.progres);
+            if (p >= 100) {
+                this.status = 'Selesai';
+            } else if (p < 40) {
+                this.status = 'Diteruskan';
+            } else {
+                this.status = 'Diproses';
             }
         }
     }"
@@ -89,10 +102,15 @@
                         </span>
                     </div>
 
-                    <!-- Flash Message Sukses -->
+                    <!-- Flash Message Sukses / Error -->
                     @if (session('success'))
                         <div class="bg-[#ECFDF5] border border-[#A7F3D0] text-[#065F46] px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between shadow-sm">
                             <span>{{ session('success') }}</span>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between shadow-sm">
+                            <span>{{ session('error') }}</span>
                         </div>
                     @endif
 
@@ -232,6 +250,7 @@
                             <!-- KARTU 2: RIWAYAT DAN TANGGAPAN -->
                             <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB]">
                                 <h3 class="text-base font-bold text-[#252525]">Riwayat dan Tanggapan</h3>
+                                <p class="text-xs text-[#6B7280] mt-0.5">Komunikasi dan catatan penanganan terkait laporan ini.</p>
 
                                 <div class="mt-5 space-y-4">
                                     @foreach ($riwayats as $r)
@@ -240,12 +259,17 @@
                                                 {{ $r['inisial'] }}
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="text-sm font-bold text-[#252525]">{{ $r['nama'] }}</span>
-                                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F1F5F9] text-[#475569]">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-[#64748B]"></span>
-                                                        <span>{{ $r['role'] }}</span>
-                                                    </span>
+                                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <span class="text-sm font-bold text-[#252525]">{{ $r['nama'] }}</span>
+                                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F1F5F9] text-[#475569]">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-[#64748B]"></span>
+                                                            <span>{{ $r['role'] }}</span>
+                                                        </span>
+                                                    </div>
+                                                    @if (!empty($r['waktu']))
+                                                        <span class="text-[11px] text-[#6B7280]">{{ $r['waktu'] }}</span>
+                                                    @endif
                                                 </div>
                                                 <p class="text-sm text-[#4B5563] mt-1 leading-relaxed">
                                                     {{ $r['pesan'] }}
@@ -254,14 +278,182 @@
                                         </div>
                                     @endforeach
                                 </div>
+
+                                @if (in_array($laporan['status'], ['Diteruskan', 'Diproses'], true))
+                                    <!-- Form Kirim Tanggapan Terpisah (Tanpa Mengubah Status/Progres) -->
+                                    <form
+                                        method="POST"
+                                        action="{{ route('unit.laporan-ditugaskan.update', $laporan['tiket']) }}"
+                                        class="mt-5 pt-4 border-t border-[#E5E7EB]"
+                                    >
+                                        @csrf
+                                        <input type="hidden" name="action_type" value="tanggapan">
+                                        <label for="pesan_tanggapan" class="block text-xs font-bold text-[#252525] mb-1.5">
+                                            Tulis Tanggapan
+                                        </label>
+                                        <textarea
+                                            id="pesan_tanggapan"
+                                            name="catatan"
+                                            rows="3"
+                                            required
+                                            placeholder="Tulis pesan atau tanggapan untuk pelapor / Admin SSC tanpa mengubah status..."
+                                            class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 px-3.5 text-sm text-[#252525] placeholder-[#9CA3AF] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition resize-none"
+                                        ></textarea>
+                                        <div class="mt-3 flex items-center justify-between gap-3">
+                                            <p class="text-[11px] text-[#6B7280]">
+                                                Tanggapan akan dikirim sebagai {{ $authUser->name ?? 'Petugas Unit' }} (Petugas Unit).
+                                            </p>
+                                            <button
+                                                type="submit"
+                                                class="px-4 py-2 rounded-xl bg-[#B01116] hover:bg-[#8C0D11] text-[#FFFFFF] text-xs sm:text-sm font-bold shadow-sm transition cursor-pointer shrink-0"
+                                            >
+                                                Kirim Tanggapan
+                                            </button>
+                                        </div>
+                                    </form>
+                                @endif
                             </div>
 
                         </div>
 
                         <!-- ================================================= -->
-                        <!-- KOLOM KANAN: PEMBARUAN PENANGANAN (4 Kolom) -->
+                        <!-- KOLOM KANAN: PEMBARUAN PENANGANAN / STATUS TERKUNCI -->
                         <!-- ================================================= -->
-                        <div class="lg:col-span-4">
+                        <div class="lg:col-span-4 space-y-6">
+                            @if (!in_array($laporan['status'], ['Diteruskan', 'Diproses'], true))
+                                @if ($laporan['status'] === 'Selesai')
+                                    <!-- Kartu Informasi Penanganan Selesai -->
+                                    <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB] space-y-4">
+                                        <div class="flex items-start gap-3.5">
+                                            <div class="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#16A34A] flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-base font-bold text-[#252525]">Penanganan Selesai</h3>
+                                                <p class="text-xs text-[#6B7280] mt-0.5">
+                                                    Laporan ini telah selesai ditangani dan diarsipkan.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-[#F9FAFB] rounded-xl p-4 border border-[#F3F4F6] space-y-2.5">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="font-semibold text-[#6B7280]">Progres Akhir</span>
+                                                <span class="font-extrabold text-[#16A34A]">100%</span>
+                                            </div>
+                                            <div class="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                                                <div class="h-full bg-[#16A34A] rounded-full w-full"></div>
+                                            </div>
+                                            <div class="pt-1 flex items-center justify-between text-xs">
+                                                <span class="font-semibold text-[#6B7280]">Diselesaikan pada</span>
+                                                <span class="font-bold text-[#252525]">{{ $laporan['selesai_pada'] ?? '-' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <a
+                                            href="{{ route('petugas.riwayat') }}"
+                                            class="block w-full py-2.5 px-4 rounded-xl bg-[#B01116] hover:bg-[#8C0D11] text-[#FFFFFF] text-xs sm:text-sm font-bold text-center shadow-sm transition"
+                                        >
+                                            Lihat di Riwayat Penanganan
+                                        </a>
+                                    </div>
+                                @else
+                                    <!-- Kartu Informasi Dikembalikan ke Admin SSC -->
+                                    <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB] space-y-4">
+                                        <div class="flex items-start gap-3.5">
+                                            <div class="w-10 h-10 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-base font-bold text-[#252525]">Dikembalikan ke Admin SSC</h3>
+                                                <p class="text-xs text-[#6B7280] mt-0.5">
+                                                    Laporan ini sedang menunggu verifikasi ulang unit penangan oleh Admin SSC dan tidak dapat diperbarui oleh unit.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-[#F9FAFB] rounded-xl p-4 border border-[#F3F4F6] space-y-2.5">
+                                            <div class="flex items-center justify-between text-xs">
+                                                <span class="font-semibold text-[#6B7280]">Status Saat Ini</span>
+                                                <span class="font-extrabold text-[#D97706]">{{ $laporan['status'] }}</span>
+                                            </div>
+                                            <div class="pt-1 flex items-center justify-between text-xs">
+                                                <span class="font-semibold text-[#6B7280]">Dikembalikan pada</span>
+                                                <span class="font-bold text-[#252525]">{{ $laporan['selesai_pada'] ?? '-' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <a
+                                            href="{{ route('unit.laporan-ditugaskan') }}"
+                                            class="block w-full py-2.5 px-4 rounded-xl bg-[#B01116] hover:bg-[#8C0D11] text-[#FFFFFF] text-xs sm:text-sm font-bold text-center shadow-sm transition"
+                                        >
+                                            Kembali ke Laporan Ditugaskan
+                                        </a>
+                                    </div>
+                                @endif
+
+                                <!-- Kartu Riwayat Status -->
+                                <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB]">
+                                    <h3 class="text-base font-bold text-[#252525] mb-5">Riwayat Status</h3>
+
+                                    <div class="space-y-6 relative">
+                                        @forelse ($trackings ?? [] as $index => $track)
+                                            <div class="flex items-start gap-3.5 relative">
+                                                @if ($index === 0 && $laporan['status'] !== 'Selesai')
+                                                    <div class="w-6 h-6 rounded-full border-2 border-[#B01116] flex items-center justify-center bg-white shrink-0 mt-0.5 z-10">
+                                                        <span class="w-2 h-2 rounded-full bg-[#B01116]"></span>
+                                                    </div>
+                                                @else
+                                                    <div class="w-6 h-6 rounded-full bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5 z-10">
+                                                        <svg class="w-3.5 h-3.5 text-[#16A34A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="20 6 9 17 4 12"/>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+
+                                                @if (!$loop->last)
+                                                    <div class="absolute left-3 top-6 w-0.5 bg-[#E5E7EB] h-14 -translate-x-1/2"></div>
+                                                @endif
+
+                                                <div>
+                                                    <h4 class="text-sm font-bold text-[#252525]">{{ $track->status }}</h4>
+                                                    <p class="text-[11px] text-[#6B7280] mt-0.5">{{ $track->formatted_waktu }}</p>
+                                                    @if ($track->keterangan)
+                                                        <p class="text-xs text-[#6B7280] mt-1 leading-snug">
+                                                            {{ $track->keterangan }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <p class="text-xs text-[#6B7280]">Belum ada riwayat status.</p>
+                                        @endforelse
+                                    </div>
+                                </div>
+
+                                @if (!empty($laporan['rating']))
+                                    <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB] space-y-3">
+                                        <h3 class="text-sm font-bold text-[#252525]">Penilaian Layanan Pelapor</h3>
+                                        <div class="flex items-center text-amber-400">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <svg class="w-4 h-4 {{ $i <= $laporan['rating'] ? 'fill-current' : 'text-gray-300 fill-current' }}" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                </svg>
+                                            @endfor
+                                            <span class="ml-1.5 text-xs font-bold text-[#252525]">({{ $laporan['rating'] }}/5)</span>
+                                        </div>
+                                        @if (!empty($laporan['ulasan']))
+                                            <p class="text-xs text-[#252525] italic bg-[#F9FAFB] p-3 rounded-xl border border-[#F3F4F6]">
+                                                "{{ $laporan['ulasan'] }}"
+                                            </p>
+                                        @endif
+                                    </div>
+                                @endif
+                            @else
                             <div class="bg-[#FFFFFF] rounded-2xl p-6 shadow-xl border border-[#E5E7EB]">
                                 <h3 class="text-base font-bold text-[#252525]">Pembaruan Penanganan</h3>
                                 <p class="text-xs text-[#6B7280] mt-0.5">Perubahan akan tercatat dalam riwayat laporan.</p>
@@ -284,12 +476,12 @@
                                             id="status"
                                             name="status"
                                             x-model="status"
+                                            @change="syncProgresWithStatus()"
                                             class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 px-3.5 text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
                                         >
-                                            <option value="Diproses">Diproses</option>
                                             <option value="Diteruskan">Diteruskan</option>
+                                            <option value="Diproses">Diproses</option>
                                             <option value="Selesai">Selesai</option>
-                                            <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
                                         </select>
                                     </div>
 
@@ -307,7 +499,8 @@
                                             min="0"
                                             max="100"
                                             step="5"
-                                            x-model="progres"
+                                            x-model.number="progres"
+                                            @input="syncStatusWithProgres()"
                                             class="w-full h-1.5 bg-[#E5E7EB] rounded-lg appearance-none cursor-pointer accent-[#B01116]"
                                         />
                                     </div>
@@ -351,7 +544,7 @@
                                     </div>
 
                                     <!-- Tombol Utama -->
-                                    <div class="space-y-2.5 pt-1">
+                                    <div class="pt-1">
                                         <button
                                             type="submit"
                                             @click="actionType = 'simpan'"
@@ -359,17 +552,9 @@
                                         >
                                             Simpan Pembaruan
                                         </button>
-
-                                        <button
-                                            type="submit"
-                                            @click="actionType = 'tanggapan'"
-                                            class="w-full py-2.5 px-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] hover:bg-gray-50 text-[#252525] text-sm font-bold transition cursor-pointer"
-                                        >
-                                            Kirim Tanggapan
-                                        </button>
                                     </div>
 
-                                    <div class="border-t border-[#E5E7EB] pt-4 space-y-3">
+                                    <div class="border-t border-[#E5E7EB] pt-4">
                                         <button
                                             type="submit"
                                             @click="actionType = 'kembalikan'"
@@ -377,17 +562,10 @@
                                         >
                                             Kembalikan ke SSC
                                         </button>
-
-                                        <button
-                                            type="button"
-                                            @click="simulasikanPenyelesaian()"
-                                            class="w-full text-center text-xs font-bold text-[#B01116] hover:underline transition cursor-pointer"
-                                        >
-                                            Simulasikan penyelesaian
-                                        </button>
                                     </div>
                                 </form>
                             </div>
+                            @endif
                         </div>
 
                     </div>

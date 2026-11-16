@@ -397,26 +397,32 @@ class LaporanController extends Controller
             ]);
         }
 
-        // Ambil laporan yang diteruskan / ditugaskan dari database
-        $query = Laporan::with(['user', 'unitPenangan'])
-            ->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai']);
-
-        if ($authUser && $authUser->unit_penangan_id) {
-            $query->where(function ($q) use ($authUser) {
-                $q->where('unit_penangan_id', $authUser->unit_penangan_id)
-                  ->orWhere('unit_penangan', $authUser->unitPenangan?->nama_unit ?? $authUser->fakultas);
-            });
-        } elseif ($authUser && $authUser->fakultas) {
-            $query->where(function ($q) use ($authUser) {
+        // Ambil laporan aktif yang ditugaskan ke unit (belum Selesai)
+        $unitFilter = function ($q) use ($authUser) {
+            if ($authUser && $authUser->unit_penangan_id) {
+                $q->where(function ($sub) use ($authUser) {
+                    $sub->where('unit_penangan_id', $authUser->unit_penangan_id)
+                        ->orWhere('unit_penangan', $authUser->unitPenangan?->nama_unit ?? $authUser->fakultas);
+                });
+            } elseif ($authUser && $authUser->fakultas) {
                 $q->where('unit_penangan', 'like', '%' . $authUser->fakultas . '%');
-            });
-        }
+            }
+        };
 
-        $dbLaporans = $query->orderBy('created_at', 'desc')->get();
-        // Fallback jika belum ada laporan spesifik unit ini pada database demo/testing
-        if ($dbLaporans->isEmpty()) {
+        $dbLaporans = Laporan::with(['user', 'unitPenangan'])
+            ->whereIn('status', ['Diteruskan', 'Diproses'])
+            ->tap($unitFilter)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Fallback hanya jika unit ini sama sekali belum punya laporan (termasuk yang Selesai) pada DB demo/testing
+        $hasAnyUnitLaporan = Laporan::whereIn('status', ['Diteruskan', 'Diproses', 'Selesai'])
+            ->tap($unitFilter)
+            ->exists();
+
+        if ($dbLaporans->isEmpty() && !$hasAnyUnitLaporan) {
             $dbLaporans = Laporan::with('user')
-                ->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai'])
+                ->whereIn('status', ['Diteruskan', 'Diproses'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -448,7 +454,7 @@ class LaporanController extends Controller
                 'prioritas' => $prioritasShort,
                 'status' => $l->status,
                 'is_anonim' => (bool) $l->is_anonim,
-                'progres' => (int) ($l->progres ?? 0),
+                'progres' => $l->display_progres,
                 'url' => route('unit.laporan-ditugaskan.detail', $l->nomor_tiket),
             ];
         }
@@ -498,11 +504,13 @@ class LaporanController extends Controller
                 ? $dbLaporan->prioritas
                 : 'Prioritas ' . ($dbLaporan->prioritas ?: 'Sedang');
 
+            $statusAktif = $dbLaporan->status ?: 'Diproses';
+
             $laporan = [
                 'is_db' => true,
                 'tiket' => $dbLaporan->nomor_tiket,
                 'judul' => $dbLaporan->judul,
-                'status' => $dbLaporan->status ?: 'Diproses',
+                'status' => $statusAktif,
                 'prioritas' => $prioritasLabel,
                 'is_anonim' => (bool) $dbLaporan->is_anonim,
                 'kategori' => $kategoriLabel,
@@ -513,8 +521,13 @@ class LaporanController extends Controller
                 'berkas_meta' => $dbLaporan->berkas_ukuran ? ($dbLaporan->berkas_ukuran . ($dbLaporan->berkas_extension ? ' • ' . strtoupper($dbLaporan->berkas_extension) : '')) : '',
                 'berkas_url' => $dbLaporan->berkas_url,
                 'berkas_ext' => $dbLaporan->berkas_extension,
-                'progres' => (int) ($dbLaporan->progres ?? 65),
+                'progres' => Laporan::resolveProgresForStatus($statusAktif, $dbLaporan->progres),
+                'selesai_pada' => $dbLaporan->updated_at ? $dbLaporan->updated_at->wib()->isoFormat('D MMMM YYYY, HH.mm') . ' WIB' : '-',
+                'rating' => $dbLaporan->rating,
+                'ulasan' => $dbLaporan->ulasan,
             ];
+
+            $trackings = $dbLaporan->trackings;
 
             $riwayats = [];
             foreach ($dbLaporan->tanggapans as $t) {
@@ -560,7 +573,7 @@ class LaporanController extends Controller
             ->where('is_read', false)
             ->count();
 
-        return view('unit.tangani-laporan', compact('authUser', 'laporan', 'riwayats', 'unreadCount'));
+        return view('unit.tangani-laporan', compact('authUser', 'laporan', 'riwayats', 'trackings', 'unreadCount'));
     }
 
     /**
@@ -568,6 +581,73 @@ class LaporanController extends Controller
      */
     public function updatePenangananUnit(Request $request, $tiket)
     {
+        $dbLaporan = Laporan::where('nomor_tiket', $tiket)->first();
+        if ($dbLaporan && !in_array($dbLaporan->status, ['Diteruskan', 'Diproses'], true)) {
+            $alasanTerkunci = $dbLaporan->status === 'Selesai'
+                ? "Laporan {$tiket} sudah selesai ditangani dan tidak dapat diperbarui lagi."
+                : "Laporan {$tiket} telah dikembalikan ke Admin SSC dan tidak dapat diperbarui oleh unit.";
+
+            return redirect()->route('unit.laporan-ditugaskan.detail', $tiket)
+                ->with('error', $alasanTerkunci);
+        }
+
+        $actionType = $request->input('action_type', 'simpan');
+
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Petugas Unit') {
+            $authUser = User::where('role', 'Petugas Unit')->first() ?? $authUser;
+        }
+
+        if ($actionType === 'tanggapan') {
+            $request->validate([
+                'catatan' => 'required|string|max:2000',
+            ]);
+
+            $pesan = trim((string) $request->input('catatan'));
+
+            if ($dbLaporan) {
+                LaporanTanggapan::create([
+                    'laporan_id' => $dbLaporan->id,
+                    'user_id' => $authUser?->id,
+                    'nama_pengirim' => $authUser->name ?? 'Petugas Unit',
+                    'role_pengirim' => 'Petugas Unit',
+                    'pesan' => $pesan,
+                ]);
+
+                $this->notifyRole('Admin SSC', [
+                    'laporan_id' => $dbLaporan->id,
+                    'tiket' => $dbLaporan->nomor_tiket,
+                    'icon' => 'response',
+                    'title' => 'Tanggapan baru dari unit',
+                    'desc' => "Petugas unit mengirim tanggapan pada laporan {$dbLaporan->nomor_tiket}.",
+                ]);
+
+                if ($dbLaporan->user_id) {
+                    AppNotification::create([
+                        'user_id' => $dbLaporan->user_id,
+                        'laporan_id' => $dbLaporan->id,
+                        'tiket' => $dbLaporan->nomor_tiket,
+                        'icon' => 'response',
+                        'title' => 'Tanggapan baru dari unit',
+                        'desc' => "Petugas unit memberikan tanggapan pada laporan {$dbLaporan->nomor_tiket}.",
+                        'is_read' => false,
+                    ]);
+                }
+
+                LogAktivitas::catat(
+                    aktivitas: "Memberikan tanggapan pada laporan {$tiket}",
+                    recordTerkait: $tiket,
+                    kategori: 'Tanggapan',
+                    status: 'Berhasil',
+                    user: $authUser,
+                    ipAddress: $request->ip()
+                );
+            }
+
+            return redirect()->route('unit.laporan-ditugaskan.detail', $tiket)
+                ->with('success', "Tanggapan untuk laporan {$tiket} berhasil dikirim.");
+        }
+
         $request->validate([
             'status' => 'required|string|max:50',
             'progres' => 'required|integer|min:0|max:100',
@@ -576,14 +656,20 @@ class LaporanController extends Controller
             'bukti_penyelesaian' => 'nullable|file|max:5120',
         ]);
 
-        $authUser = Auth::user();
-        if (!$authUser || $authUser->role !== 'Petugas Unit') {
-            $authUser = User::where('role', 'Petugas Unit')->first() ?? $authUser;
+        $statusBaru = $actionType === 'kembalikan' ? 'Menunggu Verifikasi' : $request->input('status');
+        $progresInput = (int) $request->input('progres');
+
+        if ($actionType === 'kembalikan') {
+            $progresBaru = 10;
+        } else {
+            if ($statusBaru !== 'Selesai' && $progresInput >= 100) {
+                $statusBaru = 'Selesai';
+            }
+            $progresBaru = $statusBaru === 'Menunggu Verifikasi'
+                ? 10
+                : Laporan::resolveProgresForStatus($statusBaru, $progresInput);
         }
 
-        $actionType = $request->input('action_type', 'simpan');
-        $statusBaru = $actionType === 'kembalikan' ? 'Menunggu Verifikasi' : $request->input('status');
-        $progresBaru = $actionType === 'kembalikan' ? 10 : (int) $request->input('progres');
         $catatan = trim((string) $request->input('catatan'));
 
         if ($actionType === 'kembalikan' && $catatan === '') {
@@ -592,12 +678,16 @@ class LaporanController extends Controller
             $catatan = "Status diperbarui menjadi {$statusBaru} dengan progres {$progresBaru}%.";
         }
 
-        $dbLaporan = Laporan::where('nomor_tiket', $tiket)->first();
         if ($dbLaporan) {
             $updateData = [
                 'status' => $statusBaru,
                 'progres' => $progresBaru,
             ];
+
+            if ($actionType === 'kembalikan') {
+                $updateData['unit_penangan'] = 'Belum Ditentukan';
+                $updateData['unit_penangan_id'] = null;
+            }
 
             if ($request->hasFile('bukti_penyelesaian')) {
                 $file = $request->file('bukti_penyelesaian');
@@ -800,7 +890,7 @@ class LaporanController extends Controller
                 'unit_penangan' => $unitPenangan,
                 'unit_penangan_id' => $unitModel?->id,
                 'catatan_internal' => $catatan,
-                'progres' => max(20, (int) ($dbLaporan->progres ?? 0)),
+                'progres' => max(35, (int) ($dbLaporan->progres ?? 0)),
             ]);
 
             LaporanTracking::create([

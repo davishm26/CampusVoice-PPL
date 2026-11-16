@@ -340,7 +340,7 @@
 
                                     @php
                                         $badgeStyle = $sampleReport ? $sampleReport->status_badge : ['text' => '#7C3AED', 'bg' => '#F5F3FF', 'dot' => '#7C3AED'];
-                                        $progressVal = $sampleReport ? $sampleReport->progres : 65;
+                                        $progressVal = $sampleReport ? $sampleReport->display_progres : 65;
                                         $statusText = $sampleReport ? $sampleReport->status : 'Diproses';
                                     @endphp
 
