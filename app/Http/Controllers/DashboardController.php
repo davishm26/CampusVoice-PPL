@@ -262,23 +262,46 @@ class DashboardController extends Controller
         $totalPetugasUnit = User::where('role', 'Petugas Unit')->count();
         $totalSuperAdmin = User::where('role', 'Super Admin')->count();
         $totalLaporan = Laporan::count();
-        $totalUnitPenangan = User::where('role', 'Petugas Unit')->whereNotNull('fakultas')->distinct('fakultas')->count('fakultas');
+        $totalUnitPenangan = \App\Models\UnitPenangan::count()
+            ?: User::where('role', 'Petugas Unit')->whereNotNull('fakultas')->distinct('fakultas')->count('fakultas');
         $totalKategori = \App\Models\KategoriPenyaluran::count();
 
-        $activities = \App\Models\LaporanTracking::with('laporan.user')
+        $auditLogs = \App\Models\LogAktivitas::orderBy('created_at', 'desc')
+            ->take(15)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => 'log-' . $item->id,
+                    'sort_time' => $item->created_at?->timestamp ?? 0,
+                    'timestamp' => $item->formatted_waktu,
+                    'pengguna' => $item->nama_pengguna,
+                    'peran' => $item->peran,
+                    'aktivitas' => $item->aktivitas,
+                    'record' => $item->record_terkait ?: '—',
+                ];
+            });
+
+        $trackingLogs = \App\Models\LaporanTracking::with('laporan.user')
             ->orderBy('created_at', 'desc')
             ->take(15)
             ->get()
             ->map(function ($t) {
                 return [
-                    'id' => $t->id,
+                    'id' => 'trk-' . $t->id,
+                    'sort_time' => $t->created_at?->timestamp ?? 0,
                     'timestamp' => $t->formatted_waktu,
                     'pengguna' => $t->laporan?->is_anonim ? 'Pelapor Anonim' : ($t->laporan?->user?->name ?? 'Sistem'),
                     'peran' => $t->laporan?->user?->role ?? 'Sistem',
                     'aktivitas' => $t->status ?? 'Aktivitas Laporan',
                     'record' => $t->laporan?->nomor_tiket ?? '—',
                 ];
-            })->values()->all();
+            });
+
+        $activities = $auditLogs->concat($trackingLogs)
+            ->sortByDesc('sort_time')
+            ->take(15)
+            ->values()
+            ->all();
 
         return view('superadmin.dashboard', compact(
             'authUser',
@@ -306,13 +329,32 @@ class DashboardController extends Controller
             ]);
         }
 
-        $logs = \App\Models\LaporanTracking::with('laporan.user')
+        $auditLogs = \App\Models\LogAktivitas::orderBy('created_at', 'desc')
+            ->take(100)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => 'log-' . $item->id,
+                    'sort_time' => $item->created_at?->timestamp ?? 0,
+                    'timestamp' => $item->formatted_waktu,
+                    'pengguna' => $item->nama_pengguna,
+                    'peran' => $item->peran,
+                    'aktivitas' => $item->aktivitas,
+                    'kategori' => $item->kategori ?: 'Sistem',
+                    'status' => $item->status ?: 'Berhasil',
+                    'record' => $item->record_terkait ?: '—',
+                    'ip' => $item->ip_address ?: '-',
+                ];
+            });
+
+        $trackingLogs = \App\Models\LaporanTracking::with('laporan.user')
             ->orderBy('created_at', 'desc')
             ->take(50)
             ->get()
-            ->map(function ($t) {
+            ->map(function ($t) use ($request) {
                 return [
-                    'id' => $t->id,
+                    'id' => 'trk-' . $t->id,
+                    'sort_time' => $t->created_at?->timestamp ?? 0,
                     'timestamp' => $t->formatted_waktu,
                     'pengguna' => $t->laporan?->is_anonim ? 'Pelapor Anonim' : ($t->laporan?->user?->name ?? 'Sistem'),
                     'peran' => $t->laporan?->user?->role ?? 'Sistem',
@@ -322,7 +364,13 @@ class DashboardController extends Controller
                     'record' => $t->laporan?->nomor_tiket ?? '—',
                     'ip' => $request->ip() ?? '-',
                 ];
-            })->values()->all();
+            });
+
+        $logs = $auditLogs->concat($trackingLogs)
+            ->sortByDesc('sort_time')
+            ->take(100)
+            ->values()
+            ->all();
 
         return view('superadmin.log-aktivitas', compact('authUser', 'logs'));
     }
@@ -338,39 +386,196 @@ class DashboardController extends Controller
             ]);
         }
 
-        $direktoratUnits = User::where('role', 'Petugas Unit')
-            ->whereNotNull('fakultas')
-            ->where('fakultas', 'not like', 'Program Studi%')
-            ->get()
-            ->groupBy('fakultas')
-            ->values()
-            ->map(function ($group, $idx) {
-                $unitName = $group->first()->fakultas;
-                return [
-                    'id' => $idx + 1,
-                    'nama' => $unitName,
-                    'tipe' => 'Direktorat',
-                    'jumlahLabel' => $group->count() . ' petugas',
-                    'status' => $group->contains('status_akun', 'Aktif') ? 'Aktif' : 'Nonaktif',
-                ];
-            })->all();
+        if (\App\Models\UnitPenangan::count() > 0) {
+            $direktoratUnits = \App\Models\UnitPenangan::where('tipe', 'Direktorat')
+                ->orderBy('id')
+                ->get()
+                ->map(function ($unit) {
+                    $count = User::where('role', 'Petugas Unit')
+                        ->where(function ($q) use ($unit) {
+                            $q->where('unit_penangan_id', $unit->id)
+                                ->orWhere('fakultas', $unit->nama_unit);
+                        })->count();
 
-        $prodiUnits = User::where('role', 'Mahasiswa')
-            ->whereNotNull('prodi')
-            ->get()
-            ->groupBy('prodi')
-            ->values()
-            ->map(function ($group, $idx) {
-                $prodiName = $group->first()->prodi;
-                return [
-                    'id' => $idx + 1,
-                    'nama' => str_starts_with($prodiName, 'Program Studi') ? $prodiName : 'Program Studi ' . $prodiName,
-                    'tipe' => 'Program Studi',
-                    'jumlahLabel' => $group->count() . ' mahasiswa',
-                    'status' => 'Aktif',
-                ];
-            })->all();
+                    return [
+                        'id' => $unit->id,
+                        'nama' => $unit->nama_unit,
+                        'tipe' => 'Direktorat',
+                        'jumlahLabel' => ($count ?: 1) . ' petugas',
+                        'status' => $unit->status ?: 'Aktif',
+                    ];
+                })->all();
+
+            $prodiUnits = \App\Models\UnitPenangan::where('tipe', 'Program Studi')
+                ->orderBy('id')
+                ->get()
+                ->map(function ($unit) {
+                    $cleanProdiName = preg_replace('/^Program Studi\s+/i', '', $unit->nama_unit);
+                    $count = User::where('role', 'Mahasiswa')
+                        ->where(function ($q) use ($unit, $cleanProdiName) {
+                            $q->where('prodi', $unit->nama_unit)
+                                ->orWhere('prodi', $cleanProdiName);
+                        })->count();
+
+                    return [
+                        'id' => $unit->id,
+                        'nama' => $unit->nama_unit,
+                        'tipe' => 'Program Studi',
+                        'jumlahLabel' => $count . ' mahasiswa',
+                        'status' => $unit->status ?: 'Aktif',
+                    ];
+                })->all();
+        } else {
+            $direktoratUnits = User::where('role', 'Petugas Unit')
+                ->whereNotNull('fakultas')
+                ->where('fakultas', 'not like', 'Program Studi%')
+                ->get()
+                ->groupBy('fakultas')
+                ->values()
+                ->map(function ($group, $idx) {
+                    $unitName = $group->first()->fakultas;
+                    return [
+                        'id' => $idx + 1,
+                        'nama' => $unitName,
+                        'tipe' => 'Direktorat',
+                        'jumlahLabel' => $group->count() . ' petugas',
+                        'status' => $group->contains('status_akun', 'Aktif') ? 'Aktif' : 'Nonaktif',
+                    ];
+                })->all();
+
+            $prodiUnits = User::where('role', 'Mahasiswa')
+                ->whereNotNull('prodi')
+                ->get()
+                ->groupBy('prodi')
+                ->values()
+                ->map(function ($group, $idx) {
+                    $prodiName = $group->first()->prodi;
+                    return [
+                        'id' => $idx + 1,
+                        'nama' => str_starts_with($prodiName, 'Program Studi') ? $prodiName : 'Program Studi ' . $prodiName,
+                        'tipe' => 'Program Studi',
+                        'jumlahLabel' => $group->count() . ' mahasiswa',
+                        'status' => 'Aktif',
+                    ];
+                })->all();
+        }
 
         return view('superadmin.unit-penangan', compact('authUser', 'direktoratUnits', 'prodiUnits'));
+    }
+
+    public function superAdminUnitPenanganStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:unit_penangan,nama_unit',
+            'tipe' => 'required|in:Direktorat,Program Studi',
+            'status' => 'required|in:Aktif,Nonaktif',
+            'jumlahLabel' => 'nullable|string|max:100',
+        ]);
+
+        $unit = \App\Models\UnitPenangan::create([
+            'nama_unit' => trim($validated['nama']),
+            'tipe' => $validated['tipe'],
+            'status' => $validated['status'],
+        ]);
+
+        $authUser = Auth::user() ?? User::where('role', 'Super Admin')->first();
+        \App\Models\LogAktivitas::catat(
+            aktivitas: "Menambahkan unit penangan baru: {$unit->nama_unit}",
+            recordTerkait: $unit->nama_unit,
+            kategori: 'Unit Penangan',
+            status: 'Berhasil',
+            user: $authUser,
+            ipAddress: $request->ip()
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Unit {$unit->nama_unit} berhasil ditambahkan.",
+                'unit' => [
+                    'id' => $unit->id,
+                    'nama' => $unit->nama_unit,
+                    'tipe' => $unit->tipe,
+                    'jumlahLabel' => $validated['jumlahLabel'] ?: ($unit->tipe === 'Direktorat' ? '1 petugas' : '0 mahasiswa'),
+                    'status' => $unit->status,
+                ],
+            ]);
+        }
+
+        return redirect()->route('superadmin.unit-penangan')->with('success', "Unit {$unit->nama_unit} berhasil ditambahkan.");
+    }
+
+    public function superAdminUnitPenanganUpdate(Request $request, $id)
+    {
+        $unit = \App\Models\UnitPenangan::findOrFail($id);
+        $oldName = $unit->nama_unit;
+
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255|unique:unit_penangan,nama_unit,' . $unit->id,
+            'status' => 'required|in:Aktif,Nonaktif',
+            'jumlahLabel' => 'nullable|string|max:100',
+        ]);
+
+        $newName = trim($validated['nama']);
+        $unit->update([
+            'nama_unit' => $newName,
+            'status' => $validated['status'],
+        ]);
+
+        if ($oldName !== $newName) {
+            User::where('fakultas', $oldName)->update(['fakultas' => $newName]);
+        }
+
+        $authUser = Auth::user() ?? User::where('role', 'Super Admin')->first();
+        \App\Models\LogAktivitas::catat(
+            aktivitas: "Memperbarui unit penangan: {$unit->nama_unit}",
+            recordTerkait: $unit->nama_unit,
+            kategori: 'Unit Penangan',
+            status: 'Berhasil',
+            user: $authUser,
+            ipAddress: $request->ip()
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Perubahan unit {$unit->nama_unit} berhasil disimpan.",
+                'unit' => [
+                    'id' => $unit->id,
+                    'nama' => $unit->nama_unit,
+                    'tipe' => $unit->tipe,
+                    'jumlahLabel' => $validated['jumlahLabel'] ?: '1 petugas',
+                    'status' => $unit->status,
+                ],
+            ]);
+        }
+
+        return redirect()->route('superadmin.unit-penangan')->with('success', "Perubahan unit {$unit->nama_unit} berhasil disimpan.");
+    }
+
+    public function superAdminUnitPenanganDestroy(Request $request, $id)
+    {
+        $unit = \App\Models\UnitPenangan::findOrFail($id);
+        $namaUnit = $unit->nama_unit;
+        $unit->delete();
+
+        $authUser = Auth::user() ?? User::where('role', 'Super Admin')->first();
+        \App\Models\LogAktivitas::catat(
+            aktivitas: "Menghapus unit penangan: {$namaUnit}",
+            recordTerkait: $namaUnit,
+            kategori: 'Unit Penangan',
+            status: 'Berhasil',
+            user: $authUser,
+            ipAddress: $request->ip()
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Unit {$namaUnit} berhasil dihapus.",
+            ]);
+        }
+
+        return redirect()->route('superadmin.unit-penangan')->with('success', "Unit {$namaUnit} berhasil dihapus.");
     }
 }
