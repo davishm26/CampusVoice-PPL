@@ -82,33 +82,72 @@
             };
             this.showAddModal = true;
         },
-        saveNewUnit() {
+        async saveNewUnit() {
             if (!this.newUnit.nama.trim()) return;
-            const targetList = this.newUnit.tipe === 'Direktorat' ? this.direktoratUnits : this.prodiUnits;
-            const nextId = targetList.length ? Math.max(...targetList.map(u => u.id)) + 1 : 1;
-            targetList.push({
-                id: nextId,
-                nama: this.newUnit.nama.trim(),
-                tipe: this.newUnit.tipe,
-                jumlahLabel: this.newUnit.jumlahLabel.trim() || (this.newUnit.tipe === 'Direktorat' ? '1 petugas' : '20 mahasiswa'),
-                status: this.newUnit.status
-            });
-            this.activeTab = this.newUnit.tipe === 'Direktorat' ? 'direktorat' : 'prodi';
-            this.showAddModal = false;
-            this.notify('Unit ' + this.newUnit.nama.trim() + ' berhasil ditambahkan.');
+            try {
+                const res = await fetch('{{ route('superadmin.unit-penangan.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        nama: this.newUnit.nama.trim(),
+                        tipe: this.newUnit.tipe,
+                        status: this.newUnit.status,
+                        jumlahLabel: this.newUnit.jumlahLabel.trim()
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const targetList = this.newUnit.tipe === 'Direktorat' ? this.direktoratUnits : this.prodiUnits;
+                    targetList.push(data.unit);
+                    this.activeTab = this.newUnit.tipe === 'Direktorat' ? 'direktorat' : 'prodi';
+                    this.showAddModal = false;
+                    this.notify(data.message || 'Unit berhasil ditambahkan.');
+                } else {
+                    alert(data.message || 'Gagal menambahkan unit.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan jaringan.');
+            }
         },
         openManageModal(unit) {
             this.selectedUnit = unit;
             this.editForm = { ...unit };
             this.showManageModal = true;
         },
-        saveManageUnit() {
+        async saveManageUnit() {
             if (!this.selectedUnit || !this.editForm.nama.trim()) return;
-            this.selectedUnit.nama = this.editForm.nama.trim();
-            this.selectedUnit.jumlahLabel = this.editForm.jumlahLabel.trim() || this.selectedUnit.jumlahLabel;
-            this.selectedUnit.status = this.editForm.status;
-            this.showManageModal = false;
-            this.notify('Perubahan unit ' + this.selectedUnit.nama + ' berhasil disimpan.');
+            try {
+                const url = '{{ url('/super-admin/unit-penangan') }}/' + this.selectedUnit.id;
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        nama: this.editForm.nama.trim(),
+                        status: this.editForm.status,
+                        jumlahLabel: this.editForm.jumlahLabel.trim()
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.selectedUnit.nama = data.unit.nama;
+                    this.selectedUnit.status = data.unit.status;
+                    this.selectedUnit.jumlahLabel = data.unit.jumlahLabel;
+                    this.showManageModal = false;
+                    this.notify(data.message || 'Perubahan unit berhasil disimpan.');
+                } else {
+                    alert(data.message || 'Gagal memperbarui unit.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan jaringan.');
+            }
         },
         notify(msg) {
             this.toastMessage = msg;

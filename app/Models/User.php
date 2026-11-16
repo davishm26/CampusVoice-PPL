@@ -7,11 +7,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'nim', 'prodi', 'fakultas', 'phone', 'role', 'status_akun'])]
+#[Fillable(['name', 'email', 'password', 'nim', 'prodi', 'fakultas', 'unit_penangan_id', 'phone', 'role', 'status_akun'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -29,6 +30,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function unitPenangan(): BelongsTo
+    {
+        return $this->belongsTo(UnitPenangan::class, 'unit_penangan_id');
     }
 
     public function laporans(): HasMany

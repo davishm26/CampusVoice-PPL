@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LogAktivitas;
+use App\Models\UnitPenangan;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -112,6 +114,9 @@ class SuperAdminAkunController extends Controller
         ]);
 
         $isMahasiswa = $validated['role'] === 'Mahasiswa';
+        $matchedUnit = UnitPenangan::where('nama_unit', $validated['unit'])
+            ->orWhere('nama_unit', 'like', '%' . $validated['unit'] . '%')
+            ->first();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -119,12 +124,23 @@ class SuperAdminAkunController extends Controller
             'nim' => $validated['nip'] ?: null,
             'prodi' => $validated['unit'],
             'fakultas' => $isMahasiswa ? 'Direktorat Kampus Surabaya' : $validated['unit'],
+            'unit_penangan_id' => $matchedUnit?->id,
             'phone' => $validated['phone'] ?: null,
             'role' => $validated['role'],
             'status_akun' => $validated['status_akun'],
             'password' => Hash::make($validated['password'] ?: '12345678'),
             'email_verified_at' => now(),
         ]);
+
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Membuat akun baru: {$user->name} ({$user->role})",
+            recordTerkait: $user->email,
+            kategori: 'Manajemen Akun',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -167,6 +183,9 @@ class SuperAdminAkunController extends Controller
         ]);
 
         $isMahasiswa = $validated['role'] === 'Mahasiswa';
+        $matchedUnit = UnitPenangan::where('nama_unit', $validated['unit'])
+            ->orWhere('nama_unit', 'like', '%' . $validated['unit'] . '%')
+            ->first();
 
         $payload = [
             'name' => $validated['name'],
@@ -174,6 +193,7 @@ class SuperAdminAkunController extends Controller
             'nim' => $validated['nip'] ?: null,
             'prodi' => $validated['unit'],
             'fakultas' => $isMahasiswa ? 'Direktorat Kampus Surabaya' : $validated['unit'],
+            'unit_penangan_id' => $matchedUnit?->id,
             'phone' => $validated['phone'] ?: null,
             'role' => $validated['role'],
             'status_akun' => $validated['status_akun'],
@@ -185,6 +205,16 @@ class SuperAdminAkunController extends Controller
 
         $user->update($payload);
         $user->refresh();
+
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Memperbarui data akun: {$user->name} ({$user->role})",
+            recordTerkait: $user->email,
+            kategori: 'Manajemen Akun',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -220,7 +250,19 @@ class SuperAdminAkunController extends Controller
         }
 
         $deletedName = $user->name;
+        $deletedEmail = $user->email;
+        $deletedRole = $user->role;
         $user->delete();
+
+        $activeAdmin = $this->getActiveSuperAdmin();
+        LogAktivitas::catat(
+            aktivitas: "Menghapus akun staf: {$deletedName} ({$deletedRole})",
+            recordTerkait: $deletedEmail,
+            kategori: 'Manajemen Akun',
+            status: 'Berhasil',
+            user: $activeAdmin,
+            ipAddress: $request->ip()
+        );
 
         if ($request->expectsJson()) {
             return response()->json([
