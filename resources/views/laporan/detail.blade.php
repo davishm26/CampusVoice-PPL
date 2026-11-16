@@ -312,6 +312,13 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-[#B01116] bg-[#FCE8E8]">
                                             {{ $laporan ? $laporan->prioritas : 'Normal' }}
                                         </span>
+
+                                        @if ($laporan && $laporan->is_anonim)
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F3F4F6] text-[#252525]">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#2563EB]"></span>
+                                                <span>Laporan Anonim</span>
+                                            </span>
+                                        @endif
                                     </div>
 
                                     <!-- Teks Progres -->
@@ -354,41 +361,102 @@
                                 </div>
 
                                 <!-- Bukti Pendukung -->
-                                <div class="pt-1">
+                                <div class="pt-1" x-data="{ showBuktiModal: false }">
                                     <h3 class="text-sm font-bold text-[#252525] mb-2">Bukti pendukung</h3>
                                     @if ($laporan && ($laporan->berkas_bukti || $laporan->berkas_nama))
-                                        <div class="border border-[#E5E7EB] rounded-xl p-3.5 flex items-center justify-between hover:bg-gray-50/70 transition">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-[#6B7280]">
-                                                    <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                                        <polyline points="14 2 14 8 20 8"/>
-                                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                                        <line x1="16" y1="17" x2="8" y2="17"/>
-                                                    </svg>
+                                        @php
+                                            $berkasUrl = $laporan->berkas_url;
+                                            $berkasExt = $laporan->berkas_extension;
+                                            $berkasIsImage = in_array($berkasExt, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                            $berkasIsPdf = $berkasExt === 'pdf';
+                                        @endphp
+                                        <div class="border border-[#E5E7EB] rounded-xl p-3.5 space-y-3">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    @if ($berkasUrl && $berkasIsImage)
+                                                        <button type="button" @click="showBuktiModal = true" class="w-12 h-12 rounded-lg overflow-hidden border border-[#E5E7EB] bg-gray-100 shrink-0 cursor-pointer hover:opacity-90 transition">
+                                                            <img src="{{ $berkasUrl }}" alt="{{ $laporan->berkas_nama ?: 'Bukti Pendukung' }}" class="w-full h-full object-cover" />
+                                                        </button>
+                                                    @else
+                                                        <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-[#6B7280]">
+                                                            <svg class="w-5 h-5 text-[#6B7280]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                                <polyline points="14 2 14 8 20 8"/>
+                                                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                                            </svg>
+                                                        </div>
+                                                    @endif
+                                                    <div class="min-w-0">
+                                                        <p class="text-xs sm:text-sm font-bold text-[#252525] truncate">{{ $laporan->berkas_nama ?: 'Berkas_Lampiran_Laporan' }}</p>
+                                                        <p class="text-[11px] text-[#6B7280] mt-0.5">{{ $laporan->berkas_ukuran ?: 'Dokumen pendukung' }}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p class="text-xs sm:text-sm font-bold text-[#252525]">{{ $laporan->berkas_nama ?: 'Berkas_Lampiran_Laporan' }}</p>
-                                                    <p class="text-[11px] text-[#6B7280] mt-0.5">{{ $laporan->berkas_ukuran ?: 'Dokumen pendukung' }}</p>
-                                                </div>
+
+                                                @if ($berkasUrl)
+                                                    <div class="flex items-center gap-3 shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            @click="showBuktiModal = true"
+                                                            class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#8e0d12] transition cursor-pointer"
+                                                        >
+                                                            <svg class="w-4 h-4 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                                <circle cx="12" cy="12" r="3"/>
+                                                            </svg>
+                                                            <span>Lihat Berkas</span>
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <span class="text-xs text-gray-500 italic">Terlampir</span>
+                                                @endif
                                             </div>
 
-                                            @if ($laporan->berkas_bukti)
-                                                <a
-                                                    href="{{ asset('storage/' . $laporan->berkas_bukti) }}"
-                                                    target="_blank"
-                                                    class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#8e0d12] transition cursor-pointer"
-                                                >
-                                                    <svg class="w-4 h-4 text-[#B01116]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                                        <circle cx="12" cy="12" r="3"/>
-                                                    </svg>
-                                                    <span>Lihat Berkas</span>
-                                                </a>
-                                            @else
-                                                <span class="text-xs text-gray-500 italic">Terlampir</span>
+                                            @if ($berkasUrl && $berkasIsImage)
+                                                <button type="button" @click="showBuktiModal = true" class="block w-full rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB] p-2 hover:border-[#B01116]/40 transition cursor-pointer">
+                                                    <img src="{{ $berkasUrl }}" alt="{{ $laporan->berkas_nama ?: 'Bukti Pendukung' }}" class="max-h-56 mx-auto rounded-md object-contain" />
+                                                </button>
                                             @endif
                                         </div>
+
+                                        @if ($berkasUrl)
+                                            <div
+                                                x-show="showBuktiModal"
+                                                x-cloak
+                                                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+                                                @keydown.escape.window="showBuktiModal = false"
+                                            >
+                                                <div @click.away="showBuktiModal = false" class="bg-[#FFFFFF] rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-[#E5E7EB]">
+                                                    <div class="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                                                        <div class="min-w-0">
+                                                            <h4 class="text-sm font-bold text-[#252525]">Pratinjau Bukti Pendukung</h4>
+                                                            <p class="text-[11px] text-[#6B7280] truncate">{{ $laporan->berkas_nama ?: 'Lampiran Bukti' }}{{ $laporan->berkas_ukuran ? ' (' . $laporan->berkas_ukuran . ')' : '' }}</p>
+                                                        </div>
+                                                        <button type="button" @click="showBuktiModal = false" class="p-1 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 cursor-pointer">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        </button>
+                                                    </div>
+                                                    <div class="my-5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-4 text-center overflow-hidden">
+                                                        @if ($berkasIsImage)
+                                                            <img src="{{ $berkasUrl }}" alt="{{ $laporan->berkas_nama ?: 'Bukti Pendukung' }}" class="max-h-[28rem] mx-auto rounded-lg object-contain" />
+                                                        @elseif ($berkasIsPdf)
+                                                            <iframe src="{{ $berkasUrl }}" class="w-full h-96 rounded-lg border border-[#E5E7EB]"></iframe>
+                                                        @else
+                                                            <p class="text-sm font-bold text-[#252525]">{{ $laporan->berkas_nama ?: 'Lampiran Bukti' }}</p>
+                                                            <p class="text-xs text-[#6B7280] mt-1">Klik tombol di bawah untuk membuka berkas lampiran.</p>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex justify-end gap-2">
+                                                        <a href="{{ $berkasUrl }}" target="_blank" class="px-4 py-2 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#252525] hover:bg-gray-50 transition">
+                                                            Buka di Tab Baru
+                                                        </a>
+                                                        <button type="button" @click="showBuktiModal = false" class="px-4 py-2 rounded-xl bg-[#B01116] text-xs font-bold text-[#FFFFFF] hover:bg-[#970e13] transition cursor-pointer">
+                                                            Tutup
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @else
                                         <div class="border border-dashed border-[#E5E7EB] rounded-xl p-4 text-center">
                                             <p class="text-xs text-[#6B7280]">Tidak ada berkas bukti pendukung yang dilampirkan pada laporan ini.</p>
@@ -414,14 +482,22 @@
                                 <!-- Daftar Tanggapan / Chat -->
                                 <div class="space-y-5">
                                     @forelse ($tanggapans as $tanggapan)
+                                        @php
+                                            $maskAnonim = $laporan && $laporan->is_anonim && (
+                                                $tanggapan->role_pengirim === 'Mahasiswa'
+                                                || ($tanggapan->user_id && $tanggapan->user_id === $laporan->user_id)
+                                            );
+                                            $tInitials = $maskAnonim ? 'MA' : $tanggapan->initials;
+                                            $tNama = $maskAnonim ? 'Mahasiswa (Anonim)' : $tanggapan->nama_pengirim;
+                                        @endphp
                                         <div>
                                             <div class="flex items-start justify-between gap-3">
                                                 <div class="flex items-center gap-3">
                                                     <div class="w-9 h-9 rounded-xl bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0">
-                                                        {{ $tanggapan->initials }}
+                                                        {{ $tInitials }}
                                                     </div>
                                                     <div class="flex items-center gap-2 flex-wrap">
-                                                        <p class="text-sm font-bold text-[#252525]">{{ $tanggapan->nama_pengirim }}</p>
+                                                        <p class="text-sm font-bold text-[#252525]">{{ $tNama }}</p>
                                                         @php
                                                             $roleColor = match ($tanggapan->role_pengirim) {
                                                                 'Admin SSC' => ['text' => '#2563EB', 'bg' => '#EFF6FF', 'dot' => '#2563EB'],
@@ -469,7 +545,13 @@
                                         ></textarea>
 
                                         <div class="mt-3 flex items-center justify-between">
-                                            <p class="text-[11px] text-[#6B7280]">Pesan akan terkirim sebagai {{ $authName }} ({{ $authRole }}).</p>
+                                            <p class="text-[11px] text-[#6B7280]">
+                                                @if ($laporan && $laporan->is_anonim && $authRole === 'Mahasiswa')
+                                                    Pesan akan terkirim sebagai Mahasiswa (Anonim).
+                                                @else
+                                                    Pesan akan terkirim sebagai {{ $authName }} ({{ $authRole }}).
+                                                @endif
+                                            </p>
                                             <button
                                                 type="submit"
                                                 class="px-5 py-2.5 rounded-xl bg-[#B01116] hover:bg-[#8e0d12] text-xs sm:text-sm font-bold text-white shadow-sm transition inline-flex items-center gap-2 cursor-pointer"

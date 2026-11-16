@@ -262,29 +262,18 @@ class DashboardController extends Controller
         $totalPetugasUnit = User::where('role', 'Petugas Unit')->count();
         $totalSuperAdmin = User::where('role', 'Super Admin')->count();
         $totalLaporan = Laporan::count();
-        $totalUnitPenangan = \App\Models\UnitPenangan::count() ?: 24;
-
-        $totalKategori = 10;
-        try {
-            if (class_exists(\App\Models\KategoriPenyaluran::class) && \Illuminate\Support\Facades\Schema::hasTable('kategori_penyalurans')) {
-                $count = \App\Models\KategoriPenyaluran::count();
-                if ($count > 0) {
-                    $totalKategori = $count;
-                }
-            }
-        } catch (\Throwable $e) {
-            $totalKategori = 10;
-        }
+        $totalUnitPenangan = User::where('role', 'Petugas Unit')->whereNotNull('fakultas')->distinct('fakultas')->count('fakultas');
+        $totalKategori = \App\Models\KategoriPenyaluran::count();
 
         $activities = \App\Models\LaporanTracking::with('laporan.user')
             ->orderBy('created_at', 'desc')
             ->take(15)
             ->get()
-            ->map(function ($t) {
+            ->map(function ($t) use ($request) {
                 return [
                     'id' => $t->id,
                     'timestamp' => $t->formatted_waktu,
-                    'pengguna' => $t->laporan?->user?->name ?? 'Sistem',
+                    'pengguna' => $t->laporan?->is_anonim ? 'Pelapor Anonim' : ($t->laporan?->user?->name ?? 'Sistem'),
                     'peran' => $t->laporan?->user?->role ?? 'Sistem',
                     'aktivitas' => $t->status ?? 'Aktivitas Laporan',
                     'record' => $t->laporan?->nomor_tiket ?? '—',
@@ -346,17 +335,17 @@ class DashboardController extends Controller
         $logs = \App\Models\LogAktivitas::orderBy('created_at', 'desc')
             ->take(100)
             ->get()
-            ->map(function ($item) {
+            ->map(function ($t) use ($request) {
                 return [
-                    'id' => $item->id,
-                    'timestamp' => $item->formatted_waktu,
-                    'pengguna' => $item->nama_pengguna,
-                    'peran' => $item->peran,
-                    'aktivitas' => $item->aktivitas,
-                    'kategori' => $item->kategori ?: 'Umum',
-                    'status' => $item->status ?: 'Berhasil',
-                    'record' => $item->record_terkait ?: '—',
-                    'ip' => $item->ip_address ?: '-',
+                    'id' => $t->id,
+                    'timestamp' => $t->formatted_waktu,
+                    'pengguna' => $t->laporan?->is_anonim ? 'Pelapor Anonim' : ($t->laporan?->user?->name ?? 'Sistem'),
+                    'peran' => $t->laporan?->user?->role ?? 'Sistem',
+                    'aktivitas' => $t->status . ($t->keterangan ? ': ' . $t->keterangan : ''),
+                    'kategori' => str_contains(strtolower($t->status ?? ''), 'terus') ? 'Penyaluran' : 'Progres',
+                    'status' => 'Berhasil',
+                    'record' => $t->laporan?->nomor_tiket ?? '—',
+                    'ip' => $request->ip() ?? '-',
                 ];
             })->values()->all();
 
@@ -374,18 +363,14 @@ class DashboardController extends Controller
             ]);
         }
 
-        $direktoratUnits = \App\Models\UnitPenangan::where('tipe', 'Direktorat')
-            ->orderBy('id')
+        $direktoratUnits = User::where('role', 'Petugas Unit')
+            ->whereNotNull('fakultas')
+            ->where('fakultas', 'not like', 'Program Studi%')
             ->get()
-            ->map(function ($unit, $idx) {
-                $count = User::where('role', 'Petugas Unit')
-                    ->where(function ($q) use ($unit) {
-                        $q->where('unit_penangan_id', $unit->id)
-                          ->orWhere('fakultas', $unit->nama_unit);
-                    })->count();
-                $baseCounts = [1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1];
-                $defaultLabel = ($baseCounts[$idx % count($baseCounts)]) . ' petugas';
-                $label = $count > 0 ? "{$count} petugas" : $defaultLabel;
+            ->groupBy('fakultas')
+            ->values()
+            ->map(function ($group, $idx) {
+                $unitName = $group->first()->fakultas;
                 return [
                     'id' => $unit->id,
                     'nama' => $unit->nama_unit,

@@ -60,200 +60,14 @@
 >
     <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
-        <!-- ========================================================= -->
-        <!-- SIDEBAR KIRI (PETUGAS UNIT) -->
-        <!-- ========================================================= -->
-        <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
-            :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-        >
-            <div class="flex flex-col flex-1 overflow-y-auto">
-                <!-- Logo -->
-                <div class="px-6 py-5 flex items-center gap-3">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
-                    <div>
-                        <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight">CampusVoice</span>
-                        <p class="text-[10px] text-[#6B7280] font-medium leading-tight">Telkom University Surabaya</p>
-                    </div>
-                </div>
-
-                <!-- Navigasi Menu Petugas Unit -->
-                <div class="px-4 py-3 flex-1">
-                    <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wide mb-2">Petugas Unit</p>
-
-                    <nav class="space-y-1">
-                        <!-- Menu 1: Dashboard Unit -->
-                        <a
-                            href="#"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span>Dashboard Unit</span>
-                        </a>
-
-                        <!-- Menu 2: Laporan Ditugaskan (AKTIF) -->
-                        <a
-                            href="{{ route('unit.laporan-ditugaskan') }}"
-                            aria-current="page"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition shadow-xs"
-                        >
-                            <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                            </svg>
-                            <span>Laporan Ditugaskan</span>
-                        </a>
-
-                        <!-- Menu 3: Riwayat Penanganan -->
-                        <a
-                            href="{{ route('petugas.riwayat') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="20" x2="12" y2="10"/>
-                                <line x1="18" y1="20" x2="18" y2="4"/>
-                                <line x1="6" y1="20" x2="6" y2="16"/>
-                            </svg>
-                            <span>Riwayat Penanganan</span>
-                        </a>
-
-                        <!-- Menu 4: Notifikasi -->
-                        <a
-                            href="{{ route('unit.notifikasi') }}"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                                </svg>
-                                <span>Notifikasi</span>
-                            </div>
-                            @if (($unreadCount ?? 0) > 0)
-                                <span class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center">
-                                    {{ $unreadCount }}
-                                </span>
-                            @endif
-                        </a>
-
-                        <!-- Menu 5: Profil Unit -->
-                        <a
-                            href="{{ route('unit.profil') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            <span>Profil Unit</span>
-                        </a>
-                    </nav>
-                </div>
-
-                <!-- Bagian Bawah: Keluar -->
-                <div class="px-4 py-3 border-t border-[#E5E7EB]">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button
-                            type="submit"
-                            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition cursor-pointer text-left"
-                        >
-                            <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span>Keluar</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Kartu Bantuan -->
-            <div class="p-4 border-t border-[#E5E7EB]">
-                <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
-                    <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
-                        Pusat Bantuan
-                    </a>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Overlay Mobile -->
-        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"></div>
+        @include('unit.partials.sidebar', ['activeMenu' => 'ditugaskan', 'unreadCount' => $unreadCount])
 
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten Tangani Laporan) -->
         <!-- ========================================================= -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
-            <!-- HEADER ATAS (NAVBAR) -->
-            <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
-                <!-- Hamburger Mobile & Search Bar Header -->
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        @click="mobileSidebarOpen = !mobileSidebarOpen"
-                        class="p-2 -ml-2 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 lg:hidden transition"
-                        title="Buka Menu"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-
-                    <!-- Search Bar Header -->
-                    <form action="{{ route('unit.laporan-ditugaskan') }}" method="GET" class="relative w-56 sm:w-80 md:w-96">
-                        <input
-                            type="text"
-                            name="q"
-                            placeholder="Cari nomor tiket atau laporan..."
-                            class="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#9CA3AF] focus:bg-[#FFFFFF] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                        />
-                    </form>
-                </div>
-
-                <!-- Bagian Kanan: Lonceng Notifikasi & Profil Petugas Unit -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <!-- Tombol Lonceng Notifikasi -->
-                    <a
-                        href="{{ route('unit.notifikasi') }}"
-                        class="relative w-9 h-9 rounded-xl border border-[#E5E7EB] flex items-center justify-center text-[#4B5563] hover:text-[#B01116] hover:bg-gray-50 transition"
-                        title="Notifikasi"
-                    >
-                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
-                            {{ $unreadCount }}
-                        </span>
-                    </a>
-
-                    <!-- Profil Petugas Unit: Budi Santoso -->
-                    <a href="{{ route('unit.profil') }}" class="flex items-center gap-2.5 group">
-                        <div class="w-9 h-9 rounded-xl bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0">
-                            {{ $authUser->initials ?? 'BS' }}
-                        </div>
-                        <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">
-                                {{ $authUser->name ?? 'Budi Santoso' }}
-                            </p>
-                            <p class="text-[11px] text-[#6B7280] leading-tight">
-                                {{ $authUser->role ?? 'Petugas Unit' }}
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </header>
+            @include('unit.partials.header', ['authUser' => $authUser, 'unreadCount' => $unreadCount])
 
             <!-- ========================================================= -->
             <!-- KONTEN UTAMA: DETAIL & PENANGANAN LAPORAN -->
@@ -355,35 +169,62 @@
                                 </div>
 
                                 <!-- Lampiran Bukti -->
-                                <div class="mt-5 border border-[#E5E7EB] rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#4B5563] shrink-0">
-                                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-bold text-[#252525] truncate">{{ $laporan['berkas_nama'] }}</p>
-                                            <p class="text-[11px] text-[#6B7280]">{{ $laporan['berkas_meta'] }}</p>
-                                        </div>
-                                    </div>
+                                @php
+                                    $berkasUrl = $laporan['berkas_url'] ?? null;
+                                    $berkasExt = strtolower($laporan['berkas_ext'] ?? ($berkasUrl ? pathinfo(parse_url($berkasUrl, PHP_URL_PATH), PATHINFO_EXTENSION) : ''));
+                                    $berkasIsImage = in_array($berkasExt, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                    $berkasIsPdf = $berkasExt === 'pdf';
+                                @endphp
+                                <div class="mt-5 border border-[#E5E7EB] rounded-xl px-4 py-3 space-y-3">
+                                    @if (!empty($berkasUrl) || !empty($laporan['berkas_nama']))
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                @if ($berkasUrl && $berkasIsImage)
+                                                    <button type="button" @click="previewModalOpen = true" class="w-11 h-11 rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB] shrink-0 cursor-pointer hover:opacity-90 transition">
+                                                        <img src="{{ $berkasUrl }}" alt="{{ $laporan['berkas_nama'] ?: 'Lampiran Bukti' }}" class="w-full h-full object-cover" />
+                                                    </button>
+                                                @else
+                                                    <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#4B5563] shrink-0">
+                                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-bold text-[#252525] truncate">{{ $laporan['berkas_nama'] ?: 'Lampiran Bukti' }}</p>
+                                                    @if (!empty($laporan['berkas_meta']))
+                                                        <p class="text-[11px] text-[#6B7280]">{{ $laporan['berkas_meta'] }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
 
-                                    @if ($laporan['berkas_url'])
-                                        <a
-                                            href="{{ $laporan['berkas_url'] }}"
-                                            target="_blank"
-                                            class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline shrink-0"
-                                        >
-                                            Lihat
-                                        </a>
+                                            @if ($berkasUrl)
+                                                <button
+                                                    type="button"
+                                                    @click="previewModalOpen = true"
+                                                    class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline shrink-0 cursor-pointer"
+                                                >
+                                                    Lihat
+                                                </button>
+                                            @else
+                                                <span class="text-xs text-[#6B7280] italic shrink-0">Terlampir</span>
+                                            @endif
+                                        </div>
+
+                                        @if ($berkasUrl && $berkasIsImage)
+                                            <button type="button" @click="previewModalOpen = true" class="block w-full rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB] p-2 hover:border-[#B01116]/40 transition cursor-pointer">
+                                                <img src="{{ $berkasUrl }}" alt="{{ $laporan['berkas_nama'] ?: 'Bukti Pendukung' }}" class="max-h-48 mx-auto rounded-md object-contain" />
+                                            </button>
+                                        @endif
                                     @else
-                                        <button
-                                            type="button"
-                                            @click="previewModalOpen = true"
-                                            class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline shrink-0 cursor-pointer"
-                                        >
-                                            Lihat
-                                        </button>
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] shrink-0">
+                                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs text-[#6B7280]">Tidak ada lampiran bukti pendukung.</p>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -556,29 +397,52 @@
 
     </div>
 
-    <!-- Modal Preview Lampiran Sampel -->
+    <!-- Modal Preview Lampiran -->
     <div
         x-show="previewModalOpen"
         x-cloak
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
         @click.self="previewModalOpen = false"
+        @keydown.escape.window="previewModalOpen = false"
     >
-        <div class="bg-[#FFFFFF] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between">
-                <h4 class="text-sm font-bold text-[#252525]">Pratinjau Lampiran</h4>
-                <button type="button" @click="previewModalOpen = false" class="text-[#6B7280] hover:text-[#252525] cursor-pointer">&times;</button>
+        <div class="bg-[#FFFFFF] rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                <div class="min-w-0">
+                    <h4 class="text-sm font-bold text-[#252525]">Pratinjau Lampiran</h4>
+                    @if (!empty($laporan['berkas_nama']))
+                        <p class="text-[11px] text-[#6B7280] truncate">{{ $laporan['berkas_nama'] }}{{ !empty($laporan['berkas_meta']) ? ' (' . $laporan['berkas_meta'] . ')' : '' }}</p>
+                    @endif
+                </div>
+                <button type="button" @click="previewModalOpen = false" class="p-1 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
             </div>
-            <div class="rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-6 text-center">
-                <p class="text-sm font-bold text-[#252525]">{{ $laporan['berkas_nama'] }}</p>
-                <p class="text-xs text-[#6B7280] mt-1">{{ $laporan['berkas_meta'] }}</p>
+            <div class="rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-4 text-center overflow-hidden">
+                @if ($berkasUrl && $berkasIsImage)
+                    <img src="{{ $berkasUrl }}" alt="{{ $laporan['berkas_nama'] ?: 'Bukti Pendukung' }}" class="max-h-[28rem] mx-auto rounded-lg object-contain" />
+                @elseif ($berkasUrl && $berkasIsPdf)
+                    <iframe src="{{ $berkasUrl }}" class="w-full h-96 rounded-lg border border-[#E5E7EB]"></iframe>
+                @elseif ($berkasUrl)
+                    <p class="text-sm font-bold text-[#252525]">{{ $laporan['berkas_nama'] ?: 'Lampiran Bukti' }}</p>
+                    <p class="text-xs text-[#6B7280] mt-1">Klik tombol di bawah untuk membuka berkas lampiran.</p>
+                @else
+                    <p class="text-xs text-[#6B7280] py-4">Tidak ada berkas bukti pendukung yang dilampirkan.</p>
+                @endif
             </div>
-            <button
-                type="button"
-                @click="previewModalOpen = false"
-                class="w-full py-2 rounded-xl bg-[#B01116] text-[#FFFFFF] text-xs font-bold cursor-pointer"
-            >
-                Tutup
-            </button>
+            <div class="flex justify-end gap-2">
+                @if ($berkasUrl)
+                    <a href="{{ $berkasUrl }}" target="_blank" class="px-4 py-2 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#252525] hover:bg-gray-50 transition">
+                        Buka di Tab Baru
+                    </a>
+                @endif
+                <button
+                    type="button"
+                    @click="previewModalOpen = false"
+                    class="px-4 py-2 rounded-xl bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#8C0D11] transition cursor-pointer"
+                >
+                    Tutup
+                </button>
+            </div>
         </div>
     </div>
 </body>

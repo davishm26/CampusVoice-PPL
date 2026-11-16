@@ -501,7 +501,7 @@
                                 </div>
                                 <div>
                                     <p class="text-[10px] font-bold uppercase tracking-wider text-[#6B7280]">
-                                        PELAPOR <span class="text-[#6B7280] font-semibold">&bull; KHUSUS SSC</span>
+                                        PELAPOR
                                     </p>
                                     <p class="text-xs sm:text-sm font-bold text-[#252525] mt-0.5">{{ $laporan['pelapor'] }}</p>
                                 </div>
@@ -520,37 +520,57 @@
                             </div>
 
                             <!-- Kotak Bukti Pendukung -->
-                            <div class="mt-5 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] p-3.5 flex items-center justify-between gap-3">
-                                @if (!empty($laporan['lampiran_url']) || !empty($laporan['lampiran_nama']))
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] shrink-0">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-xs sm:text-sm font-bold text-[#252525] truncate">{{ $laporan['lampiran_nama'] ?: 'Lampiran Bukti' }}</p>
-                                            @if (!empty($laporan['lampiran_meta']))
-                                                <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_meta'] }}</p>
+                            @php
+                                $lampiranUrl = $laporan['lampiran_url'] ?? null;
+                                $lampiranExt = strtolower($laporan['lampiran_ext'] ?? ($lampiranUrl ? pathinfo(parse_url($lampiranUrl, PHP_URL_PATH), PATHINFO_EXTENSION) : ''));
+                                $isImage = in_array($lampiranExt, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                $isPdf = $lampiranExt === 'pdf';
+                            @endphp
+                            <div class="mt-5 rounded-xl border border-[#E5E7EB] bg-[#FFFFFF] p-3.5 space-y-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    @if (!empty($lampiranUrl) || !empty($laporan['lampiran_nama']))
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            @if ($lampiranUrl && $isImage)
+                                                <button type="button" @click="showPreviewModal = true" class="w-11 h-11 rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB] shrink-0 cursor-pointer hover:opacity-90 transition">
+                                                    <img src="{{ $lampiranUrl }}" alt="{{ $laporan['lampiran_nama'] ?: 'Lampiran Bukti' }}" class="w-full h-full object-cover" />
+                                                </button>
+                                            @else
+                                                <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] shrink-0">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
+                                                </div>
                                             @endif
+                                            <div class="min-w-0">
+                                                <p class="text-xs sm:text-sm font-bold text-[#252525] truncate">{{ $laporan['lampiran_nama'] ?: 'Lampiran Bukti' }}</p>
+                                                @if (!empty($laporan['lampiran_meta']))
+                                                    <p class="text-[11px] text-[#6B7280]">{{ $laporan['lampiran_meta'] }}</p>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        @click="showPreviewModal = true"
-                                        class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#970e13] hover:underline shrink-0 cursor-pointer px-2 py-1"
-                                    >
-                                        Lihat
+                                        <button
+                                            type="button"
+                                            @click="showPreviewModal = true"
+                                            class="text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#970e13] hover:underline shrink-0 cursor-pointer px-2 py-1"
+                                        >
+                                            Lihat
+                                        </button>
+                                    @else
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] shrink-0">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs text-[#6B7280]">Tidak ada lampiran bukti pendukung.</p>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @if ($lampiranUrl && $isImage)
+                                    <button type="button" @click="showPreviewModal = true" class="block w-full rounded-lg overflow-hidden border border-[#E5E7EB] bg-[#F9FAFB] p-2 hover:border-[#B01116]/40 transition cursor-pointer">
+                                        <img src="{{ $lampiranUrl }}" alt="{{ $laporan['lampiran_nama'] ?: 'Bukti Pendukung' }}" class="max-h-48 mx-auto rounded-md object-contain" />
                                     </button>
-                                @else
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] flex items-center justify-center text-[#9CA3AF] shrink-0">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </div>
-                                        <p class="text-xs text-[#6B7280]">Tidak ada lampiran bukti pendukung.</p>
-                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -772,7 +792,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
         @keydown.escape.window="showPreviewModal = false"
     >
-        <div @click.away="showPreviewModal = false" class="bg-[#FFFFFF] rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#E5E7EB]">
+        <div @click.away="showPreviewModal = false" class="bg-[#FFFFFF] rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-[#E5E7EB]">
             <div class="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
                 <div>
                     <h3 class="text-sm font-bold text-[#252525]">Pratinjau Bukti Pendukung</h3>
@@ -784,12 +804,6 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            @php
-                $lampiranUrl = $laporan['lampiran_url'] ?? null;
-                $lampiranExt = $lampiranUrl ? strtolower(pathinfo(parse_url($lampiranUrl, PHP_URL_PATH), PATHINFO_EXTENSION)) : '';
-                $isImage = in_array($lampiranExt, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                $isPdf = $lampiranExt === 'pdf';
-            @endphp
             <div class="my-5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] p-4 text-center overflow-hidden">
                 @if ($lampiranUrl && $isImage)
                     <img src="{{ $lampiranUrl }}" alt="{{ $laporan['lampiran_nama'] ?: 'Bukti Pendukung' }}" class="max-h-96 mx-auto rounded-lg object-contain" />

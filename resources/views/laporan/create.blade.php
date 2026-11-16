@@ -321,32 +321,65 @@
                             class="lg:col-span-8 w-full bg-[#FFFFFF] rounded-2xl p-6 sm:p-8 text-[#252525] shadow-xl border border-[#E5E7EB] min-w-0"
                             x-data="{
                                 deskripsi: @js(old('deskripsi', '')),
-                                fileSelected: null,
+                                fileSelected: false,
                                 fileName: '',
                                 fileSize: '',
+                                fileError: '',
+                                filePreviewUrl: '',
+                                fileIsImage: false,
                                 isDragging: false,
                                 handleFileDrop(e) {
                                     this.isDragging = false;
                                     const files = e.dataTransfer.files;
                                     if (files.length > 0) {
-                                        this.processFile(files[0]);
+                                        this.processFile(files[0], true);
                                     }
                                 },
                                 handleFileSelect(e) {
                                     const files = e.target.files;
                                     if (files.length > 0) {
-                                        this.processFile(files[0]);
+                                        this.processFile(files[0], false);
                                     }
                                 },
-                                processFile(file) {
-                                    this.fileSelected = file;
+                                processFile(file, syncInput) {
+                                    this.fileError = '';
+                                    const allowedExt = ['jpg', 'jpeg', 'png', 'pdf'];
+                                    const ext = (file.name.split('.').pop() || '').toLowerCase();
+                                    if (!allowedExt.includes(ext)) {
+                                        this.removeFile();
+                                        this.fileError = 'Format berkas bukti harus berupa JPG, PNG, atau PDF.';
+                                        return;
+                                    }
+                                    if (file.size > 10 * 1024 * 1024) {
+                                        this.removeFile();
+                                        this.fileError = 'Ukuran berkas bukti maksimal adalah 10 MB.';
+                                        return;
+                                    }
+                                    if (syncInput && this.$refs.fileInput) {
+                                        const dt = new DataTransfer();
+                                        dt.items.add(file);
+                                        this.$refs.fileInput.files = dt.files;
+                                    }
+                                    if (this.filePreviewUrl) {
+                                        URL.revokeObjectURL(this.filePreviewUrl);
+                                    }
+                                    this.fileSelected = true;
                                     this.fileName = file.name;
-                                    this.fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                                    this.fileSize = file.size >= 1048576
+                                        ? (file.size / 1048576).toFixed(2) + ' MB'
+                                        : Math.max(1, Math.round(file.size / 1024)) + ' KB';
+                                    this.fileIsImage = ['jpg', 'jpeg', 'png'].includes(ext);
+                                    this.filePreviewUrl = this.fileIsImage ? URL.createObjectURL(file) : '';
                                 },
                                 removeFile() {
-                                    this.fileSelected = null;
+                                    if (this.filePreviewUrl) {
+                                        URL.revokeObjectURL(this.filePreviewUrl);
+                                    }
+                                    this.fileSelected = false;
                                     this.fileName = '';
                                     this.fileSize = '';
+                                    this.filePreviewUrl = '';
+                                    this.fileIsImage = false;
                                     if (this.$refs.fileInput) {
                                         this.$refs.fileInput.value = '';
                                     }
@@ -478,6 +511,16 @@
                                         class="w-full rounded-xl border-2 border-dashed p-6 sm:p-7 text-center transition-all duration-200"
                                         :class="isDragging ? 'border-[#B01116] bg-[#FCE8E8]/40' : 'border-[#E5E7EB] bg-[#FAFAFA] hover:border-gray-300'"
                                     >
+                                        <input
+                                            type="file"
+                                            id="berkas_bukti"
+                                            name="berkas_bukti"
+                                            accept=".jpg,.jpeg,.png,.pdf"
+                                            x-ref="fileInput"
+                                            @change="handleFileSelect($event)"
+                                            class="hidden"
+                                        />
+
                                         <template x-if="!fileSelected">
                                             <div class="flex flex-col items-center justify-center">
                                                 <div class="w-8 h-8 flex items-center justify-center text-[#B01116] mb-1">
@@ -495,16 +538,6 @@
                                                     JPG, PNG, atau PDF • Maksimum 10 MB
                                                 </p>
 
-                                                <input
-                                                    type="file"
-                                                    id="berkas_bukti"
-                                                    name="berkas_bukti"
-                                                    accept=".jpg,.jpeg,.png,.pdf"
-                                                    x-ref="fileInput"
-                                                    @change="handleFileSelect($event)"
-                                                    class="hidden"
-                                                />
-
                                                 <button
                                                     type="button"
                                                     @click="$refs.fileInput.click()"
@@ -516,30 +549,53 @@
                                         </template>
 
                                         <template x-if="fileSelected">
-                                            <div class="flex items-center justify-between p-3 bg-[#FFFFFF] rounded-lg border border-[#E5E7EB] max-w-md mx-auto shadow-xs">
-                                                <div class="flex items-center gap-3 truncate text-left">
-                                                    <div class="w-8 h-8 rounded-lg bg-[#FCE8E8] text-[#B01116] flex items-center justify-center shrink-0">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                        </svg>
+                                            <div class="max-w-md mx-auto space-y-3">
+                                                <div class="flex items-center justify-between p-3 bg-[#FFFFFF] rounded-lg border border-[#E5E7EB] shadow-xs">
+                                                    <div class="flex items-center gap-3 min-w-0 text-left">
+                                                        <template x-if="fileIsImage && filePreviewUrl">
+                                                            <img :src="filePreviewUrl" :alt="fileName" class="w-10 h-10 rounded-lg object-cover border border-[#E5E7EB] shrink-0" />
+                                                        </template>
+                                                        <template x-if="!fileIsImage">
+                                                            <div class="w-10 h-10 rounded-lg bg-[#FCE8E8] text-[#B01116] flex items-center justify-center shrink-0">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                </svg>
+                                                            </div>
+                                                        </template>
+                                                        <div class="min-w-0">
+                                                            <p class="text-xs font-semibold text-[#252525] truncate" x-text="fileName"></p>
+                                                            <p class="text-[10px] text-[#6B7280]" x-text="fileSize"></p>
+                                                        </div>
                                                     </div>
-                                                    <div class="truncate">
-                                                        <p class="text-xs font-semibold text-[#252525] truncate" x-text="fileName"></p>
-                                                        <p class="text-[10px] text-[#6B7280]" x-text="fileSize"></p>
+                                                    <div class="flex items-center gap-1 shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            @click="$refs.fileInput.click()"
+                                                            class="text-[11px] font-semibold text-[#B01116] hover:underline px-2 py-1 cursor-pointer"
+                                                        >
+                                                            Ganti
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            @click="removeFile()"
+                                                            class="text-[#6B7280] hover:text-[#B01116] p-1 rounded-md transition cursor-pointer"
+                                                            title="Hapus berkas"
+                                                        >
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                            </svg>
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    @click="removeFile()"
-                                                    class="text-[#6B7280] hover:text-[#B01116] p-1 rounded-md transition cursor-pointer"
-                                                    title="Hapus berkas"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                    </svg>
-                                                </button>
+                                                <template x-if="fileIsImage && filePreviewUrl">
+                                                    <div class="bg-[#FFFFFF] rounded-lg border border-[#E5E7EB] p-2">
+                                                        <img :src="filePreviewUrl" :alt="fileName" class="max-h-48 mx-auto rounded-md object-contain" />
+                                                    </div>
+                                                </template>
                                             </div>
                                         </template>
+
+                                        <p x-show="fileError" x-cloak x-text="fileError" class="mt-3 text-xs font-semibold text-[#B01116]"></p>
                                     </div>
 
                                     <!-- Kotak Checkbox Laporan Anonim -->
@@ -558,7 +614,7 @@
                                                     Kirim sebagai laporan anonim
                                                 </span>
                                                 <span class="block text-[11px] text-[#6B7280] mt-1 leading-relaxed">
-                                                    Identitas Anda disembunyikan dari petugas unit penangan. Admin SSC tetap dapat melihat identitas untuk verifikasi dan penyaluran.
+                                                    Identitas Anda disembunyikan sepenuhnya, baik dari Admin SSC maupun petugas unit penangan.
                                                 </span>
                                             </div>
                                         </label>

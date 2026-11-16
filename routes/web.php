@@ -32,6 +32,7 @@ Route::get('/riwayat-laporan', [LaporanController::class, 'riwayat']);
 Route::get('/riwayat', [LaporanController::class, 'riwayat']);
 
 Route::get('/laporan/detail/{tiket?}', [LaporanController::class, 'detail'])->name('laporan.detail');
+Route::get('/laporan/bukti/{tiket}', [LaporanController::class, 'showBukti'])->name('laporan.bukti');
 Route::get('/detail-laporan/{tiket?}', [LaporanController::class, 'detail']);
 Route::post('/laporan/detail/{tiket}/tanggapan', [LaporanController::class, 'storeTanggapan'])->name('laporan.tanggapan');
 Route::post('/laporan/detail/{tiket}/buka-kembali', [LaporanController::class, 'bukaKembali'])->name('laporan.reopen');
@@ -67,6 +68,7 @@ Route::get('/verifikasi-laporan', fn () => redirect()->route('admin.verifikasi')
 
 // Admin SSC: Monitoring Laporan
 Route::get('/admin/monitoring-laporan', [LaporanController::class, 'adminMonitoring'])->name('admin.monitoring');
+Route::get('/admin/monitoring-laporan/{tiket}', [LaporanController::class, 'adminMonitoringDetail'])->name('admin.monitoring.detail');
 Route::get('/admin/monitoring', fn () => redirect()->route('admin.monitoring'));
 Route::get('/monitoring-laporan', fn () => redirect()->route('admin.monitoring'));
 

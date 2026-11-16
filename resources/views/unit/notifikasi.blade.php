@@ -5,11 +5,13 @@
     $notifItems = $notifications->map(function ($n) {
         return [
             'id' => $n->id,
+            'tiket' => $n->tiket,
             'icon' => $n->icon,
             'title' => $n->title,
             'desc' => $n->desc,
             'time' => $n->formatted_time,
             'unread' => !$n->is_read,
+            'url' => route('notifikasi.read', $n->id),
         ];
     })->values()->all();
 @endphp
@@ -58,227 +60,53 @@
     class="h-full antialiased text-[#252525] bg-[#B01116]"
     x-data="{
         mobileSidebarOpen: false,
-        searchHeader: '',
         activeTab: 'all',
-        totalBadge: {{ $unreadCount }},
         items: @js($notifItems),
+        get totalCount() {
+            return this.items.length;
+        },
         get unreadCount() {
             return this.items.filter(i => i.unread).length;
         },
         get filteredItems() {
-            const q = this.searchHeader.trim().toLowerCase();
-            return this.items.filter(i => {
-                if (this.activeTab === 'unread' && !i.unread) return false;
-                if (q && !i.title.toLowerCase().includes(q) && !i.desc.toLowerCase().includes(q)) return false;
-                return true;
-            });
-        },
-        markAsRead(id) {
-            const item = this.items.find(i => i.id === id);
-            if (item) item.unread = false;
+            if (this.activeTab === 'unread') {
+                return this.items.filter(i => i.unread);
+            }
+            return this.items;
         },
         markAllAsRead() {
-            this.items.forEach(i => { i.unread = false; });
+            fetch('{{ route('notifikasi.markAll') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            }).then(() => {
+                this.items = this.items.map(i => ({ ...i, unread: false }));
+            }).catch(() => {
+                this.items = this.items.map(i => ({ ...i, unread: false }));
+            });
         }
     }"
 >
     <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
-        <!-- ========================================================= -->
-        <!-- SIDEBAR KIRI (PETUGAS UNIT) -->
-        <!-- ========================================================= -->
-        <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-[#FFFFFF] flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0"
-            :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-        >
-            <div class="flex flex-col flex-1 overflow-y-auto">
-                <!-- Logo -->
-                <div class="px-6 py-5 flex items-center gap-3">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
-                    <div>
-                        <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight">CampusVoice</span>
-                        <p class="text-[10px] text-[#6B7280] font-medium leading-tight">Telkom University Surabaya</p>
-                    </div>
-                </div>
-
-                <!-- Navigasi Menu Petugas Unit -->
-                <div class="px-4 py-3 flex-1">
-                    <p class="px-3 text-[11px] font-bold text-[#252525] tracking-wide mb-2">Petugas Unit</p>
-
-                    <nav class="space-y-1">
-                        <!-- Menu 1: Dashboard Unit -->
-                        <a
-                            href="{{ route('unit.dashboard') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            <span>Dashboard Unit</span>
-                        </a>
-
-                        <!-- Menu 2: Laporan Ditugaskan -->
-                        <a
-                            href="{{ route('unit.laporan-ditugaskan') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                            </svg>
-                            <span>Laporan Ditugaskan</span>
-                        </a>
-
-                        <!-- Menu 3: Riwayat Penanganan -->
-                        <a
-                            href="{{ route('petugas.riwayat') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="20" x2="12" y2="10"/>
-                                <line x1="18" y1="20" x2="18" y2="4"/>
-                                <line x1="6" y1="20" x2="6" y2="16"/>
-                            </svg>
-                            <span>Riwayat Penanganan</span>
-                        </a>
-
-                        <!-- Menu 4: Notifikasi (AKTIF) -->
-                        <a
-                            href="{{ route('unit.notifikasi') }}"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition shadow-xs"
-                        >
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                                </svg>
-                                <span>Notifikasi</span>
-                            </div>
-                            <span
-                                x-show="unreadCount > 0"
-                                x-text="unreadCount"
-                                class="w-5 h-5 rounded-full bg-[#B01116] text-[#FFFFFF] text-[11px] font-bold flex items-center justify-center"
-                            >
-                                3
-                            </span>
-                        </a>
-
-                        <!-- Menu 5: Profil Unit -->
-                        <a
-                            href="{{ route('unit.profil') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            <span>Profil Unit</span>
-                        </a>
-                    </nav>
-                </div>
-
-                <!-- Bagian Bawah: Keluar -->
-                <div class="px-4 py-3 border-t border-[#E5E7EB]">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button
-                            type="submit"
-                            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition cursor-pointer text-left"
-                        >
-                            <svg class="w-5 h-5 text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span>Keluar</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Kartu Bantuan -->
-            <div class="p-4 border-t border-[#E5E7EB]">
-                <div class="rounded-xl bg-[#B01116] p-4 text-[#FFFFFF] shadow-sm">
-                    <h4 class="text-sm font-bold tracking-tight text-[#FFFFFF]">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-[#FFFFFF]/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a href="{{ route('pusat.bantuan') }}" class="mt-3 block w-full py-1.5 px-3 bg-[#FFFFFF] hover:bg-gray-100 text-[#B01116] text-xs font-bold rounded-lg text-center shadow-xs transition">
-                        Pusat Bantuan
-                    </a>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Overlay Mobile -->
-        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"></div>
+        @include('unit.partials.sidebar', [
+            'activeMenu' => 'notifikasi',
+            'unreadCount' => $unreadCount,
+            'alpineUnread' => true,
+        ])
 
         <!-- ========================================================= -->
         <!-- AREA UTAMA (Header + Konten) -->
         <!-- ========================================================= -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
-            <!-- HEADER ATAS (NAVBAR) -->
-            <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-                <!-- Hamburger Mobile & Search Bar Header -->
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        @click="mobileSidebarOpen = !mobileSidebarOpen"
-                        class="p-2 -ml-2 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 lg:hidden transition"
-                        title="Buka Menu"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-
-                    <!-- Search Bar Header -->
-                    <div class="relative w-64 sm:w-80 md:w-96">
-                        <input
-                            type="text"
-                            x-model="searchHeader"
-                            placeholder="Cari nomor tiket atau laporan..."
-                            class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                        />
-                    </div>
-                </div>
-
-                <!-- Bagian Kanan: Lonceng Notifikasi & Profil Petugas Unit -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <!-- Tombol Lonceng Notifikasi -->
-                    <a
-                        href="{{ route('unit.notifikasi') }}"
-                        class="relative p-2 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#B01116] hover:bg-gray-50 transition cursor-pointer"
-                        title="Notifikasi"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        <span
-                            x-show="unreadCount > 0"
-                            x-text="unreadCount"
-                            class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[#B01116] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center shadow-xs"
-                        >
-                            3
-                        </span>
-                    </a>
-
-                    <!-- Profil Petugas Unit: Budi Santoso -->
-                    <a href="{{ route('unit.profil') }}" class="flex items-center gap-2.5 pl-1 group">
-                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0">
-                            BS
-                        </div>
-                        <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#252525] leading-tight group-hover:text-[#B01116] transition">Budi Santoso</p>
-                            <p class="text-[11px] text-[#6B7280] leading-tight">Petugas Unit</p>
-                        </div>
-                    </a>
-                </div>
-            </header>
+            @include('unit.partials.header', [
+                'authUser' => $authUser,
+                'unreadCount' => $unreadCount,
+                'alpineUnread' => true,
+            ])
 
             <!-- ========================================================= -->
             <!-- AREA KONTEN UTAMA: Linear Gradient #B01116 ke #58595B -->
@@ -329,9 +157,9 @@
                                     <span
                                         class="inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-bold rounded-full transition"
                                         :class="activeTab === 'all' ? 'bg-[#FCE8E8] text-[#B01116]' : 'bg-gray-100 text-[#6B7280]'"
-                                        x-text="totalBadge"
+                                        x-text="totalCount"
                                     >
-                                        6
+                                        {{ $notifications->count() }}
                                     </span>
                                 </button>
 
@@ -356,9 +184,9 @@
                             <!-- Daftar Item Notifikasi (Dipisah border horizontal #E5E7EB) -->
                             <div class="divide-y divide-[#E5E7EB]">
                                 <template x-for="item in filteredItems" :key="item.id">
-                                    <div
-                                        @click="markAsRead(item.id)"
-                                        class="px-6 py-5 transition cursor-pointer group"
+                                    <a
+                                        :href="item.url"
+                                        class="block px-6 py-5 transition cursor-pointer group"
                                         :class="item.unread ? 'bg-[#FEF2F2]/60 hover:bg-[#FEEAEA]/70' : 'bg-[#FFFFFF] hover:bg-[#F9FAFB]'"
                                     >
                                         <div class="flex items-start gap-4">
@@ -411,7 +239,7 @@
 
                                             <!-- Konten Teks -->
                                             <div class="flex-1 min-w-0">
-                                                <h3 class="text-sm sm:text-[15px] font-bold text-[#252525] tracking-tight" x-text="item.title"></h3>
+                                                <h3 class="text-sm sm:text-[15px] font-bold text-[#252525] group-hover:text-[#B01116] transition tracking-tight" x-text="item.title"></h3>
                                                 <p class="text-xs sm:text-[13px] text-[#6B7280] mt-1 leading-snug" x-text="item.desc"></p>
                                                 <p class="text-[11px] sm:text-xs text-[#6B7280] mt-1.5" x-text="item.time"></p>
                                             </div>
@@ -423,7 +251,7 @@
                                                 </template>
                                             </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 </template>
 
                                 <!-- State Kosong -->
