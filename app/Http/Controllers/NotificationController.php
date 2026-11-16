@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppNotification;
+use App\Models\Laporan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,13 +32,40 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $authUser = $this->getActiveUser();
-        $notifications = AppNotification::where('user_id', $authUser->id)
+        $notifications = AppNotification::with('laporan')
+            ->where('user_id', $authUser->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $isAdminSsc = $request->routeIs('admin.notifikasi') || $request->is('admin/*') || $authUser->role === 'Admin SSC';
+
+        // Untuk Admin SSC: notif verifikasi laporan masuk yang laporannya sudah diverifikasi tidak perlu ditandai belum dibaca/diverifikasi lagi
+        if ($isAdminSsc) {
+            $staleIds = $notifications->filter(function ($n) {
+                if ($n->is_read) {
+                    return false;
+                }
+                $isVerifNotif = in_array($n->title, ['Laporan baru masuk', 'Pengajuan buka kembali laporan'], true);
+                if (!$isVerifNotif) {
+                    return false;
+                }
+                $status = $n->laporan?->status ?? ($n->tiket ? Laporan::where('nomor_tiket', $n->tiket)->value('status') : null);
+                return $status && $status !== 'Menunggu Verifikasi';
+            })->pluck('id');
+
+            if ($staleIds->isNotEmpty()) {
+                AppNotification::whereIn('id', $staleIds)->update(['is_read' => true]);
+                $notifications->each(function ($n) use ($staleIds) {
+                    if ($staleIds->contains($n->id)) {
+                        $n->is_read = true;
+                    }
+                });
+            }
+        }
+
         $unreadCount = $notifications->where('is_read', false)->count();
 
-        if ($request->routeIs('admin.notifikasi') || $request->is('admin/*') || $authUser->role === 'Admin SSC') {
+        if ($isAdminSsc) {
             return view('admin.notifikasi', compact('notifications', 'authUser', 'unreadCount'));
         }
 
@@ -48,10 +76,14 @@ class NotificationController extends Controller
         return view('notifikasi', compact('notifications', 'authUser', 'unreadCount'));
     }
 
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
         $authUser = $this->getActiveUser();
         AppNotification::where('user_id', $authUser->id)->update(['is_read' => true]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->back()->with('success', 'Semua notifikasi telah ditandai dibaca.');
     }
@@ -65,7 +97,11 @@ class NotificationController extends Controller
             $notif->update(['is_read' => true]);
             if ($notif->tiket) {
                 if ($authUser->role === 'Admin SSC') {
-                    return redirect()->route('admin.verifikasi.detail', $notif->tiket);
+                    $laporan = $notif->laporan ?? Laporan::where('nomor_tiket', $notif->tiket)->first();
+                    if ($laporan && $laporan->status === 'Menunggu Verifikasi') {
+                        return redirect()->route('admin.verifikasi.detail', $notif->tiket);
+                    }
+                    return redirect()->route('admin.monitoring.detail', $notif->tiket);
                 }
                 if ($authUser->role === 'Petugas Unit') {
                     return redirect()->route('unit.laporan-ditugaskan.detail', $notif->tiket);

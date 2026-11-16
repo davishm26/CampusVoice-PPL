@@ -109,7 +109,7 @@ class UserSeeder extends Seeder
 
         User::create([
             'name'              => 'Budi Santoso',
-            'email'             => 'unit@telkomuniversity.ac.id',
+            'email'             => 'unit.logistik@telkomuniversity.ac.id',
             'nim'               => '992002',
             'prodi'             => 'Logistik & Sarana',
             'fakultas'          => 'Direktorat Logistik dan Aset',

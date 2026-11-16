@@ -31,18 +31,6 @@ class StaffUserSeeder extends Seeder
                 'email_verified_at' => $now,
             ],
             [
-                'email'             => 'unit@telkomuniversity.ac.id',
-                'name'              => 'Budi Santoso',
-                'nim'               => '992002',
-                'prodi'             => 'Logistik & Sarana',
-                'fakultas'          => 'Direktorat Logistik dan Aset',
-                'phone'             => '081122334466',
-                'role'              => 'Petugas Unit',
-                'status_akun'       => 'Aktif',
-                'password'          => $password,
-                'email_verified_at' => $now,
-            ],
-            [
                 'email'             => 'superadmin@telkomuniversity.ac.id',
                 'name'              => 'Rizky Pratama',
                 'nim'               => '993003',
@@ -63,7 +51,9 @@ class StaffUserSeeder extends Seeder
             );
         }
 
-        $this->command?->info('✅ Akun Admin SSC, Petugas Unit, dan Super Admin berhasil disimpan di database (password: 12345678).');
+        $this->call(UnitAccountSeeder::class);
+
+        $this->command?->info('✅ Akun Admin SSC, Petugas Unit seluruh unit, dan Super Admin berhasil disimpan di database (password: 12345678).');
     }
 }
 

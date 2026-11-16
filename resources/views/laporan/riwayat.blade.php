@@ -22,6 +22,7 @@
             'kategori' => $lap->short_kategori,
             'unit' => $lap->unit_penangan,
             'status' => $lap->status,
+            'is_anonim' => (bool) $lap->is_anonim,
         ];
     })->values();
 
@@ -374,6 +375,12 @@
                                                 <a href="{{ route('laporan.detail', $row['tiket']) }}" class="hover:text-[#B01116] transition">
                                                     {{ $row['judul'] }}
                                                 </a>
+                                                @if ($row['is_anonim'])
+                                                    <span class="ml-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[10px] font-semibold text-[#4B5563]">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-[#2563EB]"></span>
+                                                        Anonim
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td class="px-4 py-4 align-middle text-sm text-[#252525]">
                                                 <span class="px-2.5 py-1 rounded-md bg-gray-100 text-xs font-medium text-gray-700">

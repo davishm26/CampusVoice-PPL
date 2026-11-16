@@ -3,13 +3,12 @@
         return [
             'tiket' => $item->nomor_tiket,
             'judul' => $item->judul,
+            'kategori_key' => $item->kategori ?? '',
             'kategori_display' => $item->short_kategori ?? $item->kategori_label ?? $item->kategori,
             'kategori' => trim(($item->kategori ?? '') . ' ' . ($item->kategori_label ?? '') . ' ' . ($item->short_kategori ?? '')),
-            'status' => $item->status ?? '',
-            'prioritas' => $item->prioritas ?? '',
             'is_anonim' => (bool) $item->is_anonim,
-            'pelapor' => $item->user->name ?? 'Mahasiswa',
-            'prodi' => $item->user->prodi ?? '-',
+            'pelapor' => $item->is_anonim ? 'Pelapor Anonim' : ($item->user->name ?? 'Mahasiswa'),
+            'prodi' => $item->is_anonim ? '-' : ($item->user->prodi ?? '-'),
             'tanggal' => $item->created_at ? $item->created_at->wib()->format('Y-m-d') : '',
             'waktu' => $item->created_at ? $item->created_at->wib()->diffForHumans() : '-',
             'url' => route('admin.verifikasi.detail', $item->nomor_tiket),
@@ -63,9 +62,7 @@
         mobileSidebarOpen: false,
         searchHeader: '',
         searchTable: '',
-        filterStatus: '',
         filterKategori: '',
-        filterPrioritas: '',
         filterTanggalDari: '',
         filterTanggalSampai: '',
         datePopoverOpen: false,
@@ -76,9 +73,7 @@
             return Boolean(
                 this.searchHeader.trim() ||
                 this.searchTable.trim() ||
-                this.filterStatus ||
                 this.filterKategori ||
-                this.filterPrioritas ||
                 this.filterTanggalDari ||
                 this.filterTanggalSampai
             );
@@ -86,9 +81,7 @@
         resetFilters() {
             this.searchHeader = '';
             this.searchTable = '';
-            this.filterStatus = '';
             this.filterKategori = '';
-            this.filterPrioritas = '';
             this.filterTanggalDari = '';
             this.filterTanggalSampai = '';
             this.datePopoverOpen = false;
@@ -105,10 +98,18 @@
         },
         matchesFilter(item) {
             const q = (this.searchTable || this.searchHeader).trim().toLowerCase();
-            if (q && !item.tiket.toLowerCase().includes(q) && !item.judul.toLowerCase().includes(q)) return false;
-            if (this.filterStatus && item.status.toLowerCase() !== this.filterStatus.toLowerCase()) return false;
-            if (this.filterKategori && !item.kategori.toLowerCase().includes(this.filterKategori.toLowerCase())) return false;
-            if (this.filterPrioritas && !item.prioritas.toLowerCase().includes(this.filterPrioritas.toLowerCase())) return false;
+            if (q) {
+                const matchText = item.tiket.toLowerCase().includes(q)
+                    || item.judul.toLowerCase().includes(q)
+                    || (item.prodi && item.prodi.toLowerCase().includes(q))
+                    || (!item.is_anonim && item.pelapor && item.pelapor.toLowerCase().includes(q));
+                if (!matchText) return false;
+            }
+            if (this.filterKategori) {
+                const keyMatch = (item.kategori_key || '').toLowerCase() === this.filterKategori.toLowerCase();
+                const textMatch = item.kategori.toLowerCase().includes(this.filterKategori.toLowerCase());
+                if (!keyMatch && !textMatch) return false;
+            }
             if (this.filterTanggalDari && (!item.tanggal || item.tanggal < this.filterTanggalDari)) return false;
             if (this.filterTanggalSampai && (!item.tanggal || item.tanggal > this.filterTanggalSampai)) return false;
             return true;
@@ -376,61 +377,27 @@
                                 <input
                                     type="text"
                                     x-model="searchTable"
-                                    placeholder="Cari nomor tiket atau judul..."
+                                    @input="currentPage = 1"
+                                    placeholder="Cari nomor tiket, judul, pelapor, atau prodi..."
                                     class="w-full bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 px-4 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
                                 />
                             </div>
                         </div>
 
-                        <!-- Dropdown 1: Semua Status -->
-                        <div class="relative min-w-[140px] shrink-0">
-                            <select
-                                x-model="filterStatus"
-                                class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
-                            >
-                                <option value="">Semua Status</option>
-                                <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
-                                <option value="Diteruskan">Diteruskan</option>
-                                <option value="Diproses">Diproses</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Ditolak">Ditolak</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Dropdown 2: Semua Kategori -->
-                        <div class="relative min-w-[150px] shrink-0">
+                        <!-- Dropdown: Semua Kategori -->
+                        <div class="relative min-w-[190px] shrink-0">
                             <select
                                 x-model="filterKategori"
+                                @change="currentPage = 1"
                                 class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                             >
                                 <option value="">Semua Kategori</option>
-                                <option value="sarana">Sarana Prasarana</option>
-                                <option value="akademik">Akademik</option>
+                                <option value="sarana_prasarana">Sarana &amp; Prasarana</option>
                                 <option value="kemahasiswaan">Kemahasiswaan</option>
-                                <option value="ssc">SSC</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <!-- Dropdown 3: Semua Prioritas -->
-                        <div class="relative min-w-[150px] shrink-0">
-                            <select
-                                x-model="filterPrioritas"
-                                class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-transparent py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
-                            >
-                                <option value="">Semua Prioritas</option>
-                                <option value="rendah">Rendah</option>
-                                <option value="sedang">Sedang</option>
-                                <option value="tinggi">Tinggi</option>
+                                <option value="ssc">Student Service Center</option>
+                                <option value="akademik">Akademik</option>
+                                <option value="administrasi_keuangan">Administrasi &amp; Keuangan</option>
+                                <option value="lainnya">Lainnya</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -551,7 +518,7 @@
                                                 <template x-if="item.is_anonim">
                                                     <div>
                                                         <div class="text-sm text-[#252525] leading-snug">Pelapor anonim</div>
-                                                        <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
+                                                        <div class="text-[11px] font-medium text-[#6B7280] mt-0.5">Identitas disembunyikan</div>
                                                     </div>
                                                 </template>
                                                 <template x-if="!item.is_anonim">

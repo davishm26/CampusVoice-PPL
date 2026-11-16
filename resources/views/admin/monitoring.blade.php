@@ -597,7 +597,12 @@
                                         >
                                             <!-- NOMOR TIKET / LAPORAN -->
                                             <td class="py-4 px-6">
-                                                <div class="text-xs sm:text-sm font-bold text-[#252525]" x-text="row.tiket"></div>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-xs sm:text-sm font-bold text-[#252525]" x-text="row.tiket"></span>
+                                                    <template x-if="row.is_anonim">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[10px] font-semibold text-[#4B5563]">Anonim</span>
+                                                    </template>
+                                                </div>
                                                 <div class="text-[11px] text-[#6B7280] mt-0.5 leading-snug" x-text="row.judul"></div>
                                             </td>
 
@@ -676,7 +681,7 @@
                                             <!-- AKSI -->
                                             <td class="py-4 px-6 whitespace-nowrap text-right">
                                                 <a
-                                                    :href="'{{ url('/admin/verifikasi-laporan') }}/' + row.tiket"
+                                                    :href="'{{ url('/admin/monitoring-laporan') }}/' + row.tiket"
                                                     class="inline-flex items-center text-xs sm:text-sm font-bold text-[#B01116] hover:text-[#970e13] transition cursor-pointer"
                                                 >
                                                     Detail &rarr;

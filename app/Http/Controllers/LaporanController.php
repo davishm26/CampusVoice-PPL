@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class LaporanController extends Controller
 {
@@ -79,7 +80,10 @@ class LaporanController extends Controller
         if ($request->hasFile('berkas_bukti')) {
             $file = $request->file('berkas_bukti');
             $fileName = $file->getClientOriginalName();
-            $fileSize = number_format($file->getSize() / (1024 * 1024), 2) . ' MB';
+            $bytes = $file->getSize();
+            $fileSize = $bytes >= 1048576
+                ? number_format($bytes / 1048576, 2) . ' MB'
+                : number_format(max(1, $bytes / 1024), 0) . ' KB';
             $filePath = $file->store('bukti_laporan', 'public');
         }
 
@@ -232,6 +236,20 @@ class LaporanController extends Controller
         $unreadCount = AppNotification::where('user_id', $authUser->id)->where('is_read', false)->count();
 
         return view('laporan.detail', compact('laporan', 'tiket', 'authUser', 'unreadCount'));
+    }
+
+    /**
+     * Sajikan berkas bukti pendukung laporan dari storage public secara aman.
+     */
+    public function showBukti($tiket)
+    {
+        $laporan = Laporan::where('nomor_tiket', $tiket)->firstOrFail();
+
+        if (!$laporan->berkas_bukti || !Storage::disk('public')->exists($laporan->berkas_bukti)) {
+            abort(404, 'Berkas bukti tidak ditemukan.');
+        }
+
+        return response()->file(Storage::disk('public')->path($laporan->berkas_bukti));
     }
 
     public function storeTanggapan(Request $request, $tiket)
@@ -394,10 +412,12 @@ class LaporanController extends Controller
             $items[] = [
                 'tiket' => $l->nomor_tiket,
                 'tanggal' => $l->created_at ? $l->created_at->wib()->isoFormat('D MMM YYYY') : '18 Okt 2026',
+                'tanggal_ymd' => $l->created_at ? $l->created_at->wib()->format('Y-m-d') : '',
                 'judul' => $l->judul,
                 'kategori' => $kategoriShort,
                 'prioritas' => $prioritasShort,
                 'status' => $l->status,
+                'is_anonim' => (bool) $l->is_anonim,
                 'progres' => (int) ($l->progres ?? 0),
                 'url' => route('unit.laporan-ditugaskan.detail', $l->nomor_tiket),
             ];
@@ -459,21 +479,37 @@ class LaporanController extends Controller
                 'lokasi' => $dbLaporan->lokasi ?: 'Kampus Telkom University Surabaya',
                 'pelapor' => $dbLaporan->is_anonim ? 'Identitas disembunyikan' : ($dbLaporan->user->name ?? 'Mahasiswa'),
                 'deskripsi' => $dbLaporan->deskripsi,
-                'berkas_nama' => $dbLaporan->berkas_nama ?: 'foto_lampiran_laporan.jpg',
-                'berkas_meta' => $dbLaporan->berkas_ukuran ? ($dbLaporan->berkas_ukuran . ' • FILE') : '1,8 MB • JPG',
-                'berkas_url' => $dbLaporan->berkas_bukti ? asset('storage/' . $dbLaporan->berkas_bukti) : null,
+                'berkas_nama' => $dbLaporan->berkas_nama ?: ($dbLaporan->berkas_bukti ? basename($dbLaporan->berkas_bukti) : ''),
+                'berkas_meta' => $dbLaporan->berkas_ukuran ? ($dbLaporan->berkas_ukuran . ($dbLaporan->berkas_extension ? ' • ' . strtoupper($dbLaporan->berkas_extension) : '')) : '',
+                'berkas_url' => $dbLaporan->berkas_url,
+                'berkas_ext' => $dbLaporan->berkas_extension,
                 'progres' => (int) ($dbLaporan->progres ?? 65),
             ];
 
             $riwayats = [];
             foreach ($dbLaporan->tanggapans as $t) {
-                $riwayats[] = [
-                    'inisial' => $t->pengirim_role === 'Admin SSC' ? 'SS' : ($authUser->initials ?? 'BS'),
-                    'nama' => $t->pengirim_nama ?? 'Admin SSC',
-                    'role' => $t->pengirim_role ?? 'Admin SSC',
-                    'pesan' => $t->pesan,
-                    'waktu' => $t->created_at ? $t->created_at->wib()->diffForHumans() : 'Baru saja',
-                ];
+                $isPelaporAnonim = $dbLaporan->is_anonim && (
+                    ($t->role_pengirim ?? '') === 'Mahasiswa'
+                    || ($t->user_id && $t->user_id === $dbLaporan->user_id)
+                );
+
+                if ($isPelaporAnonim) {
+                    $riwayats[] = [
+                        'inisial' => 'PA',
+                        'nama' => 'Pelapor Anonim',
+                        'role' => 'Pelapor (Anonim)',
+                        'pesan' => $t->pesan,
+                        'waktu' => $t->created_at ? $t->created_at->wib()->diffForHumans() : 'Baru saja',
+                    ];
+                } else {
+                    $riwayats[] = [
+                        'inisial' => $t->initials,
+                        'nama' => $t->nama_pengirim ?: 'Admin SSC',
+                        'role' => $t->role_pengirim ?: 'Admin SSC',
+                        'pesan' => $t->pesan,
+                        'waktu' => $t->created_at ? $t->created_at->wib()->diffForHumans() : 'Baru saja',
+                    ];
+                }
             }
 
             if (empty($riwayats)) {
@@ -534,17 +570,23 @@ class LaporanController extends Controller
             ];
 
             if ($request->hasFile('bukti_penyelesaian')) {
-                $path = $request->file('bukti_penyelesaian')->store('bukti-penyelesaian', 'public');
+                $file = $request->file('bukti_penyelesaian');
+                $path = $file->store('bukti-penyelesaian', 'public');
+                $bytes = $file->getSize();
                 $updateData['berkas_bukti'] = $path;
-                $updateData['berkas_nama'] = $request->file('bukti_penyelesaian')->getClientOriginalName();
+                $updateData['berkas_nama'] = $file->getClientOriginalName();
+                $updateData['berkas_ukuran'] = $bytes >= 1048576
+                    ? number_format($bytes / 1048576, 2) . ' MB'
+                    : number_format(max(1, $bytes / 1024), 0) . ' KB';
             }
 
             $dbLaporan->update($updateData);
 
             LaporanTanggapan::create([
                 'laporan_id' => $dbLaporan->id,
-                'pengirim_nama' => $authUser->name ?? 'Petugas Unit',
-                'pengirim_role' => 'Petugas Unit',
+                'user_id' => $authUser?->id,
+                'nama_pengirim' => $authUser->name ?? 'Petugas Unit',
+                'role_pengirim' => 'Petugas Unit',
                 'pesan' => $catatan,
             ]);
 
@@ -637,6 +679,10 @@ class LaporanController extends Controller
                 ->with('error', 'Laporan dengan tiket ' . $tiket . ' tidak ditemukan.');
         }
 
+        if ($dbLaporan->status !== 'Menunggu Verifikasi') {
+            return redirect()->route('admin.monitoring.detail', $dbLaporan->nomor_tiket);
+        }
+
         $laporan = [
             'tiket' => $dbLaporan->nomor_tiket,
             'judul' => $dbLaporan->judul,
@@ -644,12 +690,15 @@ class LaporanController extends Controller
             'anonim' => (bool) $dbLaporan->is_anonim,
             'kategori' => $dbLaporan->short_kategori ?? $dbLaporan->kategori_label ?? $dbLaporan->kategori,
             'lokasi' => $dbLaporan->lokasi ?? '-',
-            'pelapor' => trim(($dbLaporan->user->name ?? 'Mahasiswa') . ($dbLaporan->user?->nim ? ' • ' . $dbLaporan->user->nim : '')),
-            'prodi' => $dbLaporan->user->prodi ?? '-',
+            'pelapor' => $dbLaporan->is_anonim
+                ? 'Identitas disembunyikan'
+                : trim(($dbLaporan->user->name ?? 'Mahasiswa') . ($dbLaporan->user?->nim ? ' • ' . $dbLaporan->user->nim : '')),
+            'prodi' => $dbLaporan->is_anonim ? '-' : ($dbLaporan->user->prodi ?? '-'),
             'deskripsi' => $dbLaporan->deskripsi,
-            'lampiran_nama' => $dbLaporan->berkas_nama ?? '',
+            'lampiran_nama' => $dbLaporan->berkas_nama ?: ($dbLaporan->berkas_bukti ? basename($dbLaporan->berkas_bukti) : ''),
             'lampiran_meta' => $dbLaporan->berkas_ukuran ?? '',
-            'lampiran_url' => $dbLaporan->berkas_bukti ? asset('storage/' . $dbLaporan->berkas_bukti) : null,
+            'lampiran_url' => $dbLaporan->berkas_url,
+            'lampiran_ext' => $dbLaporan->berkas_extension,
             'rekomendasi_unit' => $dbLaporan->unit_penangan ?? 'Belum ditentukan',
             'rekomendasi_alasan' => 'Berdasarkan kategori laporan dan program studi pelapor.',
             'dasar_penyaluran' => 'Penyaluran disesuaikan dengan kategori laporan.',
@@ -747,6 +796,15 @@ class LaporanController extends Controller
             $message = "Laporan {$tiket} telah ditolak.";
         }
 
+        // Tandai notifikasi verifikasi laporan masuk untuk Admin SSC sebagai sudah dibaca
+        AppNotification::whereIn('user_id', User::where('role', 'Admin SSC')->pluck('id'))
+            ->where(function ($q) use ($dbLaporan, $tiket) {
+                $q->where('laporan_id', $dbLaporan->id)
+                    ->orWhere('tiket', $tiket);
+            })
+            ->whereIn('title', ['Laporan baru masuk', 'Pengajuan buka kembali laporan'])
+            ->update(['is_read' => true]);
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
@@ -797,6 +855,7 @@ class LaporanController extends Controller
                 'durasi' => $days . ' hari',
                 'overdue' => $overdue,
                 'status' => $l->status,
+                'is_anonim' => (bool) $l->is_anonim,
             ];
         })->values()->all();
 
@@ -818,6 +877,36 @@ class LaporanController extends Controller
     }
 
     /**
+     * Admin SSC: Detail Laporan (Monitoring).
+     */
+    public function adminMonitoringDetail($tiket)
+    {
+        $authUser = Auth::user();
+        if (!$authUser || $authUser->role !== 'Admin SSC') {
+            $authUser = User::where('role', 'Admin SSC')->first() ?? $authUser ?? new User([
+                'name' => 'Admin SSC',
+                'role' => 'Admin SSC',
+                'email' => 'admin.ssc@telkomuniversity.ac.id',
+            ]);
+        }
+
+        $laporan = Laporan::with(['user', 'tanggapans', 'trackings'])
+            ->where('nomor_tiket', $tiket)
+            ->first();
+
+        if (!$laporan) {
+            return redirect()->route('admin.monitoring')
+                ->with('error', 'Laporan dengan tiket ' . $tiket . ' tidak ditemukan.');
+        }
+
+        $unreadCount = AppNotification::where('user_id', $authUser?->id)
+            ->where('is_read', false)
+            ->count();
+
+        return view('admin.monitoring-detail', compact('authUser', 'laporan', 'tiket', 'unreadCount'));
+    }
+
+    /**
      * Admin SSC: Rekapitulasi Pengaduan.
      */
     public function adminRekapitulasi()
@@ -831,35 +920,77 @@ class LaporanController extends Controller
             ]);
         }
 
-        $laporans = Laporan::all();
-        $rows = $laporans->groupBy(fn ($l) => $l->unit_penangan ?: 'Belum Ditentukan')
-            ->map(function ($group, $unit) {
-                $total = $group->count();
-                $selesai = $group->where('status', 'Selesai')->count();
-                $diproses = $group->whereIn('status', ['Diproses', 'Diteruskan', 'Menunggu Verifikasi'])->count();
-                $avgDays = $group->avg(fn ($l) => $l->created_at ? max(1, $l->created_at->diffInDays($l->updated_at ?? now())) : 1) ?? 0;
-                $avgDaysRounded = round($avgDays, 1);
-                $rate = $total > 0 ? round(($selesai / $total) * 100, 1) : 0;
-                $firstKategori = $group->first()?->kategori_label ?? $group->first()?->kategori ?? 'Umum';
+        $laporans = Laporan::orderBy('created_at', 'desc')->get();
+        $laporanItems = $laporans->map(function ($l) {
+            $unit = $l->unit_penangan ?: 'Belum Ditentukan';
+            $durasiDays = $l->created_at ? max(1, (int) $l->created_at->diffInDays($l->updated_at ?? now())) : 1;
 
-                return [
-                    'unit' => $unit,
-                    'shortUnit' => strlen($unit) > 22 ? substr($unit, 0, 20) . '…' : $unit,
-                    'kategori' => $firstKategori,
-                    'total' => $total,
-                    'diproses' => $diproses,
-                    'selesai' => $selesai,
-                    'durasi' => number_format($avgDaysRounded, 1, ',', '.') . ' hari',
-                    'durasiNum' => $avgDaysRounded,
-                    'tingkat' => number_format($rate, 1, ',', '.') . '%',
-                ];
-            })->values()->all();
+            return [
+                'tiket' => $l->nomor_tiket,
+                'judul' => $l->judul,
+                'unit' => $unit,
+                'shortUnit' => strlen($unit) > 22 ? substr($unit, 0, 20) . '…' : $unit,
+                'kategori_key' => $l->kategori ?? '',
+                'kategori_label' => $l->kategori_label ?? $l->short_kategori ?? 'Umum',
+                'status' => $l->status ?? 'Menunggu Verifikasi',
+                'tanggal_ymd' => $l->created_at ? $l->created_at->wib()->format('Y-m-d') : '',
+                'durasi_hari' => $durasiDays,
+            ];
+        })->values()->all();
+
+        $unitGroups = [
+            'Program Studi' => [
+                'Program Studi S1 Sistem Informasi',
+                'Program Studi S1 Teknologi Informasi',
+                'Program Studi S1 Teknik Informatika',
+                'Program Studi S1 Rekayasa Perangkat Lunak',
+                'Program Studi S1 Sains Data',
+                'Program Studi S1 Teknik Elektro',
+                'Program Studi S1 Teknik Industri',
+                'Program Studi S1 Teknik Komputer',
+                'Program Studi S1 Teknik Logistik',
+                'Program Studi S1 Bisnis Digital',
+                'Program Studi S1 Teknik Telekomunikasi',
+            ],
+            'Direktorat' => [
+                'Direktorat Sekretariat & Perencanaan Strategis',
+                'Direktorat Bandung Techno Park',
+                'Direktorat Akademik',
+                'Direktorat Pasca Sarjana dan Advance Learning',
+                'Direktorat Logistik dan Aset',
+                'Direktorat Keuangan',
+                'Direktorat Sumber Daya Manusia',
+                'Direktorat Pusat Teknologi Informasi',
+                'Direktorat Pemasaran & Admisi',
+                'Direktorat Pengembangan Karir, Alumni, & Endowment',
+                'Direktorat Kemahasiswaan',
+                'Direktorat Kerjasama Strategis & Kantor Urusan Internasional',
+                'Direktorat Penelitian dan Pengabdian Masyarakat',
+            ],
+            'Satpras' => [
+                'SATPRAS (Sarana Prasarana)',
+            ],
+        ];
+
+        $knownUnits = collect($unitGroups)->flatten()->all();
+        $extraUnits = $laporans->map(fn ($l) => $l->unit_penangan ?: 'Belum Ditentukan')
+            ->unique()
+            ->reject(fn ($u) => in_array($u, $knownUnits, true))
+            ->sort()
+            ->values()
+            ->all();
+
+        if (!empty($extraUnits)) {
+            $unitGroups['Lainnya'] = $extraUnits;
+        }
+
+        $unitOptions = collect($unitGroups)->flatten()->values()->all();
 
         $unreadCount = AppNotification::where('user_id', $authUser?->id)
             ->where('is_read', false)
             ->count();
 
-        return view('admin.rekapitulasi', compact('authUser', 'rows', 'unreadCount'));
+        return view('admin.rekapitulasi', compact('authUser', 'laporanItems', 'unitOptions', 'unitGroups', 'unreadCount'));
     }
 
     /**
@@ -898,6 +1029,7 @@ class LaporanController extends Controller
                 'tiket' => $l->nomor_tiket,
                 'judul' => $l->judul,
                 'diterima' => $l->created_at ? $l->created_at->wib()->isoFormat('D MMM YYYY') : '-',
+                'tanggal_ymd' => $l->created_at ? $l->created_at->wib()->format('Y-m-d') : '',
                 'selesai' => $l->status === 'Selesai' && $l->updated_at ? $l->updated_at->wib()->isoFormat('D MMM YYYY') : '—',
                 'status' => $l->status,
                 'durasi' => $l->status === 'Selesai' ? "{$days} hari" : "{$days} hari berjalan",
@@ -921,7 +1053,11 @@ class LaporanController extends Controller
         $query = User::where('role', $role);
         if ($unit) {
             $query->where(function ($q) use ($unit) {
-                $q->where('unit', $unit)->orWhereNull('unit');
+                $q->where('fakultas', $unit)
+                    ->orWhere('prodi', $unit)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('fakultas')->whereNull('prodi');
+                    });
             });
         }
 

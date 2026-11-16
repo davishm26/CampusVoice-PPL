@@ -21,6 +21,7 @@
     $selesai = $selesai ?? 0;
     $laporansList = $laporansList ?? [];
     $unreadCount = $unreadCount ?? 0;
+    $unitName = $authUser?->unit ?: 'Unit Penangan';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-white">
@@ -29,7 +30,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Dashboard Unit — Program Studi S1 Sistem Informasi - CampusVoice</title>
+    <title>Dashboard Unit — {{ $unitName }} - CampusVoice</title>
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,10 +72,14 @@
     <style>
         [x-cloak] { display: none !important; }
         body, input, select, button, textarea { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        .content-gradient-bg {
+            background: linear-gradient(to top right, #B01116 0%, #58595B 100%);
+        }
     </style>
 </head>
 <body
-    class="min-h-screen bg-white antialiased text-[#252525]"
+    class="h-full bg-[#B01116] antialiased text-[#252525]"
     x-data="{
         mobileSidebarOpen: false,
         searchQuery: '',
@@ -93,210 +98,19 @@
 >
     <div class="h-screen overflow-hidden flex flex-col lg:flex-row">
 
-        <!-- ========================================================= -->
-        <!-- 2. SIDEBAR KIRI (LATAR PUTIH) -->
-        <!-- ========================================================= -->
-        <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-white flex flex-col justify-between border-r border-[#E5E7EB] transition-transform duration-200 lg:static lg:translate-x-0 shrink-0"
-            :class="mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-        >
-            <div class="flex flex-col flex-1 overflow-y-auto">
-                <!-- Header Sidebar: Logo CampusVoice (merah), Subtitle, Label "Petugas Unit" -->
-                <div class="px-6 py-5 flex items-center gap-3">
-                    <img src="{{ asset('images/logo-campusvoice.png') }}" alt="CampusVoice Logo" class="w-8 h-8 object-contain shrink-0" onerror="this.onerror=null; this.src='https://placehold.co/32x32/B01116/white?text=CV';" />
-                    <div>
-                        <span class="text-[17px] font-extrabold text-[#B01116] tracking-tight block leading-tight">CampusVoice</span>
-                        <p class="text-[10px] text-[#6B7280] font-medium leading-tight mt-0.5">Telkom University Surabaya</p>
-                    </div>
-                </div>
-
-                <!-- Label & Menu Navigasi Petugas Unit -->
-                <div class="px-4 py-2 flex-1">
-                    <p class="px-3.5 text-[11px] font-bold text-[#6B7280] tracking-wider mb-2.5 uppercase">Petugas Unit</p>
-
-                    <nav class="space-y-1">
-                        <!-- Menu 1: Dashboard Unit (Aktif: latar belakang pink muda, teks/ikon merah) -->
-                        <a
-                            href="{{ route('unit.dashboard') }}"
-                            aria-current="page"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#FCE8E8] text-[#B01116] transition shadow-xs"
-                        >
-                            <svg class="w-5 h-5 text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect width="7" height="7" x="3" y="3" rx="1.5"/>
-                                <rect width="7" height="7" x="14" y="3" rx="1.5"/>
-                                <rect width="7" height="7" x="14" y="14" rx="1.5"/>
-                                <rect width="7" height="7" x="3" y="14" rx="1.5"/>
-                            </svg>
-                            <span>Dashboard Unit</span>
-                        </a>
-
-                        <!-- Menu 2: Laporan Ditugaskan (ikon dokumen) -->
-                        <a
-                            href="{{ route('laporan.riwayat') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                            </svg>
-                            <span>Laporan Ditugaskan</span>
-                        </a>
-
-                        <!-- Menu 3: Riwayat Penanganan (ikon grafik) -->
-                        <a
-                            href="{{ route('laporan.riwayat') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="20" x2="18" y2="10"/>
-                                <line x1="12" y1="20" x2="12" y2="4"/>
-                                <line x1="6" y1="20" x2="6" y2="14"/>
-                            </svg>
-                            <span>Riwayat Penanganan</span>
-                        </a>
-
-                        <!-- Menu 4: Notifikasi (ikon lonceng dengan badge angka 3) -->
-                        <a
-                            href="{{ route('unit.notifikasi') }}"
-                            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                                </svg>
-                                <span>Notifikasi</span>
-                            </div>
-                            <span class="w-5 h-5 rounded-full bg-[#B01116] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
-                                3
-                            </span>
-                        </a>
-
-                        <!-- Menu 5: Profil Unit (ikon user) -->
-                        <a
-                            href="{{ route('profil') }}"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
-                        >
-                            <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            <span>Profil Unit</span>
-                        </a>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Bottom: Menu "Keluar" (ikon panah keluar) & Kartu Bantuan Maroon -->
-            <div class="p-4 border-t border-[#E5E7EB] space-y-3">
-                @auth
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button
-                            type="submit"
-                            class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition cursor-pointer text-left"
-                        >
-                            <svg class="w-5 h-5 text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span>Keluar</span>
-                        </button>
-                    </form>
-                @else
-                    <a
-                        href="{{ route('login') }}"
-                        class="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-semibold text-[#B01116] hover:bg-red-50 transition text-left"
-                    >
-                        <svg class="w-5 h-5 text-[#B01116] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                            <polyline points="10 17 15 12 10 7"/>
-                            <line x1="15" y1="12" x2="3" y2="12"/>
-                        </svg>
-                        <span>Keluar</span>
-                    </a>
-                @endauth
-
-                <!-- Kartu Bantuan Merah Maroon Penuh -->
-                <div class="rounded-xl bg-[#851518] p-4 text-white shadow-sm">
-                    <h4 class="text-sm font-bold tracking-tight text-white">Butuh bantuan?</h4>
-                    <p class="text-[11px] text-white/85 mt-1 leading-snug">Hubungi pusat layanan CampusVoice.</p>
-                    <a
-                        href="{{ route('pusat.bantuan') }}"
-                        class="mt-3 block w-full py-1.5 px-3 bg-white hover:bg-gray-100 text-[#851518] text-xs font-bold rounded-lg text-center shadow-xs transition"
-                    >
-                        Pusat Bantuan
-                    </a>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Overlay Mobile -->
-        <div x-show="mobileSidebarOpen" x-cloak @click="mobileSidebarOpen = false" class="fixed inset-0 z-40 bg-black/40 lg:hidden"></div>
+        @include('unit.partials.sidebar', ['activeMenu' => 'dashboard', 'unreadCount' => $unreadCount])
 
         <!-- ========================================================= -->
-        <!-- AREA UTAMA (Top Navbar & Area Konten Maroon) -->
+        <!-- AREA UTAMA (Top Navbar & Area Konten) -->
         <!-- ========================================================= -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
-            <!-- 1. TOP NAVBAR (LATAR PUTIH) -->
-            <header class="bg-white border-b border-[#E5E7EB] h-[72px] flex items-center justify-between px-6 sm:px-8 shrink-0 sticky top-0 z-30">
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        @click="mobileSidebarOpen = !mobileSidebarOpen"
-                        class="p-2 -ml-2 rounded-lg text-[#6B7280] hover:text-[#252525] hover:bg-gray-100 lg:hidden"
-                        aria-label="Buka navigasi"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-
-                    <!-- Search Bar Oval Abu-abu Muda -->
-                    <div class="relative w-64 sm:w-80 md:w-96">
-                        <input
-                            type="text"
-                            x-model="searchQuery"
-                            placeholder="Cari nomor tiket atau laporan..."
-                            class="w-full bg-[#F4F5F7] border border-[#E5E7EB] rounded-xl py-2 px-4 text-xs sm:text-sm text-[#252525] placeholder-[#9CA3AF] focus:ring-2 focus:ring-[#851518] focus:border-[#851518] focus:bg-white transition"
-                        />
-                    </div>
-                </div>
-
-                <!-- Navigasi Kanan: Lonceng Notifikasi (badge 3 merah), Avatar "BS", Budi Santoso, Petugas Unit -->
-                <div class="flex items-center gap-4 sm:gap-6">
-                    <!-- Ikon Lonceng Notifikasi -->
-                    <a href="{{ route('unit.notifikasi') }}" class="relative w-9 h-9 rounded-full flex items-center justify-center text-[#252525] hover:bg-gray-100 transition" aria-label="Notifikasi">
-                        <svg class="w-5 h-5 text-[#252525]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
-                            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
-                        </svg>
-                        <span class="absolute top-1 right-1 flex items-center justify-center w-3.5 h-3.5 text-[9px] font-bold text-white bg-[#B01116] rounded-full ring-2 ring-white">
-                            3
-                        </span>
-                    </a>
-
-                    <!-- User Profile: Kotak Avatar "BS" & Budi Santoso / Petugas Unit -->
-                    <a href="{{ route('profil') }}" class="flex items-center gap-3 group">
-                        <div class="w-9 h-9 rounded-lg bg-[#FCE8E8] text-[#B01116] font-bold text-xs flex items-center justify-center shrink-0 group-hover:ring-2 group-hover:ring-[#B01116]/30 transition">
-                            {{ $authInitials }}
-                        </div>
-                        <div class="hidden sm:block text-left">
-                            <p class="text-xs font-bold text-[#1F2937] leading-tight group-hover:text-[#B01116] transition">{{ $authName }}</p>
-                            <p class="text-[10px] text-[#6B7280] leading-tight mt-0.5">{{ $authRole }}</p>
-                        </div>
-                    </a>
-                </div>
-            </header>
+            @include('unit.partials.header', ['authUser' => $authUser, 'unreadCount' => $unreadCount, 'searchModel' => 'searchQuery'])
 
             <!-- ========================================================= -->
-            <!-- 3. AREA KONTEN UTAMA (HEADER MAROON & LATAR ABU-ABU) -->
+            <!-- 3. AREA KONTEN UTAMA -->
             <!-- ========================================================= -->
-            <main class="flex-1 min-h-0 overflow-y-auto bg-[#851518] px-6 sm:px-8 lg:px-10 py-8">
+            <main class="flex-1 min-h-0 overflow-y-auto content-gradient-bg px-4 sm:px-8 lg:px-10 py-8">
                 <div class="max-w-[1360px] mx-auto space-y-6">
 
                     <!-- Header Atas (Maroon): Label, Judul Besar, Sub-judul, Tombol Aksi Kanan -->
@@ -306,24 +120,18 @@
                                 PETUGAS UNIT
                             </span>
                             <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-snug">
-                                Dashboard Unit — Program Studi S1 Sistem Informasi
+                                Dashboard Unit — {{ $unitName }}
                             </h1>
                             <p class="text-xs sm:text-sm text-white/85 mt-1">
                                 Kelola laporan yang ditugaskan kepada unit Anda.
                             </p>
                         </div>
 
-                        <!-- Pojok Kanan Atas: Tombol Putih "Lihat Versi Direktorat" & Teks Link Putih "Lihat Laporan Ditugaskan" -->
+                        <!-- Pojok Kanan Atas: Tombol Lihat Laporan Ditugaskan -->
                         <div class="flex items-center gap-3 shrink-0 pt-1">
-                            <button
-                                type="button"
-                                class="px-4 py-2.5 rounded-xl bg-white hover:bg-gray-50 text-xs sm:text-sm font-bold text-[#1F2937] shadow-sm transition cursor-pointer"
-                            >
-                                Lihat Versi Direktorat
-                            </button>
                             <a
-                                href="{{ route('laporan.riwayat') }}"
-                                class="px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:text-white/80 transition"
+                                href="{{ route('unit.laporan-ditugaskan') }}"
+                                class="px-4 py-2.5 rounded-xl bg-white hover:bg-gray-50 text-xs sm:text-sm font-bold text-[#1F2937] shadow-sm transition"
                             >
                                 Lihat Laporan Ditugaskan
                             </a>
@@ -340,7 +148,7 @@
                             </svg>
                         </div>
                         <p class="text-xs sm:text-sm text-[#252525]">
-                            Anda hanya dapat mengakses laporan yang ditugaskan kepada <span class="font-bold">Program Studi S1 Sistem Informasi</span>.
+                            Anda hanya dapat mengakses laporan yang ditugaskan kepada <span class="font-bold">{{ $unitName }}</span>.
                         </p>
                     </div>
 

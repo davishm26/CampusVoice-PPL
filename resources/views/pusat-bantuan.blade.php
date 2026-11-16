@@ -74,7 +74,7 @@
               },
               {
                   q: 'Apakah saya dapat mengirim laporan secara anonim?',
-                  a: 'Ya, centang opsi \'Kirim sebagai laporan anonim\' saat mengisi form. Identitas Anda akan disembunyikan dari unit penangan.'
+                  a: 'Ya, centang opsi \'Kirim sebagai laporan anonim\' saat mengisi form. Identitas Anda akan disembunyikan sepenuhnya dari Admin SSC maupun unit penangan.'
               },
               {
                   q: 'Bagaimana jika laporan saya ditolak?',

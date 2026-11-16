@@ -275,7 +275,7 @@
                                 Rekapitulasi Pengaduan
                             </h1>
                             <p class="text-xs sm:text-sm text-[#FFFFFF]/85 mt-1 font-normal">
-                                Susun data evaluasi berdasarkan periode, kategori, unit, dan status.
+                                Susun data evaluasi berdasarkan rentang tanggal, kategori, dan unit penangan.
                             </p>
                         </div>
 
@@ -298,28 +298,83 @@
                     <!-- Baris Filter Utama (Kartu Putih Memanjang) -->
                     <div class="bg-[#FFFFFF] rounded-2xl border border-[#E5E7EB] p-3 sm:p-3.5 shadow-sm">
                         <div class="flex flex-wrap items-center gap-2.5">
-                            <!-- Input Teks Tanggal -->
-                            <div class="w-full sm:w-auto sm:min-w-[215px]">
-                                <input
-                                    type="text"
-                                    x-model="draftPeriod"
-                                    aria-label="Periode tanggal"
-                                    class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-medium text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition"
-                                />
+                            <!-- Rentang Tanggal -->
+                            <div class="relative w-full sm:w-auto sm:min-w-[215px]" @click.outside="datePopoverOpen = false">
+                                <button
+                                    type="button"
+                                    @click="datePopoverOpen = !datePopoverOpen"
+                                    aria-label="Filter Rentang Tanggal"
+                                    class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-medium text-[#252525] flex items-center justify-between gap-2 hover:bg-gray-50 focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                >
+                                    <span class="flex items-center gap-2 truncate">
+                                        <svg class="w-4 h-4 text-[#6B7280] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        <span x-text="dateLabel" class="truncate"></span>
+                                    </span>
+                                    <svg class="w-4 h-4 text-[#6B7280] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+
+                                <div
+                                    x-show="datePopoverOpen"
+                                    x-cloak
+                                    x-transition
+                                    class="absolute left-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E5E7EB] p-4 z-30 text-[#252525] space-y-3"
+                                >
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Dari Tanggal</label>
+                                        <input
+                                            type="date"
+                                            x-model="draftTanggalDari"
+                                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Sampai Tanggal</label>
+                                        <input
+                                            type="date"
+                                            x-model="draftTanggalSampai"
+                                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                                        />
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1">
+                                        <button
+                                            type="button"
+                                            @click="draftTanggalDari = ''; draftTanggalSampai = ''; datePopoverOpen = false;"
+                                            class="text-xs font-semibold text-[#6B7280] hover:text-[#B01116] transition cursor-pointer"
+                                        >
+                                            Reset
+                                        </button>
+                                        <button
+                                            type="button"
+                                            @click="datePopoverOpen = false"
+                                            class="px-3 py-1.5 rounded-lg bg-[#B01116] text-[#FFFFFF] text-xs font-bold hover:bg-[#970e13] transition cursor-pointer"
+                                        >
+                                            Selesai
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Dropdown: Semua Kategori -->
-                            <div class="relative w-full sm:w-auto sm:min-w-[165px]">
+                            <div class="relative w-full sm:w-auto sm:min-w-[205px]">
                                 <select
                                     x-model="draftKategori"
                                     aria-label="Filter Kategori"
                                     class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                 >
                                     <option value="">Semua Kategori</option>
-                                    <option value="Sarana & Prasarana">Sarana &amp; Prasarana</option>
-                                    <option value="Layanan IT">Layanan IT</option>
-                                    <option value="Akademik">Akademik</option>
-                                    <option value="Administrasi">Administrasi</option>
+                                    <option value="sarana_prasarana">Sarana &amp; Prasarana</option>
+                                    <option value="kemahasiswaan">Kemahasiswaan</option>
+                                    <option value="ssc">Student Service Center</option>
+                                    <option value="akademik">Akademik</option>
+                                    <option value="administrasi_keuangan">Administrasi &amp; Keuangan</option>
+                                    <option value="lainnya">Lainnya</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#252525]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,35 +384,20 @@
                             </div>
 
                             <!-- Dropdown: Semua Unit -->
-                            <div class="relative w-full sm:w-auto sm:min-w-[155px]">
+                            <div class="relative w-full sm:w-auto sm:min-w-[240px] sm:max-w-[300px]">
                                 <select
                                     x-model="draftUnit"
                                     aria-label="Filter Unit"
-                                    class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
+                                    class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] truncate focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                                 >
                                     <option value="">Semua Unit</option>
-                                    <option value="Direktorat Logistik dan Aset">Direktorat Logistik dan Aset</option>
-                                    <option value="Direktorat Pusat Teknologi Informasi">Direktorat Pusat Teknologi Informasi</option>
-                                    <option value="Program Studi S1 Sistem Informasi">Program Studi S1 Sistem Informasi</option>
-                                    <option value="Direktorat Akademik">Direktorat Akademik</option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#252525]">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </div>
-                            </div>
-
-                            <!-- Dropdown: Semua Status -->
-                            <div class="relative w-full sm:w-auto sm:min-w-[155px]">
-                                <select
-                                    x-model="draftStatus"
-                                    aria-label="Filter Status"
-                                    class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-3.5 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
-                                >
-                                    <option value="">Semua Status</option>
-                                    <option value="Diproses">Diproses</option>
-                                    <option value="Selesai">Selesai</option>
+                                    @foreach ($unitGroups ?? [] as $groupLabel => $groupUnits)
+                                        <optgroup label="{{ $groupLabel }}">
+                                            @foreach ($groupUnits as $unitOption)
+                                                <option value="{{ $unitOption }}">{{ $unitOption }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#252525]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,9 +410,19 @@
                             <button
                                 type="button"
                                 @click="applyFilters()"
-                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#FFFFFF] hover:bg-gray-50 border-2 border-[#E5E7EB] text-xs sm:text-sm font-bold text-[#252525] shadow-xs transition cursor-pointer"
+                                class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#B01116] hover:bg-[#970e13] text-xs sm:text-sm font-bold text-[#FFFFFF] shadow-xs transition cursor-pointer"
                             >
                                 Terapkan Filter
+                            </button>
+
+                            <button
+                                type="button"
+                                x-show="hasActiveFilters"
+                                x-cloak
+                                @click="resetFilters()"
+                                class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#FFFFFF] hover:bg-[#FCE8E8] border border-[#E5E7EB] text-xs sm:text-sm font-bold text-[#B01116] transition cursor-pointer"
+                            >
+                                Reset
                             </button>
                         </div>
                     </div>
@@ -503,8 +553,8 @@
                                             <tr class="hover:bg-[#F9FAFB]/70 transition">
                                                 <td class="py-4 px-4 font-bold text-[#252525]" x-text="row.unit"></td>
                                                 <td class="py-4 px-4 font-medium text-[#252525]" x-text="row.total"></td>
-                                                <td class="py-4 px-4 font-medium text-[#252525]" x-text="activeStatus === 'Selesai' ? 0 : row.diproses"></td>
-                                                <td class="py-4 px-4 font-medium text-[#252525]" x-text="activeStatus === 'Diproses' ? 0 : row.selesai"></td>
+                                                <td class="py-4 px-4 font-medium text-[#252525]" x-text="row.diproses"></td>
+                                                <td class="py-4 px-4 font-medium text-[#252525]" x-text="row.selesai"></td>
                                                 <td class="py-4 px-4 font-medium text-[#252525]" x-text="row.durasi"></td>
                                                 <td class="py-4 px-4 font-medium text-[#252525]" x-text="row.tingkat"></td>
                                             </tr>
@@ -527,47 +577,125 @@
 
     <script>
         function rekapitulasiApp() {
-            const initialRows = @js($rows ?? []);
+            const laporanItems = @js($laporanItems ?? []);
 
             return {
                 mobileSidebarOpen: false,
                 searchHeader: '',
-                draftPeriod: 'Semua Periode',
+                datePopoverOpen: false,
+                draftTanggalDari: '',
+                draftTanggalSampai: '',
                 draftKategori: '',
                 draftUnit: '',
-                draftStatus: '',
-                activePeriod: 'Semua Periode',
+                activeTanggalDari: '',
+                activeTanggalSampai: '',
                 activeKategori: '',
                 activeUnit: '',
-                activeStatus: '',
-                rows: initialRows,
+                items: laporanItems,
 
-                applyFilters() {
-                    this.activePeriod = this.draftPeriod;
-                    this.activeKategori = this.draftKategori;
-                    this.activeUnit = this.draftUnit;
-                    this.activeStatus = this.draftStatus;
+                get dateLabel() {
+                    if (!this.draftTanggalDari && !this.draftTanggalSampai) return 'Semua Periode';
+                    const fmt = (d) => {
+                        if (!d) return '...';
+                        const dt = new Date(d + 'T00:00:00');
+                        return dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                    };
+                    return fmt(this.draftTanggalDari) + ' — ' + fmt(this.draftTanggalSampai);
                 },
 
-                get filteredRows() {
+                get hasActiveFilters() {
+                    return Boolean(
+                        this.activeTanggalDari ||
+                        this.activeTanggalSampai ||
+                        this.activeKategori ||
+                        this.activeUnit ||
+                        this.searchHeader.trim()
+                    );
+                },
+
+                applyFilters() {
+                    this.activeTanggalDari = this.draftTanggalDari;
+                    this.activeTanggalSampai = this.draftTanggalSampai;
+                    this.activeKategori = this.draftKategori;
+                    this.activeUnit = this.draftUnit;
+                    this.datePopoverOpen = false;
+                },
+
+                resetFilters() {
+                    this.searchHeader = '';
+                    this.draftTanggalDari = '';
+                    this.draftTanggalSampai = '';
+                    this.draftKategori = '';
+                    this.draftUnit = '';
+                    this.activeTanggalDari = '';
+                    this.activeTanggalSampai = '';
+                    this.activeKategori = '';
+                    this.activeUnit = '';
+                    this.datePopoverOpen = false;
+                },
+
+                get filteredItems() {
                     const query = this.searchHeader.trim().toLowerCase();
-                    return this.rows.filter((row) => {
-                        if (this.activeKategori && row.kategori !== this.activeKategori) return false;
-                        if (this.activeUnit && row.unit !== this.activeUnit) return false;
-                        if (query && !row.unit.toLowerCase().includes(query) && !row.kategori.toLowerCase().includes(query)) {
-                            return false;
+                    return this.items.filter((item) => {
+                        if (this.activeTanggalDari && (!item.tanggal_ymd || item.tanggal_ymd < this.activeTanggalDari)) return false;
+                        if (this.activeTanggalSampai && (!item.tanggal_ymd || item.tanggal_ymd > this.activeTanggalSampai)) return false;
+                        if (this.activeKategori && item.kategori_key !== this.activeKategori) return false;
+                        if (this.activeUnit && item.unit !== this.activeUnit) return false;
+                        if (query) {
+                            const matched = item.tiket.toLowerCase().includes(query)
+                                || item.judul.toLowerCase().includes(query)
+                                || item.unit.toLowerCase().includes(query)
+                                || item.kategori_label.toLowerCase().includes(query);
+                            if (!matched) return false;
                         }
                         return true;
                     });
                 },
 
-                get isDefaultState() {
-                    return !this.activeKategori && !this.activeUnit && !this.activeStatus && !this.searchHeader.trim();
+                get filteredRows() {
+                    const groups = new Map();
+                    for (const item of this.filteredItems) {
+                        if (!groups.has(item.unit)) {
+                            groups.set(item.unit, {
+                                unit: item.unit,
+                                shortUnit: item.shortUnit,
+                                total: 0,
+                                diproses: 0,
+                                selesai: 0,
+                                durasiSum: 0,
+                            });
+                        }
+                        const g = groups.get(item.unit);
+                        g.total += 1;
+                        if (item.status === 'Selesai') {
+                            g.selesai += 1;
+                        } else if (['Diproses', 'Diteruskan', 'Menunggu Verifikasi'].includes(item.status)) {
+                            g.diproses += 1;
+                        }
+                        g.durasiSum += item.durasi_hari || 1;
+                    }
+
+                    return Array.from(groups.values()).map((g) => {
+                        const avgDays = g.total > 0 ? g.durasiSum / g.total : 0;
+                        const rate = g.total > 0 ? (g.selesai / g.total) * 100 : 0;
+                        return {
+                            unit: g.unit,
+                            shortUnit: g.shortUnit,
+                            total: g.total,
+                            diproses: g.diproses,
+                            selesai: g.selesai,
+                            durasiSum: g.durasiSum,
+                            durasi: avgDays.toFixed(1).replace('.', ',') + ' hari',
+                            durasiNum: avgDays,
+                            tingkat: rate.toFixed(1).replace('.', ',') + '%',
+                        };
+                    });
                 },
 
                 get metrics() {
+                    const items = this.filteredItems;
                     const rows = this.filteredRows;
-                    if (rows.length === 0) {
+                    if (items.length === 0 || rows.length === 0) {
                         return {
                             total: '0',
                             completionRate: '0,0%',
@@ -576,24 +704,11 @@
                         };
                     }
 
-                    const total = rows.reduce((sum, r) => {
-                        if (this.activeStatus === 'Diproses') return sum + r.diproses;
-                        if (this.activeStatus === 'Selesai') return sum + r.selesai;
-                        return sum + r.total;
-                    }, 0);
-
-                    const totalAll = rows.reduce((sum, r) => sum + r.total, 0);
-                    const selesaiAll = rows.reduce((sum, r) => sum + r.selesai, 0);
-                    const rate = this.activeStatus === 'Diproses'
-                        ? '0,0%'
-                        : this.activeStatus === 'Selesai'
-                            ? '100,0%'
-                            : ((selesaiAll / totalAll) * 100).toFixed(1).replace('.', ',') + '%';
-
-                    const avgDur = (rows.reduce((sum, r) => sum + r.durasiNum, 0) / rows.length)
-                        .toFixed(1)
-                        .replace('.', ',') + ' hari';
-
+                    const total = items.length;
+                    const selesaiAll = items.filter((i) => i.status === 'Selesai').length;
+                    const rate = ((selesaiAll / total) * 100).toFixed(1).replace('.', ',') + '%';
+                    const totalDays = items.reduce((sum, i) => sum + (i.durasi_hari || 1), 0);
+                    const avgDur = (totalDays / total).toFixed(1).replace('.', ',') + ' hari';
                     const top = [...rows].sort((a, b) => b.total - a.total)[0];
 
                     return {
@@ -604,6 +719,10 @@
                     };
                 },
 
+                get exportFilenameBase() {
+                    return 'rekapitulasi-pengaduan-' + new Date().toISOString().slice(0, 10);
+                },
+
                 downloadCsv() {
                     const headers = ['UNIT PENANGAN', 'TOTAL', 'DIPROSES', 'SELESAI', 'RATA-RATA DURASI', 'TINGKAT SELESAI'];
                     const lines = [
@@ -611,15 +730,15 @@
                         ...this.filteredRows.map((row) => [
                             `"${row.unit}"`,
                             row.total,
-                            this.activeStatus === 'Selesai' ? 0 : row.diproses,
-                            this.activeStatus === 'Diproses' ? 0 : row.selesai,
+                            row.diproses,
+                            row.selesai,
                             `"${row.durasi}"`,
                             `"${row.tingkat}"`
                         ].join(','))
                     ];
 
                     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-                    this.triggerDownload(blob, 'rekapitulasi-pengaduan-oktober-2026.csv');
+                    this.triggerDownload(blob, this.exportFilenameBase + '.csv');
                 },
 
                 downloadExcel() {
@@ -627,8 +746,8 @@
                         <tr>
                             <td>${row.unit}</td>
                             <td>${row.total}</td>
-                            <td>${this.activeStatus === 'Selesai' ? 0 : row.diproses}</td>
-                            <td>${this.activeStatus === 'Diproses' ? 0 : row.selesai}</td>
+                            <td>${row.diproses}</td>
+                            <td>${row.selesai}</td>
                             <td>${row.durasi}</td>
                             <td>${row.tingkat}</td>
                         </tr>
@@ -656,7 +775,7 @@
                     `;
 
                     const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-                    this.triggerDownload(blob, 'rekapitulasi-pengaduan-oktober-2026.xls');
+                    this.triggerDownload(blob, this.exportFilenameBase + '.xls');
                 },
 
                 triggerDownload(blob, filename) {

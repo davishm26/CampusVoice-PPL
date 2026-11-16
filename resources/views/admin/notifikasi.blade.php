@@ -15,10 +15,14 @@
     foreach ($authWords as $w) { $authInitials .= mb_strtoupper(mb_substr($w, 0, 1)); }
     $authInitials = substr($authInitials, 0, 2) ?: 'SR';
 
-    $notifications = $notifications ?? ($authUser?->id ? \App\Models\AppNotification::where('user_id', $authUser->id)->orderBy('created_at', 'desc')->get() : collect());
+    $notifications = $notifications ?? ($authUser?->id ? \App\Models\AppNotification::with('laporan')->where('user_id', $authUser->id)->orderBy('created_at', 'desc')->get() : collect());
 
     $unreadCount = $notifications->where('is_read', false)->count();
     $notifItems = $notifications->map(function ($n) {
+        $laporanStatus = $n->laporan?->status ?? ($n->tiket ? \App\Models\Laporan::where('nomor_tiket', $n->tiket)->value('status') : null);
+        $isVerifNotif = in_array($n->title, ['Laporan baru masuk', 'Pengajuan buka kembali laporan'], true);
+        $alreadyVerified = $isVerifNotif && $laporanStatus && $laporanStatus !== 'Menunggu Verifikasi';
+
         return [
             'id' => $n->id,
             'icon' => $n->icon,
@@ -27,6 +31,8 @@
             'time' => $n->formatted_time,
             'unread' => !$n->is_read,
             'tiket' => $n->tiket,
+            'laporan_status' => $laporanStatus,
+            'already_verified' => $alreadyVerified,
             'url' => route('notifikasi.read', $n->id),
         ];
     })->values()->all();
@@ -427,7 +433,14 @@
 
                                     <!-- Content (Title ~14px font-semibold, Description ~14px font-normal, Time ~10px font-normal) -->
                                     <div class="flex-1 min-w-0">
-                                        <h3 class="text-[14px] font-semibold text-[#252525] leading-tight" x-text="item.title"></h3>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h3 class="text-[14px] font-semibold text-[#252525] leading-tight" x-text="item.title"></h3>
+                                            <template x-if="item.already_verified">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#16A34A] text-[10px] font-bold">
+                                                    Sudah diverifikasi (<span x-text="item.laporan_status"></span>)
+                                                </span>
+                                            </template>
+                                        </div>
                                         <p class="text-[14px] font-normal text-[#58595B] mt-[3px] leading-snug" x-text="item.desc"></p>
                                         <p class="text-[10px] font-normal text-[#6B7280] mt-[4px]" x-text="item.time"></p>
                                     </div>

@@ -101,5 +101,21 @@ class Laporan extends Model
 
         return $pelapor->name . ($pelapor->nim ? ' • ' . $pelapor->nim : '');
     }
+
+    public function getBerkasExtensionAttribute(): string
+    {
+        $source = $this->berkas_bukti ?: $this->berkas_nama ?: '';
+
+        return strtolower(pathinfo($source, PATHINFO_EXTENSION));
+    }
+
+    public function getBerkasUrlAttribute(): ?string
+    {
+        if (!$this->berkas_bukti) {
+            return null;
+        }
+
+        return route('laporan.bukti', $this->nomor_tiket);
+    }
 }
 

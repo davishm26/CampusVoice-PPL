@@ -544,8 +544,8 @@
                                         x-show="matchesQuery({
                                             tiket: '{{ $item->nomor_tiket }}',
                                             judul: '{{ addslashes($item->judul) }}',
-                                            pelapor: '{{ addslashes($item->user->name ?? '') }}',
-                                            prodi: '{{ addslashes($item->user->prodi ?? '') }}',
+                                            pelapor: '{{ $item->is_anonim ? '' : addslashes($item->user->name ?? '') }}',
+                                            prodi: '{{ $item->is_anonim ? '' : addslashes($item->user->prodi ?? '') }}',
                                             kategori: '{{ addslashes($item->kategori) }}'
                                         })"
                                     >
@@ -561,24 +561,33 @@
                                         <td class="py-4 px-6 whitespace-nowrap">
                                             @if ($item->is_anonim)
                                                 <div class="text-gray-900 leading-snug">Pelapor anonim</div>
-                                                <div class="text-[11px] font-medium text-[#B01116] mt-0.5">SSC dapat melihat identitas</div>
+                                                <div class="text-[11px] font-medium text-[#6B7280] mt-0.5">Identitas disembunyikan</div>
                                             @else
                                                 <div class="text-gray-900">{{ $item->user->name ?? 'Mahasiswa' }}</div>
                                             @endif
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-gray-600">
-                                            {{ $item->user->prodi ?? '-' }}
+                                            {{ $item->is_anonim ? '-' : ($item->user->prodi ?? '-') }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-gray-600">
                                             {{ $item->created_at ? $item->created_at->wib()->diffForHumans() : '-' }}
                                         </td>
                                         <td class="py-4 px-6 whitespace-nowrap text-right">
-                                            <a
-                                                href="{{ route('admin.verifikasi.detail', $item->nomor_tiket) }}"
-                                                class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline transition"
-                                            >
-                                                Verifikasi &rarr;
-                                            </a>
+                                            @if ($item->status === 'Menunggu Verifikasi')
+                                                <a
+                                                    href="{{ route('admin.verifikasi.detail', $item->nomor_tiket) }}"
+                                                    class="inline-flex items-center text-sm font-bold text-[#B01116] hover:text-[#8C0D11] hover:underline transition"
+                                                >
+                                                    Verifikasi &rarr;
+                                                </a>
+                                            @else
+                                                <a
+                                                    href="{{ route('admin.monitoring.detail', $item->nomor_tiket) }}"
+                                                    class="inline-flex items-center text-sm font-bold text-[#252525] hover:text-[#B01116] hover:underline transition"
+                                                >
+                                                    Detail &rarr;
+                                                </a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

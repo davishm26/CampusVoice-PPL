@@ -412,6 +412,12 @@
                                                     <a href="{{ route('laporan.detail', $lap->nomor_tiket) }}" class="hover:text-[#B01116] transition line-clamp-1">
                                                         {{ $lap->judul }}
                                                     </a>
+                                                    @if ($lap->is_anonim)
+                                                        <span class="mt-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[10px] font-semibold text-[#4B5563]">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-[#2563EB]"></span>
+                                                            Anonim
+                                                        </span>
+                                                    @endif
                                                 </td>
                                                 <td class="py-3.5 px-3 text-[#6B7280] hidden md:table-cell whitespace-nowrap">
                                                     <span class="px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-700">
@@ -489,7 +495,7 @@
                                     Identitas Anda tetap terlindungi
                                 </h3>
                                 <p class="text-xs text-[#6B7280] mt-0.5 leading-relaxed">
-                                    Pada laporan anonim, identitas hanya dapat dilihat Admin SSC untuk verifikasi dan tidak ditampilkan kepada petugas unit.
+                                    Pada laporan anonim, identitas Anda disembunyikan sepenuhnya dari Admin SSC maupun petugas unit penangan.
                                 </p>
                             </div>
                         </div>

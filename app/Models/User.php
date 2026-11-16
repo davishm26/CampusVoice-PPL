@@ -56,4 +56,11 @@ class User extends Authenticatable
         $words = preg_split('/\s+/', trim($this->name ?? ''));
         return $words[0] ?? ($this->name ?? 'Pengguna');
     }
+
+    public function getUnitAttribute(): ?string
+    {
+        return $this->role === 'Mahasiswa'
+            ? ($this->prodi ?: $this->fakultas)
+            : ($this->fakultas ?: $this->prodi);
+    }
 }
