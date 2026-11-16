@@ -26,6 +26,8 @@ class Laporan extends Model
         'status',
         'prioritas',
         'unit_penangan',
+        'unit_penangan_id',
+        'catatan_internal',
         'progres',
         'rating',
         'ulasan',
@@ -42,6 +44,11 @@ class Laporan extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function unitPenangan(): BelongsTo
+    {
+        return $this->belongsTo(UnitPenangan::class, 'unit_penangan_id');
     }
 
     public function tanggapans(): HasMany

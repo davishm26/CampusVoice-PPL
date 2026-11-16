@@ -6,6 +6,8 @@ use App\Models\AppNotification;
 use App\Models\Laporan;
 use App\Models\LaporanTanggapan;
 use App\Models\LaporanTracking;
+use App\Models\LogAktivitas;
+use App\Models\UnitPenangan;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -151,6 +153,16 @@ class LaporanController extends Controller
             'title' => 'Laporan baru masuk',
             'desc' => "Laporan {$laporan->nomor_tiket} ({$laporan->judul}) menunggu verifikasi SSC.",
         ]);
+
+        // Catat ke log aktivitas
+        LogAktivitas::catat(
+            aktivitas: "Pengajuan laporan baru: {$laporan->judul}",
+            recordTerkait: $laporan->nomor_tiket,
+            kategori: $kategoriLabel,
+            status: 'Berhasil',
+            user: $user,
+            ipAddress: $request->ip()
+        );
 
         return redirect()->route('laporan.success', ['tiket' => $laporan->nomor_tiket])
             ->with('success', 'Laporan berhasil dikirim!');
@@ -386,10 +398,28 @@ class LaporanController extends Controller
         }
 
         // Ambil laporan yang diteruskan / ditugaskan dari database
-        $dbLaporans = Laporan::with('user')
-            ->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Laporan::with(['user', 'unitPenangan'])
+            ->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai']);
+
+        if ($authUser && $authUser->unit_penangan_id) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('unit_penangan_id', $authUser->unit_penangan_id)
+                  ->orWhere('unit_penangan', $authUser->unitPenangan?->nama_unit ?? $authUser->fakultas);
+            });
+        } elseif ($authUser && $authUser->fakultas) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('unit_penangan', 'like', '%' . $authUser->fakultas . '%');
+            });
+        }
+
+        $dbLaporans = $query->orderBy('created_at', 'desc')->get();
+        // Fallback jika belum ada laporan spesifik unit ini pada database demo/testing
+        if ($dbLaporans->isEmpty()) {
+            $dbLaporans = Laporan::with('user')
+                ->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         $items = [];
         foreach ($dbLaporans as $l) {
@@ -622,6 +652,24 @@ class LaporanController extends Controller
                     'is_read' => false,
                 ]);
             }
+
+            // Catat log aktivitas petugas unit
+            $aktivitasLog = match ($actionType) {
+                'kembalikan' => "Mengembalikan laporan {$tiket} ke Admin SSC",
+                'tanggapan' => "Memberikan tanggapan pada laporan {$tiket}",
+                default => $statusBaru === 'Selesai'
+                    ? "Menyelesaikan penanganan laporan {$tiket}"
+                    : "Pembaruan progres laporan {$tiket} ({$progresBaru}%)",
+            };
+
+            LogAktivitas::catat(
+                aktivitas: $aktivitasLog,
+                recordTerkait: $tiket,
+                kategori: $actionType === 'kembalikan' ? 'Penyaluran' : 'Progres',
+                status: 'Berhasil',
+                user: $authUser,
+                ipAddress: $request->ip()
+            );
         }
 
         $msg = match ($actionType) {
@@ -709,7 +757,18 @@ class LaporanController extends Controller
             ->where('is_read', false)
             ->count();
 
-        return view('admin.verifikasi-detail', compact('authUser', 'laporan', 'tiket', 'unreadCount'));
+        // Ambil unit penangan aktif secara dinamis dari database (13 Direktorat & 11 Prodi)
+        $activeUnits = UnitPenangan::where('status', 'Aktif')->orderBy('nama_unit')->get();
+        $prodiList = $activeUnits->where('tipe', 'Program Studi')->pluck('nama_unit')->values()->all();
+        $direktoratList = $activeUnits->where('tipe', 'Direktorat')->pluck('nama_unit')->values()->all();
+
+        $unitOptions = [
+            'Prodi' => $prodiList,
+            'Direktorat' => $direktoratList,
+            'Satpras' => ['Direktorat Logistik dan Aset', 'SATPRAS (Sarana Prasarana)'],
+        ];
+
+        return view('admin.verifikasi-detail', compact('authUser', 'laporan', 'tiket', 'unreadCount', 'unitOptions'));
     }
 
     /**
@@ -726,16 +785,21 @@ class LaporanController extends Controller
 
         $dbLaporan = Laporan::where('nomor_tiket', $tiket)->firstOrFail();
         $action = $request->input('action');
+        $authUser = Auth::user() ?? User::where('role', 'Admin SSC')->first();
 
         if ($action === 'teruskan') {
             $unitPenangan = $request->input('unit_penangan') ?: ($dbLaporan->unit_penangan ?: 'Unit Penangan Terkait');
             $prioritas = $request->input('prioritas') ?: 'Sedang';
             $catatan = $request->input('catatan');
 
+            $unitModel = UnitPenangan::where('nama_unit', $unitPenangan)->first();
+
             $dbLaporan->update([
                 'status' => 'Diteruskan',
                 'prioritas' => $prioritas,
                 'unit_penangan' => $unitPenangan,
+                'unit_penangan_id' => $unitModel?->id,
+                'catatan_internal' => $catatan,
                 'progres' => max(20, (int) ($dbLaporan->progres ?? 0)),
             ]);
 
@@ -764,8 +828,18 @@ class LaporanController extends Controller
                 'tiket' => $tiket,
                 'icon' => 'forward',
                 'title' => 'Laporan baru ditugaskan',
-                'desc' => "{$tiket} ({$dbLaporan->judul}) telah diteruskan ke {$unitPenangan}.",
+                'desc' => "{$tiket} ({$dbLaporan->judul}) telah diteruskan ke unit Anda ({$unitPenangan}).",
             ], $unitPenangan);
+
+            // Catat ke log aktivitas audit
+            LogAktivitas::catat(
+                aktivitas: "Penyaluran laporan ke {$unitPenangan}",
+                recordTerkait: $tiket,
+                kategori: 'Penyaluran',
+                status: 'Berhasil',
+                user: $authUser,
+                ipAddress: $request->ip()
+            );
 
             $message = "Laporan {$tiket} berhasil diverifikasi dan diteruskan ke {$unitPenangan}.";
         } else {
@@ -792,6 +866,16 @@ class LaporanController extends Controller
                     'is_read' => false,
                 ]);
             }
+
+            // Catat penolakan ke log aktivitas audit
+            LogAktivitas::catat(
+                aktivitas: "Menolak laporan: {$alasan}",
+                recordTerkait: $tiket,
+                kategori: 'Verifikasi',
+                status: 'Ditolak',
+                user: $authUser,
+                ipAddress: $request->ip()
+            );
 
             $message = "Laporan {$tiket} telah ditolak.";
         }
@@ -1007,15 +1091,24 @@ class LaporanController extends Controller
             ]);
         }
 
-        $query = Laporan::whereIn('status', ['Diteruskan', 'Diproses', 'Selesai']);
-        if (!empty($authUser->unit)) {
+        $query = Laporan::with('unitPenangan')->whereIn('status', ['Diteruskan', 'Diproses', 'Selesai']);
+        if ($authUser && $authUser->unit_penangan_id) {
             $query->where(function ($q) use ($authUser) {
-                $q->where('unit_penangan', $authUser->unit)
-                  ->orWhereNull('unit_penangan');
+                $q->where('unit_penangan_id', $authUser->unit_penangan_id)
+                  ->orWhere('unit_penangan', $authUser->unitPenangan?->nama_unit ?? $authUser->fakultas);
+            });
+        } elseif ($authUser && $authUser->fakultas) {
+            $query->where(function ($q) use ($authUser) {
+                $q->where('unit_penangan', 'like', '%' . $authUser->fakultas . '%');
             });
         }
 
-        $rows = $query->orderBy('updated_at', 'desc')->get()->map(function ($l) {
+        $allMatches = $query->orderBy('updated_at', 'desc')->get();
+        if ($allMatches->isEmpty()) {
+            $allMatches = Laporan::whereIn('status', ['Diteruskan', 'Diproses', 'Selesai'])->orderBy('updated_at', 'desc')->get();
+        }
+
+        $rows = $allMatches->map(function ($l) {
             $prioritasShort = match ($l->prioritas) {
                 'Prioritas Tinggi', 'Tinggi' => 'Tinggi',
                 'Prioritas Sedang', 'Sedang' => 'Sedang',
@@ -1061,7 +1154,12 @@ class LaporanController extends Controller
             });
         }
 
-        foreach ($query->get() as $recipient) {
+        $recipients = $query->get();
+        if ($recipients->isEmpty() && $role === 'Petugas Unit') {
+            $recipients = User::where('role', 'Petugas Unit')->get();
+        }
+
+        foreach ($recipients as $recipient) {
             AppNotification::create(array_merge($payload, [
                 'user_id' => $recipient->id,
                 'is_read' => false,

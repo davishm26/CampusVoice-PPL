@@ -106,6 +106,9 @@ Route::get('/log-aktivitas', fn () => redirect()->route('superadmin.log'));
 
 Route::get('/super-admin/unit-penangan', [DashboardController::class, 'superAdminUnitPenangan'])->name('superadmin.unit-penangan');
 Route::get('/unit-penangan', fn () => redirect()->route('superadmin.unit-penangan'));
+Route::post('/super-admin/unit-penangan', [DashboardController::class, 'superAdminUnitPenanganStore'])->name('superadmin.unit-penangan.store');
+Route::put('/super-admin/unit-penangan/{id}', [DashboardController::class, 'superAdminUnitPenanganUpdate'])->name('superadmin.unit-penangan.update');
+Route::delete('/super-admin/unit-penangan/{id}', [DashboardController::class, 'superAdminUnitPenanganDestroy'])->name('superadmin.unit-penangan.destroy');
 
 // Super Admin: Manajemen Akun
 Route::get('/super-admin/manajemen-akun', [SuperAdminAkunController::class, 'index'])->name('superadmin.akun');

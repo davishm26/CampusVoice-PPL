@@ -70,8 +70,8 @@
         catatanInternal: '',
         jenisUnit: '',
         unitPenangan: '',
-        unitOptions: {
-            'Prodi': [
+        unitOptions: @js($unitOptions ?? [
+            'Prodi' => [
                 'Program Studi S1 Sistem Informasi',
                 'Program Studi S1 Teknologi Informasi',
                 'Program Studi S1 Teknik Informatika',
@@ -84,7 +84,7 @@
                 'Program Studi S1 Bisnis Digital',
                 'Program Studi S1 Teknik Telekomunikasi'
             ],
-            'Direktorat': [
+            'Direktorat' => [
                 'Direktorat Sekretariat & Perencanaan Strategis',
                 'Direktorat Bandung Techno Park',
                 'Direktorat Akademik',
@@ -99,10 +99,11 @@
                 'Direktorat Kerjasama Strategis & Kantor Urusan Internasional',
                 'Direktorat Penelitian dan Pengabdian Masyarakat'
             ],
-            'Satpras': [
-                'SATPRAS (Sarana Prasarana)'
+            'Satpras' => [
+                'SATPRAS (Sarana Prasarana)',
+                'Direktorat Logistik dan Aset'
             ]
-        },
+        ]),
         get availableUnits() {
             if (this.jenisUnit && this.unitOptions[this.jenisUnit]) {
                 return this.unitOptions[this.jenisUnit];
