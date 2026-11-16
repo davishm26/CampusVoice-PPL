@@ -325,13 +325,13 @@
                                     </div>
 
                                     <p class="text-xs sm:text-sm text-[#6B7280]">
-                                        Progres <span class="font-extrabold text-[#252525]">{{ $laporan->progres ?? 0 }}%</span>
+                                        Progres <span class="font-extrabold text-[#252525]">{{ $laporan->display_progres }}%</span>
                                     </p>
                                 </div>
 
                                 <!-- Progress Bar -->
                                 <div class="w-full bg-[#E5E7EB] h-2 rounded-full overflow-hidden">
-                                    <div class="bg-[#B01116] h-full rounded-full transition-all duration-300" style="width: {{ $laporan->progres ?? 0 }}%;"></div>
+                                    <div class="bg-[#B01116] h-full rounded-full transition-all duration-300" style="width: {{ $laporan->display_progres }}%;"></div>
                                 </div>
 
                                 <!-- Grid Info 2x2 -->

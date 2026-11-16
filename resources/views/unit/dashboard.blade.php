@@ -281,13 +281,13 @@
                                                     </div>
                                                 </td>
 
-                                                <!-- Aksi "Tangani ->" -->
+                                                <!-- Aksi "Tangani ->" / "Detail ->" -->
                                                 <td class="py-4 px-4 whitespace-nowrap text-right">
                                                     <a
                                                         :href="item.url"
                                                         class="text-xs font-bold text-[#B01116] hover:text-[#8B1D22] inline-flex items-center gap-1 transition"
                                                     >
-                                                        Tangani &rarr;
+                                                        <span x-text="item.status === 'Selesai' ? 'Detail' : 'Tangani'"></span> &rarr;
                                                     </a>
                                                 </td>
                                             </tr>

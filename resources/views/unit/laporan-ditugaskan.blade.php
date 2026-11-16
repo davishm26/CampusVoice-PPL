@@ -53,6 +53,26 @@
         currentPage: 1,
         perPage: 6,
         items: {{ \Illuminate\Support\Js::from($laporans) }},
+        get hasActiveFilters() {
+            return Boolean(
+                this.searchQuery.trim() ||
+                this.filterStatus ||
+                this.filterKategori ||
+                this.filterPrioritas ||
+                this.filterTanggalDari ||
+                this.filterTanggalSampai
+            );
+        },
+        resetFilters() {
+            this.searchQuery = '';
+            this.filterStatus = '';
+            this.filterKategori = '';
+            this.filterPrioritas = '';
+            this.filterTanggalDari = '';
+            this.filterTanggalSampai = '';
+            this.datePopoverOpen = false;
+            this.currentPage = 1;
+        },
         get dateLabel() {
             if (!this.filterTanggalDari && !this.filterTanggalSampai) return 'Semua Tanggal';
             const fmt = (d) => {
@@ -116,7 +136,7 @@
         <!-- ========================================================= -->
         <div class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
 
-            @include('unit.partials.header', ['authUser' => $authUser, 'unreadCount' => $unreadCount, 'searchModel' => 'searchQuery', 'resetPageOnInput' => true])
+            @include('unit.partials.header', ['authUser' => $authUser, 'unreadCount' => $unreadCount])
 
             <!-- ========================================================= -->
             <!-- KONTEN UTAMA: LAPORAN DITUGASKAN -->
@@ -152,12 +172,11 @@
                             <select
                                 x-model="filterStatus"
                                 @change="currentPage = 1"
-                                class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
+                                class="w-full appearance-none bg-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
                             >
                                 <option value="">Semua Status</option>
-                                <option value="Diproses">Diproses</option>
                                 <option value="Diteruskan">Diteruskan</option>
-                                <option value="Selesai">Selesai</option>
+                                <option value="Diproses">Diproses</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#6B7280]">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +190,7 @@
                             <select
                                 x-model="filterKategori"
                                 @change="currentPage = 1"
-                                class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
+                                class="w-full appearance-none bg-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
                             >
                                 <option value="">Semua Kategori</option>
                                 <option value="Satpras">Satpras</option>
@@ -193,7 +212,7 @@
                             <select
                                 x-model="filterPrioritas"
                                 @change="currentPage = 1"
-                                class="w-full appearance-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
+                                class="w-full appearance-none bg-none bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition cursor-pointer"
                             >
                                 <option value="">Semua Prioritas</option>
                                 <option value="Tinggi">Tinggi</option>
@@ -234,6 +253,7 @@
                                     <input
                                         type="date"
                                         x-model="filterTanggalDari"
+                                        :max="filterTanggalSampai || null"
                                         @change="currentPage = 1"
                                         class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
                                     />
@@ -243,6 +263,7 @@
                                     <input
                                         type="date"
                                         x-model="filterTanggalSampai"
+                                        :min="filterTanggalDari || null"
                                         @change="currentPage = 1"
                                         class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-xs text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
                                     />
@@ -265,6 +286,22 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Tombol Hapus Semua Filter -->
+                        <button
+                            type="button"
+                            x-show="hasActiveFilters"
+                            x-cloak
+                            x-transition
+                            @click="resetFilters()"
+                            class="bg-[#FFFFFF] hover:bg-[#FCE8E8] text-[#B01116] rounded-xl border border-[#E5E7EB] py-2.5 px-4 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer transition"
+                            title="Hapus semua filter"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            <span>Hapus Filter</span>
+                        </button>
                     </div>
 
                     <!-- Kartu Tabel Laporan Ditugaskan -->
