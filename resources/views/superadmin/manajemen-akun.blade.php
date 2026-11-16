@@ -142,7 +142,7 @@
 
                         <!-- Menu 6: Profil Saya -->
                         <a
-                            href="#"
+                            href="{{ route('profil') }}"
                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                         >
                             <svg class="w-5 h-5 text-[#252525] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -644,7 +644,9 @@
                         <select
                             required
                             x-model="editForm.role"
-                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-sm text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                            @change="onEditRoleChange()"
+                            :disabled="editForm.id === currentUserId"
+                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-sm text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="Admin SSC">Admin SSC</option>
                             <option value="Petugas Unit">Petugas Unit</option>
@@ -658,7 +660,8 @@
                         <select
                             required
                             x-model="editForm.status_akun"
-                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-sm text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116]"
+                            :disabled="editForm.id === currentUserId"
+                            class="w-full rounded-xl border border-[#E5E7EB] py-2 px-3 text-sm text-[#252525] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="Aktif">Aktif</option>
                             <option value="Nonaktif">Nonaktif</option>
@@ -701,31 +704,38 @@
 
                 <div class="pt-3 border-t border-[#E5E7EB] flex items-center justify-between gap-2.5">
                     <div>
-                        <button
-                            type="button"
-                            x-show="!confirmDelete"
-                            @click="confirmDelete = true"
-                            class="px-3 py-2 rounded-xl text-xs font-bold text-[#DC2626] hover:bg-[#FEF2F2] cursor-pointer transition"
-                        >
-                            Hapus Akun
-                        </button>
-                        <div x-show="confirmDelete" x-cloak class="flex items-center gap-2">
-                            <button
-                                type="button"
-                                @click="submitDeleteAccount()"
-                                :disabled="isSubmitting"
-                                class="px-3 py-1.5 rounded-lg bg-[#DC2626] text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
-                            >
-                                Ya, Hapus
-                            </button>
-                            <button
-                                type="button"
-                                @click="confirmDelete = false"
-                                class="px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] text-xs font-semibold text-[#374151] cursor-pointer"
-                            >
-                                Batal
-                            </button>
-                        </div>
+                        <template x-if="editForm.id === currentUserId">
+                            <span class="text-[11px] font-medium text-[#6B7280]">Akun yang sedang Anda gunakan</span>
+                        </template>
+                        <template x-if="editForm.id !== currentUserId">
+                            <div>
+                                <button
+                                    type="button"
+                                    x-show="!confirmDelete"
+                                    @click="confirmDelete = true"
+                                    class="px-3 py-2 rounded-xl text-xs font-bold text-[#DC2626] hover:bg-[#FEF2F2] cursor-pointer transition"
+                                >
+                                    Hapus Akun
+                                </button>
+                                <div x-show="confirmDelete" x-cloak class="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        @click="submitDeleteAccount()"
+                                        :disabled="isSubmitting"
+                                        class="px-3 py-1.5 rounded-lg bg-[#DC2626] text-white text-xs font-bold hover:bg-red-700 cursor-pointer"
+                                    >
+                                        Ya, Hapus
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="confirmDelete = false"
+                                        class="px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] text-xs font-semibold text-[#374151] cursor-pointer"
+                                    >
+                                        Batal
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     <div class="flex items-center gap-2.5">
@@ -752,7 +762,8 @@
     <script>
         function manajemenAkunApp() {
             return {
-                unitOptions: [
+                currentUserId: @js($authUser->id ?? null),
+                unitOptions: @js($unitOptions ?? [
                     'Student Service Center',
                     'Administrasi Sistem',
                     'Direktorat Pusat Teknologi Informasi',
@@ -768,9 +779,20 @@
                     'Direktorat Pengembangan Karir, Alumni, & Endowment',
                     'Direktorat Kerjasama Strategis & Kantor Urusan Internasional',
                     'Direktorat Penelitian dan Pengabdian Masyarakat',
-                    'Satpras'
-                ],
-                prodiOptions: [
+                    'SATPRAS (Sarana Prasarana)',
+                    'Program Studi S1 Sistem Informasi',
+                    'Program Studi S1 Teknologi Informasi',
+                    'Program Studi S1 Teknik Informatika',
+                    'Program Studi S1 Rekayasa Perangkat Lunak',
+                    'Program Studi S1 Sains Data',
+                    'Program Studi S1 Teknik Elektro',
+                    'Program Studi S1 Teknik Industri',
+                    'Program Studi S1 Teknik Komputer',
+                    'Program Studi S1 Teknik Logistik',
+                    'Program Studi S1 Bisnis Digital',
+                    'Program Studi S1 Teknik Telekomunikasi',
+                ]),
+                prodiOptions: @js($prodiOptions ?? [
                     'S1 Sistem Informasi',
                     'S1 Teknologi Informasi',
                     'S1 Teknik Informatika',
@@ -782,7 +804,7 @@
                     'S1 Teknik Logistik',
                     'S1 Bisnis Digital',
                     'S1 Teknik Telekomunikasi'
-                ],
+                ]),
                 mobileSidebarOpen: false,
                 searchHeader: '',
                 searchQuery: '',
@@ -860,18 +882,31 @@
                 openManageModal(akun) {
                     this.formError = '';
                     this.confirmDelete = false;
+                    if (akun.unit && akun.unit !== '-') {
+                        if (akun.role === 'Mahasiswa' && !this.prodiOptions.includes(akun.unit)) {
+                            this.prodiOptions.push(akun.unit);
+                        } else if (akun.role !== 'Mahasiswa' && !this.unitOptions.includes(akun.unit)) {
+                            this.unitOptions.push(akun.unit);
+                        }
+                    }
                     this.editForm = {
                         id: akun.id,
                         name: akun.name,
                         email: akun.email,
                         nip: akun.nip || '',
                         role: akun.role,
-                        unit: akun.unit,
+                        unit: akun.unit && akun.unit !== '-' ? akun.unit : '',
                         phone: akun.phone || '',
                         status_akun: akun.status,
                         password: ''
                     };
                     this.showManageModal = true;
+                },
+                onEditRoleChange() {
+                    const targetList = this.editForm.role === 'Mahasiswa' ? this.prodiOptions : this.unitOptions;
+                    if (!targetList.includes(this.editForm.unit)) {
+                        this.editForm.unit = '';
+                    }
                 },
                 async submitAddAccount() {
                     this.isSubmitting = true;

@@ -342,6 +342,10 @@
                                 class="w-full appearance-none bg-[#FFFFFF] rounded-xl border border-[#E5E7EB] py-2.5 pl-4 pr-9 text-xs sm:text-sm font-medium text-[#252525] shadow-sm focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition cursor-pointer"
                             >
                                 <option value="">Semua Kategori</option>
+                                <option value="Manajemen Akun">Manajemen Akun</option>
+                                <option value="Unit Penangan">Unit Penangan</option>
+                                <option value="Kategori & Penyaluran">Kategori &amp; Penyaluran</option>
+                                <option value="Verifikasi">Verifikasi</option>
                                 <option value="Penyaluran">Penyaluran</option>
                                 <option value="Progres">Progres</option>
                                 <option value="Sistem">Sistem</option>

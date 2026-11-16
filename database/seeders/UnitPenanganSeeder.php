@@ -81,16 +81,21 @@ class UnitPenanganSeeder extends Seeder
         foreach ($petugasUsers as $petugas) {
             $unitMatch = null;
             if ($petugas->fakultas) {
-                $unitMatch = UnitPenangan::where('nama_unit', 'like', '%' . $petugas->fakultas . '%')->first();
+                $unitMatch = UnitPenangan::where('nama_unit', $petugas->fakultas)->first()
+                    ?? UnitPenangan::where('nama_unit', 'like', '%' . $petugas->fakultas . '%')->first();
             }
             if (!$unitMatch && $petugas->prodi) {
                 $unitMatch = UnitPenangan::where('nama_unit', 'like', '%' . $petugas->prodi . '%')->first();
             }
-            $targetUnit = $unitMatch ?: $defaultUnit;
-            if ($targetUnit) {
+            if ($unitMatch) {
                 $petugas->update([
-                    'unit_penangan_id' => $targetUnit->id,
-                    'fakultas' => $targetUnit->nama_unit,
+                    'unit_penangan_id' => $unitMatch->id,
+                    'fakultas' => $unitMatch->nama_unit,
+                ]);
+            } elseif (!$petugas->fakultas && $defaultUnit) {
+                $petugas->update([
+                    'unit_penangan_id' => $defaultUnit->id,
+                    'fakultas' => $defaultUnit->nama_unit,
                 ]);
             }
         }
