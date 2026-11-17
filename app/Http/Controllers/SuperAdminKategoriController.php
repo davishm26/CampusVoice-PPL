@@ -62,6 +62,10 @@ class SuperAdminKategoriController extends Controller
         $authUser = $this->getActiveSuperAdmin();
 
         try {
+            if (KategoriPenyaluran::count() === 0 && class_exists(\Database\Seeders\KategoriPenyaluranSeeder::class)) {
+                (new \Database\Seeders\KategoriPenyaluranSeeder())->run();
+            }
+
             $rules = KategoriPenyaluran::orderBy('urutan')
                 ->orderBy('id')
                 ->get()

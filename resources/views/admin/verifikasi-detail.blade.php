@@ -68,8 +68,8 @@
         check3: true,
         prioritas: '',
         catatanInternal: '',
-        jenisUnit: '',
-        unitPenangan: '',
+        jenisUnit: @js($laporan['rekomendasi_jenis_unit'] ?? ''),
+        unitPenangan: @js(($laporan['rekomendasi_unit'] ?? '') !== 'Belum ditentukan' ? ($laporan['rekomendasi_unit'] ?? '') : ''),
         unitOptions: @js($unitOptions ?? [
             'Prodi' => [
                 'Program Studi S1 Sistem Informasi',

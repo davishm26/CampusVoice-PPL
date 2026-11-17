@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AppNotification;
+use App\Models\KategoriPenyaluran;
 use App\Models\Laporan;
 use App\Models\LaporanTanggapan;
 use App\Models\LaporanTracking;
@@ -798,6 +799,129 @@ class LaporanController extends Controller
     }
 
     /**
+     * Tentukan rekomendasi unit penangan, jenis unit, alasan, dan dasar penyaluran
+     * berdasarkan tabel KategoriPenyaluran yang dikelola oleh Super Admin.
+     */
+    protected function resolveRekomendasiPenyaluran(Laporan $dbLaporan): array
+    {
+        $prodiPelapor = $dbLaporan->user?->prodi ?: 'S1 Sistem Informasi';
+        $prodiUnitName = str_starts_with($prodiPelapor, 'Program Studi')
+            ? $prodiPelapor
+            : 'Program Studi ' . $prodiPelapor;
+
+        $matchedRule = null;
+
+        try {
+            if (KategoriPenyaluran::count() === 0 && class_exists(\Database\Seeders\KategoriPenyaluranSeeder::class)) {
+                (new \Database\Seeders\KategoriPenyaluranSeeder())->run();
+            }
+
+            $activeRules = KategoriPenyaluran::where('status', 'Aktif')
+                ->orderBy('urutan')
+                ->orderBy('id')
+                ->get();
+
+            $haystack = mb_strtolower(trim(
+                ($dbLaporan->judul ?? '') . ' ' .
+                ($dbLaporan->deskripsi ?? '') . ' ' .
+                ($dbLaporan->kategori_label ?? '')
+            ));
+
+            // 1. Cocokkan frasa kata kunci dari setiap aturan aktif terhadap judul & deskripsi laporan
+            foreach ($activeRules as $rule) {
+                $keywords = array_filter(array_map('trim', explode(',', mb_strtolower($rule->kategori_kata_kunci))));
+                foreach ($keywords as $kw) {
+                    if ($kw !== '' && mb_strlen($kw) >= 3 && str_contains($haystack, $kw)) {
+                        $matchedRule = $rule;
+                        break 2;
+                    }
+                }
+            }
+
+            // 2. Jika belum ada frasa spesifik yang cocok, cocokkan berdasarkan kategori laporan
+            if (!$matchedRule && $activeRules->isNotEmpty()) {
+                $catKey = mb_strtolower($dbLaporan->kategori ?? '');
+                $categoryHints = match ($catKey) {
+                    'sarana_prasarana' => ['fasilitas', 'sarana', 'logistik'],
+                    'administrasi_keuangan' => ['keuangan', 'ukt', 'pembayaran'],
+                    'kemahasiswaan' => ['kemahasiswaan', 'organisasi', 'beasiswa'],
+                    'akademik' => ['akademik', 'perkuliahan', 'transkrip', 'krs', 'kurikulum'],
+                    'ssc', 'lainnya' => ['aspirasi', 'umum', 'lainnya', 'pelayanan'],
+                    default => [],
+                };
+
+                foreach ($activeRules as $rule) {
+                    $ruleText = mb_strtolower($rule->kategori_kata_kunci . ' ' . $rule->rekomendasi_default);
+                    foreach ($categoryHints as $hint) {
+                        if (str_contains($ruleText, $hint)) {
+                            $matchedRule = $rule;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable) {
+            $matchedRule = null;
+        }
+
+        if ($matchedRule) {
+            $rawDefault = trim($matchedRule->rekomendasi_default);
+            if (strcasecmp($rawDefault, 'Satpras') === 0) {
+                $rawDefault = 'SATPRAS (Sarana Prasarana)';
+            }
+
+            $isProdiPelapor = $matchedRule->tipe_tujuan === 'Program Studi'
+                && (stripos($rawDefault, 'pelapor') !== false || strcasecmp($rawDefault, 'Program Studi') === 0);
+
+            if ($isProdiPelapor || stripos($rawDefault, 'pelapor') !== false) {
+                $rekomendasiUnit = $dbLaporan->is_anonim ? 'Direktorat Akademik' : $prodiUnitName;
+            } else {
+                $rekomendasiUnit = $rawDefault;
+            }
+
+            $jenisUnit = match (true) {
+                str_starts_with($rekomendasiUnit, 'Program Studi') => 'Prodi',
+                stripos($rekomendasiUnit, 'SATPRAS') !== false => 'Satpras',
+                default => 'Direktorat',
+            };
+
+            return [
+                'rekomendasi_unit' => $rekomendasiUnit,
+                'rekomendasi_jenis_unit' => $jenisUnit,
+                'rekomendasi_alasan' => "Sesuai aturan penyaluran aktif untuk kata kunci \"{$matchedRule->kategori_kata_kunci}\" ({$matchedRule->tipe_tujuan}).",
+                'dasar_penyaluran' => "Aturan Penyaluran: {$matchedRule->kategori_kata_kunci} → {$rekomendasiUnit}",
+            ];
+        }
+
+        // Fallback berdasarkan kategori laporan jika tabel aturan kosong atau semua aturan terkait nonaktif
+        $existingUnit = $dbLaporan->unit_penangan;
+        if ($existingUnit && !in_array($existingUnit, ['Belum Ditentukan', 'Belum ditentukan', '-'], true)) {
+            $rekomendasiUnit = $existingUnit;
+        } else {
+            $rekomendasiUnit = match ($dbLaporan->kategori) {
+                'sarana_prasarana' => 'Direktorat Logistik dan Aset',
+                'administrasi_keuangan' => 'Direktorat Keuangan',
+                'kemahasiswaan' => 'Direktorat Kemahasiswaan',
+                'akademik' => $dbLaporan->is_anonim ? 'Direktorat Akademik' : $prodiUnitName,
+                default => 'Direktorat Sekretariat & Perencanaan Strategis',
+            };
+        }
+
+        $jenisUnit = match (true) {
+            str_starts_with($rekomendasiUnit, 'Program Studi') => 'Prodi',
+            stripos($rekomendasiUnit, 'SATPRAS') !== false => 'Satpras',
+            default => 'Direktorat',
+        };
+
+        return [
+            'rekomendasi_unit' => $rekomendasiUnit,
+            'rekomendasi_jenis_unit' => $jenisUnit,
+            'rekomendasi_alasan' => 'Berdasarkan kategori laporan dan program studi pelapor.',
+            'dasar_penyaluran' => 'Penyaluran disesuaikan dengan kategori laporan.',
+        ];
+    }
+
+    /**
      * Admin SSC: Detail Verifikasi Laporan.
      */
     public function adminVerifikasiDetail($tiket)
@@ -821,6 +945,8 @@ class LaporanController extends Controller
             return redirect()->route('admin.monitoring.detail', $dbLaporan->nomor_tiket);
         }
 
+        $rekomendasi = $this->resolveRekomendasiPenyaluran($dbLaporan);
+
         $laporan = [
             'tiket' => $dbLaporan->nomor_tiket,
             'judul' => $dbLaporan->judul,
@@ -837,9 +963,10 @@ class LaporanController extends Controller
             'lampiran_meta' => $dbLaporan->berkas_ukuran ?? '',
             'lampiran_url' => $dbLaporan->berkas_url,
             'lampiran_ext' => $dbLaporan->berkas_extension,
-            'rekomendasi_unit' => $dbLaporan->unit_penangan ?? 'Belum ditentukan',
-            'rekomendasi_alasan' => 'Berdasarkan kategori laporan dan program studi pelapor.',
-            'dasar_penyaluran' => 'Penyaluran disesuaikan dengan kategori laporan.',
+            'rekomendasi_unit' => $rekomendasi['rekomendasi_unit'],
+            'rekomendasi_jenis_unit' => $rekomendasi['rekomendasi_jenis_unit'],
+            'rekomendasi_alasan' => $rekomendasi['rekomendasi_alasan'],
+            'dasar_penyaluran' => $rekomendasi['dasar_penyaluran'],
             'status' => $dbLaporan->status,
         ];
 
@@ -847,10 +974,51 @@ class LaporanController extends Controller
             ->where('is_read', false)
             ->count();
 
-        // Ambil unit penangan aktif secara dinamis dari database (13 Direktorat & 11 Prodi)
+        // Ambil unit penangan aktif secara dinamis dari database (dengan fallback jika tabel belum di-seed)
         $activeUnits = UnitPenangan::where('status', 'Aktif')->orderBy('nama_unit')->get();
         $prodiList = $activeUnits->where('tipe', 'Program Studi')->pluck('nama_unit')->values()->all();
         $direktoratList = $activeUnits->where('tipe', 'Direktorat')->pluck('nama_unit')->values()->all();
+
+        if (empty($prodiList)) {
+            $prodiList = [
+                'Program Studi S1 Sistem Informasi',
+                'Program Studi S1 Teknologi Informasi',
+                'Program Studi S1 Teknik Informatika',
+                'Program Studi S1 Rekayasa Perangkat Lunak',
+                'Program Studi S1 Sains Data',
+                'Program Studi S1 Teknik Elektro',
+                'Program Studi S1 Teknik Industri',
+                'Program Studi S1 Teknik Komputer',
+                'Program Studi S1 Teknik Logistik',
+                'Program Studi S1 Bisnis Digital',
+                'Program Studi S1 Teknik Telekomunikasi',
+            ];
+        }
+
+        if (empty($direktoratList)) {
+            $direktoratList = [
+                'Direktorat Sekretariat & Perencanaan Strategis',
+                'Direktorat Bandung Techno Park',
+                'Direktorat Akademik',
+                'Direktorat Pasca Sarjana dan Advance Learning',
+                'Direktorat Logistik dan Aset',
+                'Direktorat Keuangan',
+                'Direktorat Sumber Daya Manusia',
+                'Direktorat Pusat Teknologi Informasi',
+                'Direktorat Pemasaran & Admisi',
+                'Direktorat Pengembangan Karir, Alumni, & Endowment',
+                'Direktorat Kemahasiswaan',
+                'Direktorat Kerjasama Strategis & Kantor Urusan Internasional',
+                'Direktorat Penelitian dan Pengabdian Masyarakat',
+            ];
+        }
+
+        // Pastikan unit rekomendasi dari aturan Super Admin juga ada di dalam daftar opsi
+        if ($rekomendasi['rekomendasi_jenis_unit'] === 'Prodi' && !in_array($rekomendasi['rekomendasi_unit'], $prodiList, true)) {
+            $prodiList[] = $rekomendasi['rekomendasi_unit'];
+        } elseif ($rekomendasi['rekomendasi_jenis_unit'] === 'Direktorat' && !in_array($rekomendasi['rekomendasi_unit'], $direktoratList, true)) {
+            $direktoratList[] = $rekomendasi['rekomendasi_unit'];
+        }
 
         $unitOptions = [
             'Prodi' => $prodiList,

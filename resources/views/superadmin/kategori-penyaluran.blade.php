@@ -145,7 +145,7 @@
                 <!-- Bagian Bawah: Profil Saya & Keluar -->
                 <div class="px-4 py-3 border-t border-[#E5E7EB] space-y-1">
                     <a
-                        href="#"
+                        href="{{ route('profil') }}"
                         class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#252525] hover:bg-gray-100 hover:text-[#B01116] transition group"
                     >
                         <svg class="w-5 h-5 text-[#6B7280] group-hover:text-[#B01116] transition shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -607,7 +607,18 @@
         <option value="Direktorat Bandung Techno Park"></option>
         <option value="Direktorat Pasca Sarjana dan Advance Learning"></option>
         <option value="Direktorat Pemasaran & Admisi"></option>
-        <option value="Satpras"></option>
+        <option value="SATPRAS (Sarana Prasarana)"></option>
+        <option value="Program Studi S1 Sistem Informasi"></option>
+        <option value="Program Studi S1 Teknologi Informasi"></option>
+        <option value="Program Studi S1 Teknik Informatika"></option>
+        <option value="Program Studi S1 Rekayasa Perangkat Lunak"></option>
+        <option value="Program Studi S1 Sains Data"></option>
+        <option value="Program Studi S1 Teknik Elektro"></option>
+        <option value="Program Studi S1 Teknik Industri"></option>
+        <option value="Program Studi S1 Teknik Komputer"></option>
+        <option value="Program Studi S1 Teknik Logistik"></option>
+        <option value="Program Studi S1 Bisnis Digital"></option>
+        <option value="Program Studi S1 Teknik Telekomunikasi"></option>
     </datalist>
 
     <script>
@@ -658,8 +669,14 @@
                 },
 
                 onTipeChange(form) {
-                    if (form.tipe_tujuan === 'Program Studi' && !form.rekomendasi_default) {
-                        form.rekomendasi_default = 'Program Studi pelapor';
+                    if (form.tipe_tujuan === 'Program Studi') {
+                        if (!form.rekomendasi_default || !form.rekomendasi_default.toLowerCase().includes('program studi')) {
+                            form.rekomendasi_default = 'Program Studi pelapor';
+                        }
+                    } else if (form.tipe_tujuan === 'Direktorat') {
+                        if (form.rekomendasi_default && form.rekomendasi_default.toLowerCase().includes('program studi')) {
+                            form.rekomendasi_default = '';
+                        }
                     }
                 },
 
