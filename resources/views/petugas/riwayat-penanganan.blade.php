@@ -58,7 +58,6 @@
             @include('unit.partials.header', [
                 'authUser' => $authUser ?? null,
                 'unreadCount' => $unreadCount ?? 0,
-                'searchModel' => 'search',
             ])
 
             <!-- ========================================================= -->
@@ -68,13 +67,30 @@
                 <div class="max-w-7xl mx-auto space-y-5">
 
                     <!-- Header Halaman (Atas) -->
-                    <div>
-                        <h1 class="text-2xl sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight leading-tight">
-                            Riwayat Penanganan
-                        </h1>
-                        <p class="text-xs sm:text-sm text-[#FFFFFF]/85 mt-1 font-normal">
-                            Arsip laporan yang pernah ditangani oleh unit Anda.
-                        </p>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 class="text-2xl sm:text-[28px] font-bold text-[#FFFFFF] tracking-tight leading-tight">
+                                Riwayat Penanganan
+                            </h1>
+                            <p class="text-xs sm:text-sm text-[#FFFFFF]/85 mt-1 font-normal">
+                                Arsip laporan yang pernah ditangani oleh unit Anda.
+                            </p>
+                        </div>
+
+                        <div class="shrink-0">
+                            <button
+                                type="button"
+                                @click="downloadExcel()"
+                                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#991015]/75 hover:bg-[#8A0D12] border border-[#FFFFFF]/25 text-[#FFFFFF] text-xs sm:text-sm font-semibold shadow-sm backdrop-blur-xs transition cursor-pointer"
+                            >
+                                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                <span>Unduh Excel</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Baris Filter & Pencarian (5 Elemen Sejajar) -->
@@ -431,6 +447,58 @@
                     this.tanggalDari = '';
                     this.tanggalSampai = '';
                     this.datePopoverOpen = false;
+                },
+
+                downloadExcel() {
+                    const rowsHtml = this.filteredRows.map((row) => `
+                        <tr>
+                            <td>${row.tiket || ''}</td>
+                            <td>${(row.judul || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                            <td>${row.kategori || ''}</td>
+                            <td>${row.prioritas || ''}</td>
+                            <td>${row.diterima || ''}</td>
+                            <td>${row.selesai || ''}</td>
+                            <td>${row.status || ''}</td>
+                            <td>${row.durasi || ''}</td>
+                        </tr>
+                    `).join('');
+
+                    const html = `
+                        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                        <head><meta charset="utf-8" /></head>
+                        <body>
+                            <table border="1">
+                                <thead>
+                                    <tr>
+                                        <th>NOMOR TIKET</th>
+                                        <th>JUDUL</th>
+                                        <th>KATEGORI</th>
+                                        <th>PRIORITAS</th>
+                                        <th>DITERIMA</th>
+                                        <th>SELESAI</th>
+                                        <th>STATUS AKHIR</th>
+                                        <th>DURASI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rowsHtml}</tbody>
+                            </table>
+                        </body>
+                        </html>
+                    `;
+
+                    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                    this.triggerDownload(blob, 'riwayat-penanganan-unit.xls');
+                },
+
+                triggerDownload(blob, filename) {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', filename);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
                 }
             };
         }
