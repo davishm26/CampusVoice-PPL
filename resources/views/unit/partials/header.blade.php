@@ -13,7 +13,7 @@
 
 <!-- HEADER ATAS (NAVBAR PETUGAS UNIT) -->
 <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-    <!-- Hamburger Mobile -->
+    <!-- Hamburger Mobile & Search (Dashboard Only) -->
     <div class="flex items-center gap-3">
         <button
             type="button"
@@ -26,6 +26,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
         </button>
+
+        @if (!empty($searchModel))
+            <div class="relative w-48 sm:w-80 md:w-96">
+                <input
+                    type="text"
+                    x-model="{{ $searchModel }}"
+                    placeholder="Cari nomor tiket atau laporan..."
+                    class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
+                />
+            </div>
+        @endif
     </div>
 
     <!-- Bagian Kanan: Lonceng Notifikasi & Profil Petugas Unit -->
