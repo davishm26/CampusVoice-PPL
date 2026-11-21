@@ -227,18 +227,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-
-                    <div class="relative w-64 sm:w-80 md:w-96">
-                        <input 
-                            type="text" 
-                            placeholder="Cari nomor tiket atau laporan..." 
-                            onkeydown="if(event.key === 'Enter'){ window.location.href='{{ route('laporan.riwayat') }}?q=' + encodeURIComponent(this.value); }"
-                            class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                        />
-                    </div>
                 </div>
 
-                <div class="flex items-center gap-4 sm:gap-5">
+                <div class="flex items-center gap-4 sm:gap-5 ml-auto">
                     <a href="{{ route('notifikasi') }}" class="relative w-9 h-9 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] hover:text-[#252525] hover:bg-gray-50 transition">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>

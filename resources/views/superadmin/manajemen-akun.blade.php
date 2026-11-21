@@ -213,7 +213,7 @@
 
             <!-- HEADER ATAS (NAVBAR) -->
             <header class="bg-[#FFFFFF] border-b border-[#E5E7EB] px-4 sm:px-8 py-3.5 flex items-center justify-between sticky top-0 z-30">
-                <!-- Hamburger Mobile & Search Bar Header -->
+                <!-- Hamburger Mobile -->
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
@@ -226,21 +226,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-
-                    <!-- Search Bar Header -->
-                    <div class="relative w-52 sm:w-80 md:w-96">
-                        <input
-                            type="text"
-                            x-model="searchHeader"
-                            placeholder="Cari nomor tiket atau laporan.."
-                            aria-label="Cari nomor tiket atau laporan"
-                            class="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg py-2 px-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#9CA3AF] focus:bg-[#FFFFFF] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                        />
-                    </div>
                 </div>
 
                 <!-- Bagian Kanan: Lonceng Notifikasi & Profil Super Admin -->
-                <div class="flex items-center gap-3 sm:gap-4">
+                <div class="flex items-center gap-3 sm:gap-4 ml-auto">
                     <!-- Tombol Lonceng Notifikasi -->
                     <button
                         type="button"

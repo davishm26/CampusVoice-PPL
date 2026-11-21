@@ -237,24 +237,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                         </svg>
                     </button>
-
-                    <!-- Search Bar Tunggal & Rapi -->
-                    <div class="relative w-64 sm:w-80 md:w-96">
-                        <form @submit.prevent="handleSearch()" class="relative">
-                            <svg class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <input
-                                type="text"
-                                x-model="searchQuery"
-                                placeholder="Cari nomor tiket atau laporan..."
-                                class="w-full bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg py-2 pl-10 pr-3.5 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:outline-none focus:ring-1 focus:ring-[#B01116] transition"
-                            />
-                        </form>
-                    </div>
                 </div>
 
-                <div class="flex items-center gap-4 sm:gap-5">
+                <div class="flex items-center gap-4 sm:gap-5 ml-auto">
                     <a href="{{ route('notifikasi') }}" class="relative w-9 h-9 rounded-full border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] hover:text-[#252525] hover:bg-gray-50 transition">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
@@ -321,6 +306,9 @@
                             class="lg:col-span-8 w-full bg-[#FFFFFF] rounded-2xl p-6 sm:p-8 text-[#252525] shadow-xl border border-[#E5E7EB] min-w-0"
                             x-data="{
                                 deskripsi: @js(old('deskripsi', '')),
+                                get charCount() {
+                                    return (this.deskripsi || '').length;
+                                },
                                 fileSelected: false,
                                 fileName: '',
                                 fileSize: '',
@@ -386,7 +374,12 @@
                                 }
                             }"
                         >
-                            <form action="{{ route('laporan.store') }}" method="POST" enctype="multipart/form-data">
+                            <form
+                                action="{{ route('laporan.store') }}"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                @submit="if (charCount < 15) { $event.preventDefault(); alert('Deskripsi laporan wajib minimal 15 karakter (saat ini baru ' + charCount + ' karakter). Mohon lengkapi penjelasan Anda.'); }"
+                            >
                                 @csrf
 
                                 <!-- BAGIAN 1: INFORMASI LAPORAN -->
@@ -458,17 +451,17 @@
                                                 rows="5"
                                                 x-model="deskripsi"
                                                 required
-                                                minlength="30"
+                                                minlength="15"
                                                 placeholder="Jelaskan kronologi, waktu kejadian, dan dampak yang Anda alami..."
                                                 class="w-full rounded-lg border border-[#E5E7EB] p-3.5 pb-8 text-xs sm:text-sm text-[#252525] placeholder-[#6B7280] focus:border-[#B01116] focus:ring-1 focus:ring-[#B01116] focus:outline-none transition resize-y min-h-[120px]"
                                             >{{ old('deskripsi') }}</textarea>
                                             <div
                                                 class="pointer-events-none absolute right-3.5 bottom-2.5 text-[11px] font-medium"
-                                                :class="deskripsi.length < 30 ? 'text-[#6B7280]' : 'text-[#16A34A] font-semibold'"
-                                                x-text="deskripsi.length + ' karakter'"
+                                                :class="charCount < 15 ? 'text-[#6B7280]' : 'text-[#16A34A] font-semibold'"
+                                                x-text="charCount + '/15 karakter'"
                                             ></div>
                                         </div>
-                                        <p class="text-[11px] text-[#6B7280] mt-1">Minimum 30 karakter. Jangan mencantumkan data sensitif.</p>
+                                        <p class="text-[11px] text-[#6B7280] mt-1">Minimal 15 karakter. Jangan mencantumkan data sensitif.</p>
                                     </div>
 
                                     <!-- Field 4: Lokasi Kejadian -->

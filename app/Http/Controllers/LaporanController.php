@@ -49,12 +49,12 @@ class LaporanController extends Controller
         $request->validate([
             'kategori' => 'required|string',
             'judul' => 'required|string|max:255',
-            'deskripsi' => 'required|string|min:30',
+            'deskripsi' => 'required|string|min:15',
             'lokasi' => 'required|string|max:255',
             'berkas_bukti' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,pdf',
             'is_anonim' => 'nullable',
         ], [
-            'deskripsi.min' => 'Deskripsi laporan minimal harus berisi 30 karakter.',
+            'deskripsi.min' => 'Deskripsi laporan minimal harus berisi 15 karakter.',
             'berkas_bukti.max' => 'Ukuran berkas bukti maksimal adalah 10 MB.',
             'berkas_bukti.mimes' => 'Format berkas bukti harus berupa JPG, PNG, atau PDF.',
         ]);
